@@ -40,7 +40,7 @@ Run `node "${CURSOR_PLUGIN_ROOT}/scripts/design-cli.mjs" status --json` and repo
 
 ### `/design doctor`
 
-Run `node "${CURSOR_PLUGIN_ROOT}/scripts/design-cli.mjs" doctor --json`. Diagnose only. Do not repair anything unless the user separately asks for an apply action. Version 0.1.0 has no automatic repair that removes or rewrites project-local Impeccable installations or hook manifests.
+Run `node "${CURSOR_PLUGIN_ROOT}/scripts/design-cli.mjs" doctor --json`. Diagnose only. Do not repair anything unless the user separately asks for an apply action.
 
 ## Safety boundary
 

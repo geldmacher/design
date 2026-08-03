@@ -28,4 +28,4 @@ Until this section has fresh evidence, report these points as unverified, not fa
 
 ## Publication gate
 
-Version 0.1.0 is local only. Committing, pushing, creating a repository, adding public URLs, setting `minClientVersions`, and publishing to the Cursor Marketplace are separate human-authorized actions and are not part of the repository gate.
+Committing, pushing, creating a repository, adding public URLs, setting `minClientVersions`, and publishing to the Cursor Marketplace require separate human authorization and are not part of the repository gate.

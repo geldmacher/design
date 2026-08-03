@@ -1,6 +1,6 @@
 # Curated extension architecture
 
-Version 0.1.0 contains only `design-core` and the vendored `impeccable` module. New modules are repository-reviewed, bundled at release time, and represented by one `modules/<id>.json` manifest validated against `modules/module.schema.json`.
+Modules are repository-reviewed, bundled at release time, and represented by one `modules/<id>.json` manifest validated against `modules/module.schema.json`.
 
 ## Module contract
 
@@ -21,6 +21,4 @@ The generated `skills/design/references/capabilities.md` is the runtime routing 
 3. No runtime download, dynamic module URL, package installation, unpinned foreign skill, or hidden model/provider routing.
 4. Every contribution must exist, be declared by the Cursor manifest where required, and be owned by exactly one curated module.
 5. Vendored code needs source/license notices, a pin, hashes, an explicit transformation allowlist, tests, and a maintainer-only sync.
-6. An MCP module is an explicit future release change: add the real MCP configuration and manifest entry together. Do not add empty MCP scaffolding.
-
-Emil Kowalski's skills are intentionally absent from 0.1.0. A later addition must demonstrate a narrower or complementary capability rather than duplicate Impeccable.
+6. An MCP module must add the real MCP configuration and manifest entry together. Do not add empty MCP scaffolding.
