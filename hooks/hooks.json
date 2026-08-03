@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "command": "node \"${CURSOR_PLUGIN_ROOT}/hooks/impeccable-plugin-hook.mjs\"",
+        "failClosed": false
+      }
+    ]
+  }
+}

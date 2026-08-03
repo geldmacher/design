@@ -1,0 +1,6 @@
+node_modules/
+/.tests/
+/.git/
+coverage/
+*.log
+upstream/.sync-*/

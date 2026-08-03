@@ -1,0 +1,31 @@
+{
+  "name": "geldmacher-design",
+  "displayName": "Design",
+  "description": "Kuratierte Designarbeit fuer Websites und Web-Apps auf Basis von Impeccable.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dennis Geldmacher",
+    "email": "geldmacher.dennis@outlook.de"
+  },
+  "publisher": "Geldmacher",
+  "homepage": "https://github.com/geldmacher/geldmacher-design#readme",
+  "repository": "https://github.com/geldmacher/geldmacher-design",
+  "license": "MIT",
+  "logo": "./assets/logo.svg",
+  "keywords": [
+    "design",
+    "frontend",
+    "ui",
+    "ux",
+    "web-app",
+    "website",
+    "impeccable"
+  ],
+  "category": "developer-tools",
+  "skills": [
+    "./skills/design",
+    "./skills/impeccable"
+  ],
+  "agents": "./agents/*.md",
+  "hooks": "./hooks/hooks.json"
+}

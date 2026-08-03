@@ -1,0 +1,6 @@
+# Preserve pinned upstream bytes while keeping whitespace checks strict elsewhere.
+skills/impeccable/reference/extract.md whitespace=-blank-at-eof
+skills/impeccable/reference/harden.md whitespace=-trailing-space
+skills/impeccable/reference/optimize.md whitespace=-trailing-space
+skills/impeccable/scripts/lib/concept-catalog.mjs whitespace=-blank-at-eof
+upstream/patches/impeccable-plugin.patch -whitespace

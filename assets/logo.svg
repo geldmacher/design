@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Design</title>
+  <desc id="desc">A precise grid with one highlighted design tile.</desc>
+  <rect width="128" height="128" rx="28" fill="#111318"/>
+  <path d="M31 31h28v28H31zM69 31h28v28H69zM31 69h28v28H31z" fill="none" stroke="#F4F1E8" stroke-width="8"/>
+  <rect x="69" y="69" width="28" height="28" rx="5" fill="#FF5C35"/>
+</svg>

@@ -1,0 +1,788 @@
+diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
+index a367627..1f54807 100644
+--- a/skills/impeccable/SKILL.md
++++ b/skills/impeccable/SKILL.md
+@@ -14,7 +14,7 @@ Core principles:
+ 
+ ## Setup
+ 
+-1. Run `node .cursor/skills/impeccable/scripts/context.mjs` once per session (if the runtime shows this skill's loaded base directory, run `node <skill-base-dir>/scripts/context.mjs`; keep cwd at the user's project). Pass a named source file or route as `--target <path>`. It loads PRODUCT.md, DESIGN.md, the matching surface brief, and native-platform guidance when applicable; follow its directives and do not rerun it.
++1. Run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/context.mjs"` once per session (if the runtime shows this skill's loaded base directory, run `node <skill-base-dir>/scripts/context.mjs`; keep cwd at the user's project). Pass a named source file or route as `--target <path>`. It loads PRODUCT.md, DESIGN.md, the matching surface brief, and native-platform guidance when applicable; follow its directives and do not rerun it.
+ 2. Before acting, load the one playbook that owns the request: the Commands table's reference for an explicit or clearly implied sub-command, or [reference/new-work.md](reference/new-work.md) for a new surface or replacement visual world. Then inspect the target and at least one representative source of incumbent visual truth (tokens, theme, CSS, component, or asset) before editing.
+ 3. After analysis and direction are resolved, load [reference/craft-floor.md](reference/craft-floor.md) immediately before editing UI. It carries the quality floor, the absolute bans, and the reflexes no detector catches. Do not load it for planning-only work.
+ 
+@@ -72,7 +72,7 @@ Routing:
+ 
+ After init writes PRODUCT.md, resume without rerunning `context.mjs`; init loads the native platform reference itself when the platform it recorded is `ios`, `android`, or `adaptive`.
+ 
+-**Pin / Unpin:** `node .cursor/skills/impeccable/scripts/pin.mjs <pin|unpin> <command>` creates or removes a standalone `/<command>` shortcut. Report the script's result concisely; relay stderr verbatim on error.
++**Pin / Unpin:** Standalone shortcut installation is disabled in Geldmacher Design. Use `/impeccable <command>` or `/design <request>`; update the vendored skill only through the plugin maintainer sync.
+ 
+ **Hooks:** `/impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project (auto-runs the detector after UI file edits and surfaces findings). Load [reference/hooks.md](reference/hooks.md) when the user invokes it with any argument.
+ 
+diff --git a/skills/impeccable/reference/critique.md b/skills/impeccable/reference/critique.md
+index 1d609ba..1c930fa 100644
+--- a/skills/impeccable/reference/critique.md
++++ b/skills/impeccable/reference/critique.md
+@@ -21,7 +21,7 @@ Resolve one stable target, run two independent assessments, synthesize a design
+    - "this page" -> the current URL or source file
+ 2. **Confirm the target slugs cleanly**:
+    ```bash
+-   node .cursor/skills/impeccable/scripts/critique-storage.mjs slug "<resolved-path-or-url>"
++   node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/critique-storage.mjs" slug "<resolved-path-or-url>"
+    ```
+    Every later command also accepts the resolved target directly and derives the same slug internally; never hand-write a slug. If this exits non-zero, skip persistence and trend for this run, but continue the critique.
+ 3. **Read `.impeccable/critique/ignore.md`** if it exists. Drop matching findings silently; it is the only prior-run input critique consumes.
+@@ -57,7 +57,7 @@ Run the bundled detector and browser visualization evidence. Assessment B is man
+ 
+ CLI scan:
+ ```bash
+-node .cursor/skills/impeccable/scripts/detect.mjs --json [target]
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/detect.mjs" --json [target]
+ ```
+ 
+ - Pass markup files/directories as `[target]`; do not pass CSS-only files.
+@@ -71,7 +71,7 @@ Browser visualization is required for a viewable target when browser automation
+ 1. Create a fresh tab and navigate. Prefer the harness's native/browser-canvas screenshot path before hand-rolling a Playwright/Puppeteer script; only fall back to a custom script when no native browser tool is exposed.
+ 2. Preflight mutable injection by setting `document.title` and appending a `<script>` tag. Read-only evaluate APIs do not count.
+ 3. If mutation is unavailable, skip live server, browser presentation, and injection; report fallback signal.
+-4. If mutation is available, start `node .cursor/skills/impeccable/scripts/live-server.mjs --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then stop the live server.
++4. If mutation is available, start `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-server.mjs" --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then stop the live server.
+ 5. For multi-view targets, inject on 3-5 representative pages.
+ 
+ Return: CLI findings JSON/counts, browser console findings if applicable, false positives, and skipped/failed browser steps with concrete reasons.
+@@ -183,7 +183,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
+ 2. **Pass the structured metadata** through `IMPECCABLE_CRITIQUE_META` (JSON), then run the write command:
+    ```bash
+    IMPECCABLE_CRITIQUE_META='{"target":"<user phrasing>","total_score":<n>,"max_score":<n>,"na_heuristics":"<comma-separated numbers, or empty>","p0_count":<n>,"p1_count":<n>}' \
+-     node .cursor/skills/impeccable/scripts/critique-storage.mjs write "<resolved target>" <body-file>
++     node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/critique-storage.mjs" write "<resolved target>" <body-file>
+    ```
+    `max_score` is the applicable maximum from the heuristic table (40 when every heuristic applied), so a later run can tell a renormalized total from a full one. The helper prints the absolute path it wrote.
+ 
+@@ -191,7 +191,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
+ 
+ 4. **Read the trend** for context:
+    ```bash
+-   node .cursor/skills/impeccable/scripts/critique-storage.mjs trend "<resolved target>" 5
++   node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/critique-storage.mjs" trend "<resolved target>" 5
+    ```
+    This returns a JSON array of the last 5 frontmatter entries (including the one you just wrote).
+ 
+diff --git a/skills/impeccable/reference/degraded/asset-producer.md b/skills/impeccable/reference/degraded/asset-producer.md
+index ae0b40b..abfa226 100644
+--- a/skills/impeccable/reference/degraded/asset-producer.md
++++ b/skills/impeccable/reference/degraded/asset-producer.md
+@@ -53,7 +53,7 @@ Ask blockers once, globally. Missing source path/crops or output directory block
+ 
+ 7. Remove baked-in UI text, navigation, buttons, body copy, and mock chrome unless the text is part of the asset.
+ 8. Think through the final DOM/CSS representation before generating. If CSS will own radius, clipping, shadows, borders, perspective, responsive cropping, captions, or card frames, do not bake those into the bitmap.
+-9. Save outputs non-destructively in the requested project directory, and leave the intent with the file: after every generation, run `node .cursor/skills/impeccable/scripts/embed-prompt.mjs <asset> --prompt "<the prompt used>"` so the prompt is embedded in the image itself, because the build thread composes what you made and needs to know what it is looking at, and the embedding survives copies where sidecars get lost.
++9. Save outputs non-destructively in the requested project directory, and leave the intent with the file: after every generation, run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/embed-prompt.mjs" <asset> --prompt "<the prompt used>"` so the prompt is embedded in the image itself, because the build thread composes what you made and needs to know what it is looking at, and the embedding survives copies where sidecars get lost.
+ 10. Compare each output against its source crop, opening every image by its workspace-relative path; sandboxed viewers reject absolute paths. If a review/QA tool is available, run it before the final manifest, then retry each major/fatal finding once before finalizing.
+ 
+ Use `texture/pattern extraction` only when the source region is already clean enough to sample as texture. If UI, cards, labels, headings, body copy, or footer chrome must be removed to make a reusable texture or background, classify it as crop-derived cleanup or clean-plate work.
+diff --git a/skills/impeccable/reference/doctor.md b/skills/impeccable/reference/doctor.md
+index 59d3040..550783d 100644
+--- a/skills/impeccable/reference/doctor.md
++++ b/skills/impeccable/reference/doctor.md
+@@ -6,14 +6,14 @@ This is maintenance, not design. Do not redesign anything, do not open files out
+ 
+ Three kinds of drift travel under "out of date". Keep them apart:
+ 
+-- **Tool version.** The installed skill is older than the published one. `context.mjs` reports that at boot as `UPDATE_AVAILABLE` and `npx impeccable update` fixes it. Not this command's job.
++- **Tool version.** The installed skill is older than the published one. `context.mjs` reports that at boot as `UPDATE_AVAILABLE` and `/design doctor` fixes it. Not this command's job.
+ - **Schema drift.** An artifact was written by an older Impeccable: fields nothing reads, fields now expected, files in retired locations. Mechanical, and this command repairs most of it.
+ - **Truth drift.** The code moved on and the document no longer describes it. No file comparison settles this. `document` owns DESIGN.md, `init` owns PRODUCT.md, and this command's job is to hand them a specific gap rather than a vague suspicion.
+ 
+ ## Step 1: Run the pass
+ 
+ ```
+-node .cursor/skills/impeccable/scripts/doctor.mjs --json
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/doctor.mjs" --json
+ ```
+ 
+ Add `--target <path>` when the user named a workspace, file, or route in a monorepo. Without it the report describes the repo root, and in a monorepo that is often the wrong project.
+@@ -26,7 +26,7 @@ An empty `findings` array is the good outcome. Say so in one line and stop.
+ 
+ The severity says what should happen, not how bad it is.
+ 
+-- **`auto`** carries no decision. Run `node .cursor/skills/impeccable/scripts/doctor.mjs --fix` once to apply these, then report what it moved in one line. Do not ask permission first, and do not ask about them afterward.
++- **`auto`** carries no decision. Run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/doctor.mjs" --fix` once to apply these, then report what it moved in one line. Do not ask permission first, and do not ask about them afterward.
+ - **`mention`** needs the user to know but not to decide anything now. State each one in a sentence with its offered fix.
+ - **`route`** needs a specific command. Name the command and the gap it would close. Run it only if the user asks in this turn; `init` and `document` are conversations, not repairs you perform unattended.
+ 
+diff --git a/skills/impeccable/reference/hooks.md b/skills/impeccable/reference/hooks.md
+index 057b9af..49eb37c 100644
+--- a/skills/impeccable/reference/hooks.md
++++ b/skills/impeccable/reference/hooks.md
+@@ -1,5 +1,7 @@
+ # /impeccable hooks
+ 
++> Geldmacher Design integration: Cursor uses the plugin-registered hook. This command changes only `.impeccable/` config and never installs or edits a project-local Cursor hook manifest.
++
+ Manage the **design detector hook** for the current project.
+ 
+ The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Cursor uses `preToolUse` to block bad proposed writes before they land and stays silent when it allows a clean write.
+@@ -25,7 +27,7 @@ The first argument is the action. Defaults to `status`.
+ | Action | What it does |
+ |---|---|
+ | `status` | Print current state, shared/local config paths, ignored rules / files / values, env override. |
+-| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed. |
++| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and use the already registered Geldmacher Design plugin hook without writing provider hook manifests. |
+ | `off` | Set `enabled: false` in `.impeccable/config.json`. |
+ | `ignore-rule <id>` | Append `<id>` to `detector.ignoreRules`; for `overused-font`, requires `--all-values`. Suppresses the rule across the whole project. |
+ | `ignore-file <glob>` | Append `<glob>` to `detector.ignoreFiles`. Suppresses **every** rule for matching files. |
+@@ -40,7 +42,7 @@ The first argument is the action. Defaults to `status`.
+ 2. Invoke the admin script and pass the user's output through verbatim:
+ 
+    ```bash
+-   node .cursor/skills/impeccable/scripts/hook-admin.mjs <action> [args...]
++   node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" <action> [args...]
+    ```
+ 
+ 3. If `<action>` is `off`, follow up with a one-line note: "Done. New edits will not trigger the design hook in this project until you run `/impeccable hooks on`."
+@@ -64,32 +66,32 @@ Prefer the narrowest exception:
+ Example value-specific exception:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/hook-admin.mjs ignore-value overused-font Inter --shared --reason "User confirmed Inter is intentional"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-value overused-font Inter --shared --reason "User confirmed Inter is intentional"
+ ```
+ 
+ Example intentional motion exception:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/hook-admin.mjs ignore-value bounce-easing bounce-ball --shared --reason "User confirmed ball bounce animation is intentional"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-value bounce-easing bounce-ball --shared --reason "User confirmed ball bounce animation is intentional"
+ ```
+ 
+ Example whole-rule font exception:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/hook-admin.mjs ignore-rule overused-font --all-values --reason "User asked to ignore overused fonts generally"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-rule overused-font --all-values --reason "User asked to ignore overused fonts generally"
+ ```
+ 
+ Example one-rule-in-one-file exception, for a file that is still worth reviewing
+ for everything else:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/hook-admin.mjs ignore-value design-system-font-size "*" --file "src/overlay/widget.js" --reason "Injected widget builds its own type scale; DESIGN.md's ramp describes the site"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-value design-system-font-size "*" --file "src/overlay/widget.js" --reason "Injected widget builds its own type scale; DESIGN.md's ramp describes the site"
+ ```
+ 
+ Example whole-file exception, for a file that is out of scope entirely:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/hook-admin.mjs ignore-file "src/legacy/Card.tsx"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-file "src/legacy/Card.tsx"
+ ```
+ 
+ ## Constraints
+@@ -97,7 +99,7 @@ node .cursor/skills/impeccable/scripts/hook-admin.mjs ignore-file "src/legacy/Ca
+ - Never modify `.impeccable/config.json` or `.impeccable/config.local.json` by hand from this command. Always go through `hook-admin.mjs` so writes stay validated and the file shape stays consistent. One exception: `detector.extensions` has no admin action, so when the user asks to cover a template stack, edit that one field in `.impeccable/config.json` directly and leave the rest of the file untouched.
+ - Do not edit the hook scripts themselves (`hook.mjs`, `hook-lib.mjs`, `hook-before-edit.mjs`) from this flow. Those are skill plumbing.
+ - Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.
+-- The hook is bundled with the Impeccable skill and installed through project-local manifests: `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, and `.github/hooks/impeccable.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.
++- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the plugin hook. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.
+ 
+ ## Failure modes
+ 
+diff --git a/skills/impeccable/reference/layout.md b/skills/impeccable/reference/layout.md
+index 76cc1e7..dbce91d 100644
+--- a/skills/impeccable/reference/layout.md
++++ b/skills/impeccable/reference/layout.md
+@@ -25,7 +25,7 @@ When a sub-agent tool is available and permitted, run these independently; other
+ 2. **Mechanical scan:** run:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/detect.mjs --json --scope layout [target files or dirs]
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/detect.mjs" --json --scope layout [target files or dirs]
+ ```
+ 
+ Also inspect arbitrary spacing, overflow, stacking, and container behavior the detector cannot resolve. Keep mechanical evidence out of the first assessment, then synthesize both passes before editing. A clean scan cannot prove hierarchy or rhythm.
+diff --git a/skills/impeccable/reference/live-setup.md b/skills/impeccable/reference/live-setup.md
+index 505397e..5f2a947 100644
+--- a/skills/impeccable/reference/live-setup.md
++++ b/skills/impeccable/reference/live-setup.md
+@@ -45,7 +45,7 @@ On every boot the project is scanned for HTML files under common page roots (`pu
+ If `config.cspChecked === true`, skip this whole section; the user was already asked once.
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/detect-csp.mjs
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/detect-csp.mjs"
+ ```
+ 
+ Output `{ shape, signals }`; the shape names the *patch mechanism*, so one template covers many frameworks:
+diff --git a/skills/impeccable/reference/live.md b/skills/impeccable/reference/live.md
+index 6ecbb03..6c92ce8 100644
+--- a/skills/impeccable/reference/live.md
++++ b/skills/impeccable/reference/live.md
+@@ -8,7 +8,7 @@ A running dev server with HMR (Vite, Next.js, Bun, etc.), OR a static HTML file
+ 
+ Execute in order. No step skipped, no step reordered. Every tool output in live mode may carry an `_instructions` field: it is the authoritative next step for that exact situation, with real ids and paths substituted; when it conflicts with your recollection of this document, `_instructions` wins.
+ 
+-1. `live.mjs`: boot. If the request names or implies a file, route, or app inside a monorepo, infer the concrete path and run `node .cursor/skills/impeccable/scripts/live.mjs --target <path>` instead; then run the rest of this live session from the returned `projectRoot`. The boot resolves the app root from dev-server config files and persists it in `.impeccable/live/roots.json`; every helper re-anchors to that manifest at startup (a wrong cwd cannot fork session state), PRODUCT.md / DESIGN.md are discovered upward to the git root, and relative helper args like `--file` resolve against the app root.
++1. `live.mjs`: boot. If the request names or implies a file, route, or app inside a monorepo, infer the concrete path and run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live.mjs" --target <path>` instead; then run the rest of this live session from the returned `projectRoot`. The boot resolves the app root from dev-server config files and persists it in `.impeccable/live/roots.json`; every helper re-anchors to that manifest at startup (a wrong cwd cannot fork session state), PRODUCT.md / DESIGN.md are discovered upward to the git root, and relative helper args like `--file` resolve against the app root.
+ 2. Open the app URL that serves `pageFile` (infer from `package.json`, docs, terminal output, or an open tab). Never use `serverPort`; it's the helper, not the app. **Cursor:** `browser_navigate` to that URL before polling; do not skip. **Other harnesses:** use the available browser tool; if the URL is uncertain, ask the user once.
+ 3. Poll loop with the default long timeout (600000 ms). Run `live-poll.mjs` again immediately after every event or `--reply`; Codex runs this one-shot poll in the foreground. Never pass a short `--timeout=`. The global bar's **Impeccable mark** dims with a pulsing amber dot when nothing is polling `/poll`; restart `live-poll.mjs` to reconnect.
+ 4. On `generate`: reuse `event.scaffold` when present; read the screenshot if present; load the action's reference; deliver variants; `--reply done`; poll again. Generate in this thread: you already hold the project's tokens and layout. The overlay preview IS the verification channel; do not screenshot, re-render, or QA variants between generate and accept. Apply craft-floor's contrast, spacing, and type floors by construction as you write; full verification runs once at accept on the chosen variant.
+@@ -31,7 +31,7 @@ Chat is overhead. No recap, no tutorial output, no pasting PRODUCT / DESIGN bodi
+ 
+ ```
+ LOOP:
+-  node .cursor/skills/impeccable/scripts/live-poll.mjs   # default long timeout; no --timeout=
++  node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-poll.mjs"   # default long timeout; no --timeout=
+   Read JSON; dispatch on "type"
+ 
+   "generate"  → Handle Generate; reply done; LOOP
+@@ -52,7 +52,7 @@ LOOP:
+ ## Start
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/live.mjs
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live.mjs"
+ ```
+ 
+ Output JSON: `{ ok, serverPort, serverToken, pageFiles, roots, hasProduct, product, productPath, hasDesign, design, designPath, hasSurfaceBrief, surfaceBrief }`. `roots` is the resolved root manifest; `projectRoot` mirrors `roots.appRoot`. The surface brief rides along; do not shell out to `surface-brief.mjs` separately. Precedence for generation: **DESIGN.md wins on visual decisions; PRODUCT.md wins on durable product and voice decisions; the surface brief wins on this surface's strategy.** When DESIGN.md is missing, identity is **not** absent; extract it from CSS variables, computed styles, and sibling components (Step 4 Phase A). Identity preservation is the default; departure requires the user's explicit redesign intent.
+@@ -66,9 +66,9 @@ If output is `{ ok: false, error: "config_missing" | "config_invalid", path }`,
+ The append-only journal under `.impeccable/live/sessions/` is canonical durable state (not project source). When the chat was interrupted, polling was missed, the helper restarted, or the browser reloaded:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/live-status.mjs      # helper state, active sessions, queued events; works with the helper down
+-node .cursor/skills/impeccable/scripts/live-resume.mjs --id SESSION_ID   # active snapshot, pending event, next safe action
+-node .cursor/skills/impeccable/scripts/live-complete.mjs --id SESSION_ID # canonical manual final acknowledgement after verified cleanup
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-status.mjs"      # helper state, active sessions, queued events; works with the helper down
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-resume.mjs" --id SESSION_ID   # active snapshot, pending event, next safe action
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-complete.mjs" --id SESSION_ID # canonical manual final acknowledgement after verified cleanup
+ ```
+ 
+ Server restart rule: start `live-server.mjs` again, then poll; startup requeues unacknowledged events, so never ask the user to click Go again unless `live-resume.mjs` says no active session exists.
+@@ -87,7 +87,7 @@ Speed matters; the user is watching the selected element. Reuse preflight metada
+ 2. If `event.scaffold` is present, use it and do **not** run the helper again. Otherwise:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/live-insert.mjs --id EVENT_ID --count EVENT_COUNT --position after \
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-insert.mjs" --id EVENT_ID --count EVENT_COUNT --position after \
+   --element-id "ANCHOR_ID" --classes "class1,class2" --tag "section" --text "ANCHOR_TEXT"
+ ```
+ 
+@@ -108,7 +108,7 @@ When `event.scaffold` is present, the helper already found the source and comput
+ **On source-preview targets `event.scaffold` carries `sourceWritten: false`.** The helper did NOT write the wrapper; it hands you `scaffold.wrapperBlock` plus the picked element's source range (`replaceStartLine`, `replaceEndLine`, 1-indexed). Write the wrapper **and** all variants in ONE edit: splice your variants into `wrapperBlock` at the "Variants: insert below this line" marker, then replace lines `[replaceStartLine, replaceEndLine]` with the result. A separate scaffold write reloads the framework before your variant write lands and strands the browser at 0/N. (`replaceEndLine < replaceStartLine` means insert mode: insert, remove nothing.) The `svelte-component` path never sets `sourceWritten`.
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/live-wrap.mjs --id EVENT_ID --count EVENT_COUNT --element-id "ELEMENT_ID" --classes "class1,class2" --tag "div" --text "TEXT_SNIPPET"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-wrap.mjs" --id EVENT_ID --count EVENT_COUNT --element-id "ELEMENT_ID" --classes "class1,class2" --tag "div" --text "TEXT_SNIPPET"
+ ```
+ 
+ Flag mapping (keep separate, never collapse into `--query`): `--element-id` ← `event.element.id`; `--classes` ← classes joined with commas; `--tag` ← tagName; `--text` ← first ~80 chars of textContent, **every call**: it disambiguates repeated sibling components, without it wrap lands on the first match. If `event.pageUrl` implies the file, pass `--file PATH`. If `--text` still matches several candidates, wrap exits `{ error: "element_ambiguous", candidates, fallback: "agent-driven" }`: pick the right range from page context and write the wrapper manually per the fallback flow.
+@@ -240,14 +240,14 @@ Three kinds: `range` (slider; drives `--p-<id>`; author `var(--p-color-amount, 0
+ ### 8. Signal done
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/live-poll.mjs --reply EVENT_ID done --file RELATIVE_PATH
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-poll.mjs" --reply EVENT_ID done --file RELATIVE_PATH
+ ```
+ 
+ `RELATIVE_PATH` is relative to project root; the browser fetches source directly if the dev server lacks HMR. Then poll again immediately.
+ 
+ ### Aborting an in-flight session
+ 
+-If wrap or generation fails after the browser flipped to GENERATING, tell the **browser** so its bar resets: `node .cursor/skills/impeccable/scripts/live-poll.mjs --reply EVENT_ID error "Short reason"`. Never use `live-accept --discard` for this (pure file mutator, browser never sees it, bar sticks on dots); `--discard` is only source-side cleanup for a discard the browser itself initiated.
++If wrap or generation fails after the browser flipped to GENERATING, tell the **browser** so its bar resets: `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-poll.mjs" --reply EVENT_ID error "Short reason"`. Never use `live-accept --discard` for this (pure file mutator, browser never sees it, bar sticks on dots); `--discard` is only source-side cleanup for a discard the browser itself initiated.
+ 
+ ## Handle fallback
+ 
+@@ -288,7 +288,7 @@ Event: `{id, _acceptResult, _completionAck}`. The poll script already restored t
+ 
+ ## Handle `steer`
+ 
+-Event: `{id, message, pageUrl}`: page-level direction from the global bar's Steer control (typed or spoken), no element context, no variant cycling. Read `message`, inspect the page or files as needed, make edits or answer in prose. Reply `node .cursor/skills/impeccable/scripts/live-poll.mjs --reply EVENT_ID steer_done ["Optional short toast"]`, or on failure `--reply EVENT_ID error "Short reason"`, then poll immediately. No separate pickup reply; the Steer bar unlocks on `steer_done` or `error`.
++Event: `{id, message, pageUrl}`: page-level direction from the global bar's Steer control (typed or spoken), no element context, no variant cycling. Read `message`, inspect the page or files as needed, make edits or answer in prose. Reply `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-poll.mjs" --reply EVENT_ID steer_done ["Optional short toast"]`, or on failure `--reply EVENT_ID error "Short reason"`, then poll immediately. No separate pickup reply; the Steer bar unlocks on `steer_done` or `error`.
+ 
+ ## Handle `prefetch`
+ 
+@@ -304,7 +304,7 @@ When native subagents are available, delegate source edits to `impeccable_manual
+ 
+ If `repair` is present, the previous Apply changed source but final validation failed. Fix the current source and return the same canonical JSON result; do not roll files back yourself. The browser will ask the user before any rollback.
+ 
+-After source edits finish, reply exactly once with `node .cursor/skills/impeccable/scripts/live-poll.mjs --reply EVENT_ID done --data '{"status":"done","appliedEntryIds":["8hexid"],"failed":[],"files":["src/page.html"],"notes":[]}'`. Use `status:"partial"` or `status:"error"` with `failed[]` when not every entry applied. Then poll again. Never reply without the event id; `--reply done --file ...` is invalid for manual Apply.
++After source edits finish, reply exactly once with `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-poll.mjs" --reply EVENT_ID done --data '{"status":"done","appliedEntryIds":["8hexid"],"failed":[],"files":["src/page.html"],"notes":[]}'`. Use `status:"partial"` or `status:"error"` with `failed[]` when not every entry applied. Then poll again. Never reply without the event id; `--reply done --file ...` is invalid for manual Apply.
+ 
+ ## Exit
+ 
+@@ -313,7 +313,7 @@ The user stops live mode by saying so in chat, closing the tab (SSE drops; poll
+ ## Cleanup
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/live-server.mjs stop
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/live-server.mjs" stop
+ ```
+ 
+ Stops the helper and runs `live-inject.mjs --remove` to strip the injected script (use `stop --keep-inject` to keep it for a quick restart; `.impeccable/live/config.json` persists as project config). Then search for and remove any leftover `impeccable-variants-start` wrappers and `impeccable-carbonize-start` blocks.
+diff --git a/skills/impeccable/reference/new-work.md b/skills/impeccable/reference/new-work.md
+index 2f1ce95..9047857 100644
+--- a/skills/impeccable/reference/new-work.md
++++ b/skills/impeccable/reference/new-work.md
+@@ -34,7 +34,7 @@ Inherit its world and composition. Resolve only the new purpose, content, hierar
+ 
+ Keep the visual system fixed. Derive five to seven materially different structures from the content, task, and user behavior, ordered by resonance. For a genuinely open whole page, screen, or flow, run:
+ 
+-`node .cursor/skills/impeccable/scripts/concept-seed.mjs --scope surface --mode <mode>`
++`node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/concept-seed.mjs" --scope surface --mode <mode>`
+ 
+ The script assigns which structure gets built; your top-ranked structure is what every run would ship, so the dice come from outside. Never run the script for a local extension or a precisely specified narrow request; shape those directly.
+ 
+@@ -43,10 +43,10 @@ The script assigns which structure gets built; your top-ranked structure is what
+ 1. Name the product's unique mechanism in one sentence, the audience's real scene, its cultural home, and what this first surface must prove. Note the page this category always ships and its predictable opposite; name both as the rut and keep them out of the seven-candidate list. A brief that paints its own picture, a product name, a titled artifact, a governing metaphor, adds its literal reading to the rut: spend at most one candidate on it and derive the rest from elsewhere in the audience's world.
+ 2. From that cultural world, list seven concrete visual systems, artifacts, places, or rituals the audience knows by heart, each with one line on why it resonates and can carry the mechanism, ordered by resonance. The audience's world includes its graphic and screen traditions, not only its physical objects: the notation, publications, identity programs, data graphics, and interfaces it reads daily; a nameable abstract system (a school of poster, a documentation standard) is as concrete a candidate as any artifact. What would this thing look like as a physical object; what did its world look like before the web? Near-duplicates count once. When more than three of the seven share one material family, the derivation stopped at the subject's most obvious artifact; dig until the list spans at least three families.
+ 3. Turn that material into complete directions: each joins a reusable visual world to a concrete first-surface experience.
+-4. Run `node .cursor/skills/impeccable/scripts/concept-seed.mjs --scope direction --mode <mode>` and follow what it prints. This step has no substitute and no skip condition: on a new or replacement world, writing artifact code before this script has run and its assignment is acknowledged is a contract violation, whatever the harness, the model, or the time pressure, because the roll is the mechanism that keeps every run from converging on the category default. The script assigns which direction gets built and deals catalog challengers. Fuse each challenger before judging it: the challenger supplies the form and its system grammar, the product supplies every fact, and clarity wins conflicts. Weigh fused challengers against the assigned direction on exactly two axes, audience identification and product clarity; losing to strong grounded material is a valid outcome, and beating a thin or tool-monoculture list is the point.
++4. Run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/concept-seed.mjs" --scope direction --mode <mode>` and follow what it prints. This step has no substitute and no skip condition: on a new or replacement world, writing artifact code before this script has run and its assignment is acknowledged is a contract violation, whatever the harness, the model, or the time pressure, because the roll is the mechanism that keeps every run from converging on the category default. The script assigns which direction gets built and deals catalog challengers. Fuse each challenger before judging it: the challenger supplies the form and its system grammar, the product supplies every fact, and clarity wins conflicts. Weigh fused challengers against the assigned direction on exactly two axes, audience identification and product clarity; losing to strong grounded material is a valid outcome, and beating a thin or tool-monoculture list is the point.
+ 5. Present one direction, fully committed: its world, first viewport, visitor path, signature interaction, cross-surface reach, and honest risk. Alongside it, offer the hand's challengers as named alternates, the weighing's verdict written on each as its one-line case, an honest "fuses poorly because X" included; the weighing informs the user's choice, it never pre-empts it. A hand holds at most three challengers: when the roll deals more, the three strongest join the hand and the rest wait in the re-roll pool, noted in one line; dropping a challenger from the hand itself takes a named product-truth failure, disclosed. Add re-roll with an optional one-line steer. Never present a ranked menu of your own grounded candidates; a lineup of those invites the safest card. The two channels share this structure and differ only in richness: cards and boards on the decision page, names and one-liners through the structured tool; the structured tool's option list also carries the standing exit as its last option.
+ 
+-The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it, in the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path, convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. A standing preference gets recorded as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. You may re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Present the decision visually: write an options payload with the assigned direction leading, the dealt challengers as alternates carrying their QUALITY BAR cards, and re-roll, steer, plus canon enabled; a degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Give every card the same anatomy, thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (run the script with `--schema` for the exact shape); the page renders identity from these fields, and a challenger's catalog image rides as labeled inspiration, never as the promise of the build. Author `canonCard` too: the category standard as one honest card with the same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `node .cursor/skills/impeccable/scripts/serve-question.mjs --start --payload <file>` (run it with `--schema` first for the exact payload shape). It daemonizes, prints the page URL and a key, and exits immediately; now open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. Exit 4 means the page was closed without an answer: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may instead run the script without `--start` and let it auto-open and block. Only a session where no browser can open at all, headless, CI, an eval worker, a remote shell with no display, puts the same decision through the structured question tool instead; the script self-detects these environments and exits 2 with that advice, so treat exit 2 as this fallback, never as an error to retry.
++The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it, in the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path, convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. A standing preference gets recorded as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. You may re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Present the decision visually: write an options payload with the assigned direction leading, the dealt challengers as alternates carrying their QUALITY BAR cards, and re-roll, steer, plus canon enabled; a degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Give every card the same anatomy, thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (run the script with `--schema` for the exact shape); the page renders identity from these fields, and a challenger's catalog image rides as labeled inspiration, never as the promise of the build. Author `canonCard` too: the category standard as one honest card with the same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/serve-question.mjs" --start --payload <file>` (run it with `--schema` first for the exact payload shape). It daemonizes, prints the page URL and a key, and exits immediately; now open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. Exit 4 means the page was closed without an answer: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may instead run the script without `--start` and let it auto-open and block. Only a session where no browser can open at all, headless, CI, an eval worker, a remote shell with no display, puts the same decision through the structured question tool instead; the script self-detects these environments and exits 2 with that advice, so treat exit 2 as this fallback, never as an error to retry.
+ 
+ When image generation exists, every card also declares a `sketch` path under `.impeccable/sketches/`, the canon card included. Serve the page first, then produce the sketches; the page shimmer-waits per slot and the user may answer before they land. Render every sketch through one shared frame so the comparison stays about direction, never rendering luck: the requested surface's first viewport as a flat, matte design sketch in that card's own palette and type character, deliberately unfinished, no photorealism, no gloss, identical framing across cards; a candidate whose sketch looks more finished than the others has broken the comparison, not won it. The frame's aspect is the surface's own: a native app or mobile-first surface sketches portrait at its device viewport, a desktop web surface landscape, and the decision page adapts to either, so a phone screen sketched landscape is a broken frame, not a neutral default. The only legible text in a sketch is the product's real name and one real headline; every other text region is greeked, indistinct lines standing where copy will go, because a sketch that renders invented specs, prices, or dates puts claims in front of the user that PRODUCT.md never made. Produce in the order the user reads: the assigned card, then the hand, then canon, each file written the moment it is done. When the harness runs subagents in parallel, fan the set out as one agent per card: each spawn is the shipped asset producer with a single-sketch packet, that card's fields, PRODUCT.md, the shared frame, and the card's declared path, up to four in flight at once. A slot still empty when its agent returns is regenerated inline, and a slot still empty when the user answers is dropped without ceremony; no other supervision is owed. Without parallel subagents, generate in the main thread after serving, in the same reading order, and let the harness's own generation display carry the progress; the wait for the answer follows the last file. A sketch answers which world, never which composition: the comp round still renders its full set, and the chosen card's sketch seeds at most one probe. With no image generation, the cards carry their identity in palette chips and facts, and that page is complete, not a lesser version.
+ 
+@@ -72,9 +72,9 @@ On a new or replacement world, DESIGN.md is written at finish, from the built wo
+ 
+ If the work establishes durable strategy for a route or artifact, read its existing surface brief, then update it:
+ 
+-`node .cursor/skills/impeccable/scripts/surface-brief.mjs read <primary-target>`
++`node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/surface-brief.mjs" read <primary-target>`
+ 
+-`node .cursor/skills/impeccable/scripts/surface-brief.mjs write <primary-target> <body-file> [related-target ...]`
++`node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/surface-brief.mjs" write <primary-target> <body-file> [related-target ...]`
+ 
+ Keep the brief small: scope and visitor mode; audience, job, action/task, proof/content, and constraints; chosen direction and memorable moment; unresolved decisions. Do not copy global product truth or DESIGN.md tokens into it.
+ 
+@@ -100,6 +100,6 @@ Preserve semantics, accessibility, performance, responsiveness, project conventi
+ 
+ Inspect desktop and mobile in one batched screenshot round, critique the render against the user's request and the direction contract, fix material gaps, and confirm with one final round; two rounds is the ceiling, and fixes batch between them rather than earning per-tweak screenshots. When an approved comp exists, the critique is a side-by-side: view the comp region and the build region together, the hero and each section as its own crop at legible scale, never one full-page thumbnail, which hides exactly the failures that matter, crude controls, wrong lettering character, flattened material, behind a superficially similar section order. On a Persuade surface, verify the mode did its job: a first-time visitor should know what this is, why it matters, and what to do within seconds, in the form's own vocabulary.
+ 
+-After the second inspection round the build thread's polishing is over: no further defect hunts, micro-edit scripts, or rebuilds here; whatever remains ships through the handoffs, where a fresh context does the finding better and cheaper. Where this harness runs no design hook, run `node .cursor/skills/impeccable/scripts/detect.mjs --json` on the changed targets once here, fix what is mechanical, and pass the remaining findings to the reviewer; a hookless build that skips this ships every tell the hook exists to catch. Capture desktop and mobile screenshots to files, then spawn the shipped finish reviewer, `impeccable-finish-reviewer` (`impeccable_finish_reviewer` in codex; `/impeccable-finish-reviewer` in Cursor; on GitHub Copilot say "Use the impeccable-finish-reviewer agent"), with the original request, confirmed answers, the artifact path, the screenshot paths, its direction contract, existing hook findings, the QUALITY BAR card and approved comp paths, and the craft-floor reference path. The reviewer has no browser; screenshots you fail to pass are checks it cannot run. Verify its return carries the five contract sections; on an empty or thrashed return, respawn once with the same inputs before doing anything else. This review never runs inside the build thread and never inherits it: spawn the reviewer fresh, with no forked conversation history (`fork_turns: 0` in codex); a reviewer that inherits your transcript inherits your framing, your optimism, and your abstractions, and everything it needs travels in the inputs above. Only a harness whose tool surface has no subagent capability at all substitutes a fresh in-thread pass after stepping fully out of the build context, run from [degraded/finish-reviewer.md](degraded/finish-reviewer.md), and a substituted or failed-and-replaced review is disclosed in one line at finish, never silently. When the reviewer's first material fix is a rebuild directive, fidelity failed wholesale rather than in patches, so skip the fix batch: put that verdict in front of the user with the named comp regions and let them choose between a re-derivation and shipping as it stands. Otherwise apply the material fixes in one batch, rebuild once, and recapture the same viewports. A recapture measures positions, loading, and overflow; it cannot measure whether a fix reached the quality the finding named, so send the recaptured screenshots back to the same reviewer for a verdict scoring every material fix resolved, partial, or unresolved (through the harness's agent continuation; without one, run the scoring fresh from [degraded/finish-reviewer.md](degraded/finish-reviewer.md)'s Verdict Pass). Fixes scored partial or unresolved get another batch, recapture, and verdict. Two rounds is the budget an unattended run ends at; an attended session's ceiling belongs to the user, so when the second verdict still lists open items, put the table in front of them and let them choose between shipping as it stands and funding another round. Whoever is deciding, stop the moment a round resolves nothing, and the reviewer's findings are the only list you work from, never your own re-opened hunt. Report the final verdict table to the user as it stands, open items included, under the reviewer's own disposition word: a table with open material findings is never announced as a pass, and never under a softer label than the reviewer wrote. Do not run a second detector.
++After the second inspection round the build thread's polishing is over: no further defect hunts, micro-edit scripts, or rebuilds here; whatever remains ships through the handoffs, where a fresh context does the finding better and cheaper. Where this harness runs no design hook, run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/detect.mjs" --json` on the changed targets once here, fix what is mechanical, and pass the remaining findings to the reviewer; a hookless build that skips this ships every tell the hook exists to catch. Capture desktop and mobile screenshots to files, then spawn the shipped finish reviewer, `impeccable-finish-reviewer` (`impeccable_finish_reviewer` in codex; `/impeccable-finish-reviewer` in Cursor; on GitHub Copilot say "Use the impeccable-finish-reviewer agent"), with the original request, confirmed answers, the artifact path, the screenshot paths, its direction contract, existing hook findings, the QUALITY BAR card and approved comp paths, and the craft-floor reference path. The reviewer has no browser; screenshots you fail to pass are checks it cannot run. Verify its return carries the five contract sections; on an empty or thrashed return, respawn once with the same inputs before doing anything else. This review never runs inside the build thread and never inherits it: spawn the reviewer fresh, with no forked conversation history (`fork_turns: 0` in codex); a reviewer that inherits your transcript inherits your framing, your optimism, and your abstractions, and everything it needs travels in the inputs above. Only a harness whose tool surface has no subagent capability at all substitutes a fresh in-thread pass after stepping fully out of the build context, run from [degraded/finish-reviewer.md](degraded/finish-reviewer.md), and a substituted or failed-and-replaced review is disclosed in one line at finish, never silently. When the reviewer's first material fix is a rebuild directive, fidelity failed wholesale rather than in patches, so skip the fix batch: put that verdict in front of the user with the named comp regions and let them choose between a re-derivation and shipping as it stands. Otherwise apply the material fixes in one batch, rebuild once, and recapture the same viewports. A recapture measures positions, loading, and overflow; it cannot measure whether a fix reached the quality the finding named, so send the recaptured screenshots back to the same reviewer for a verdict scoring every material fix resolved, partial, or unresolved (through the harness's agent continuation; without one, run the scoring fresh from [degraded/finish-reviewer.md](degraded/finish-reviewer.md)'s Verdict Pass). Fixes scored partial or unresolved get another batch, recapture, and verdict. Two rounds is the budget an unattended run ends at; an attended session's ceiling belongs to the user, so when the second verdict still lists open items, put the table in front of them and let them choose between shipping as it stands and funding another round. Whoever is deciding, stop the moment a round resolves nothing, and the reviewer's findings are the only list you work from, never your own re-opened hunt. Report the final verdict table to the user as it stands, open items included, under the reviewer's own disposition word: a table with open material findings is never announced as a pass, and never under a softer label than the reviewer wrote. Do not run a second detector.
+ 
+ Then spawn the shipped documenter, `impeccable-documenter` (`impeccable_documenter` in codex), with the project root, the artifact path, the direction contract, PRODUCT.md, the [document.md](document.md) reference path, and the boundary to write at; it records DESIGN.md and the sidecar from the built world, ground truth over intention; without subagents the pass runs from [degraded/documenter.md](degraded/documenter.md). A clean detector pass is not finished; finished is the contract kept, the comp honored, the review closed, and the system recorded.
+diff --git a/skills/impeccable/reference/polish.md b/skills/impeccable/reference/polish.md
+index f7ad2f4..39082ce 100644
+--- a/skills/impeccable/reference/polish.md
++++ b/skills/impeccable/reference/polish.md
+@@ -29,7 +29,7 @@ Use the feature yourself at representative desktop and mobile sizes. Determine:
+ If a prior critique exists, use it as one input:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/critique-storage.mjs latest "<resolved target>"
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/critique-storage.mjs" latest "<resolved target>"
+ ```
+ 
+ Exit 0 returns the latest snapshot; incorporate relevant P0/P1 findings and name the snapshot read. Exit 2 means none exists. Perform an independent pass either way.
+diff --git a/skills/impeccable/reference/routing.md b/skills/impeccable/reference/routing.md
+index 0568954..ebf255d 100644
+--- a/skills/impeccable/reference/routing.md
++++ b/skills/impeccable/reference/routing.md
+@@ -2,7 +2,7 @@
+ 
+ Read this when the user invokes `/impeccable` with no argument. They are asking "what should I do?" Make the menu context-aware instead of static.
+ 
+-Setup has already run `context.mjs`. If that reported `NO_PRODUCT_MD`, the project has no captured context yet: lead the menu with `/impeccable init` as the top recommendation (one line on why) and still show the rest below; don't silently jump into init. Otherwise run `node .cursor/skills/impeccable/scripts/context-signals.mjs` once and read its JSON, then lead with the **2-3 highest-value next commands**, each with a one-line reason pulled from the signals, followed by the full menu (the Commands table in SKILL.md, grouped by category). **Never auto-run a command; the recommendation is a suggestion the user confirms.**
++Setup has already run `context.mjs`. If that reported `NO_PRODUCT_MD`, the project has no captured context yet: lead the menu with `/impeccable init` as the top recommendation (one line on why) and still show the rest below; don't silently jump into init. Otherwise run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/context-signals.mjs"` once and read its JSON, then lead with the **2-3 highest-value next commands**, each with a one-line reason pulled from the signals, followed by the full menu (the Commands table in SKILL.md, grouped by category). **Never auto-run a command; the recommendation is a suggestion the user confirms.**
+ 
+ Reason over the signals; there is no score to obey:
+ 
+@@ -13,6 +13,6 @@ Reason over the signals; there is no score to obey:
+ - `devServer.running` true → `live` is available for in-browser iteration; if false, don't lead with `live`. **`live` and the bundled `detect.mjs` are web-only.** If `setup.platform` is `ios`, `android`, or `adaptive`, don't lead with either; the browser overlay and the HTML rule engine don't apply to native app code.
+ - Otherwise group by intent (build new / improve what's there / iterate visually), tailored to the current surface and `setup.platform`.
+ 
+-**If `scan.targets` is non-empty and `setup.platform` is not `ios`/`android`/`adaptive`, run `node .cursor/skills/impeccable/scripts/detect.mjs --json <scan.targets joined by spaces>` once** (the bundled detector over local files: no network, no npx; it reads HTML/CSS, so skip it for native projects). `scan.via` tells you what they are: `git-changes` (the markup/style files in your dirty tree, the most relevant set), `source-dir` (e.g. `src`, `app`), `html`, or `root`. Fold the hits into your picks: many quality / contrast hits → `audit` or `polish`; a specific slop family → the matching command (gradient text or eyebrows → `quieter` / `typeset`, flat or gray palette → `colorize`, and so on). It's a real, current signal that beats guessing. If detect errors or the tree is large and slow, skip it and recommend the user run `audit` themselves; never block the suggestion on it.
++**If `scan.targets` is non-empty and `setup.platform` is not `ios`/`android`/`adaptive`, run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/detect.mjs" --json <scan.targets joined by spaces>` once** (the bundled detector over local files: no network, no npx; it reads HTML/CSS, so skip it for native projects). `scan.via` tells you what they are: `git-changes` (the markup/style files in your dirty tree, the most relevant set), `source-dir` (e.g. `src`, `app`), `html`, or `root`. Fold the hits into your picks: many quality / contrast hits → `audit` or `polish`; a specific slop family → the matching command (gradient text or eyebrows → `quieter` / `typeset`, flat or gray palette → `colorize`, and so on). It's a real, current signal that beats guessing. If detect errors or the tree is large and slow, skip it and recommend the user run `audit` themselves; never block the suggestion on it.
+ 
+ Keep it to 2-3 pointed picks with the exact command to type. The menu stays the fallback; the recommendation is the lede.
+diff --git a/skills/impeccable/reference/typeset.md b/skills/impeccable/reference/typeset.md
+index 1a7c153..68d0050 100644
+--- a/skills/impeccable/reference/typeset.md
++++ b/skills/impeccable/reference/typeset.md
+@@ -24,7 +24,7 @@ When a sub-agent tool is available and permitted, run these independently; other
+ 2. **Mechanical scan:** run:
+ 
+ ```bash
+-node .cursor/skills/impeccable/scripts/detect.mjs --json --scope type [target files or dirs]
++node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/detect.mjs" --json --scope type [target files or dirs]
+ ```
+ 
+ Also inspect dynamic or arbitrary font values the detector cannot interpret. Synthesize both assessments before editing, noting what each caught alone. A clean scan is a floor, not proof of good typography.
+diff --git a/skills/impeccable/reference/visualize.md b/skills/impeccable/reference/visualize.md
+index 1491503..757cc55 100644
+--- a/skills/impeccable/reference/visualize.md
++++ b/skills/impeccable/reference/visualize.md
+@@ -40,7 +40,7 @@ Treat the comp as a north star, not something to trace, and know what that allow
+ 
+ ## Produce only the assets the build needs
+ 
+-Generation context is part of the asset: a build composed by a thread that never saw the prompts places assets it does not understand. So prefer generating build-critical imagery in the build thread when the budget allows, and when a subagent produces assets instead, every asset must carry its prompt, and the builder reads those prompts before composing a single one of them. The carrier is uniform across harnesses: after generating any image with any tool, native or `generate-image.mjs` (which does it automatically), run `node .cursor/skills/impeccable/scripts/embed-prompt.mjs <image> --prompt "<the prompt used>"` so the intent lives inside the file itself and survives copies between machines and harnesses; `--read` recovers it from any impeccable-generated image.
++Generation context is part of the asset: a build composed by a thread that never saw the prompts places assets it does not understand. So prefer generating build-critical imagery in the build thread when the budget allows, and when a subagent produces assets instead, every asset must carry its prompt, and the builder reads those prompts before composing a single one of them. The carrier is uniform across harnesses: after generating any image with any tool, native or `generate-image.mjs` (which does it automatically), run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/embed-prompt.mjs" <image> --prompt "<the prompt used>"` so the intent lives inside the file itself and survives copies between machines and harnesses; `--read` recovers it from any impeccable-generated image.
+ 
+ When clean raster ingredients are required and the harness runs subagents, use the shipped asset producer, `impeccable-asset-producer` (`impeccable_asset_producer` in codex; `/impeccable-asset-producer` in Cursor; on GitHub Copilot say "Use the impeccable-asset-producer agent"): give it the approved comp, output paths, required dimensions and formats, transparency needs, crop notes, and what must remain semantic code. Otherwise produce the minimum required assets in the current thread by the book: load [degraded/asset-producer.md](degraded/asset-producer.md) and follow it inline, with whatever generation exists, the native tool or generate-image.mjs.
+ 
+diff --git a/skills/impeccable/scripts/context.mjs b/skills/impeccable/scripts/context.mjs
+index b8413e0..9da4517 100644
+--- a/skills/impeccable/scripts/context.mjs
++++ b/skills/impeccable/scripts/context.mjs
+@@ -69,7 +69,7 @@ const VISUAL_SCAN_DEPTH_LIMIT = 4;
+ // ─── Update check ──────────────────────────────────────────────────────────
+ // Piggyback a lightweight skill-version check on the once-per-session boot.
+ // When a newer skill ships, append an UPDATE_AVAILABLE directive so the agent
+-// can offer `npx impeccable update`. Everything here is best-effort and
++// can offer `/design doctor`. Everything here is best-effort and
+ // silent on failure: a network problem, sandbox, or missing cache must never
+ // block context output or print an error.
+ 
+@@ -79,6 +79,7 @@ const UPDATE_CACHE_PATH =
+ const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // throttle the network poll to once a day
+ const RENOTIFY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // don't re-surface the same version for a week
+ const FETCH_TIMEOUT_MS = 1200;
++const PLUGIN_MANAGED_UPDATES = true;
+ 
+ export function resolveContextDir(cwd = process.cwd(), options = {}) {
+   return resolveContext(cwd, options).contextDir;
+@@ -1017,8 +1018,8 @@ function buildUpdateDirective(localVersion, latestVersion) {
+     `UPDATE_AVAILABLE: A newer Impeccable skill is available ` +
+     `(installed v${localVersion}, latest v${latestVersion}). ` +
+     `Before continuing, ask the user once: "A newer Impeccable (v${latestVersion}) is available. ` +
+-    `Update now? It runs \`npx impeccable update\`." ` +
+-    `If they agree, run \`npx impeccable update\` (the update applies to the next session, not this one). ` +
++    `Update now? It runs \`/design doctor\`." ` +
++    `If they agree, run \`/design doctor\` (the update applies to the next session, not this one). ` +
+     `Either way, continue the current task without waiting, and do not raise this again.`
+   );
+ }
+@@ -1044,6 +1045,7 @@ function updateCheckDisabledByConfig(cwd = process.cwd()) {
+ 
+ async function computeUpdateDirective(now = Date.now()) {
+   try {
++    if (PLUGIN_MANAGED_UPDATES) return null;
+     if (process.env.IMPECCABLE_NO_UPDATE_CHECK) return null;
+     if (updateCheckDisabledByConfig()) return null;
+     const localVersion = readLocalSkillVersion();
+@@ -1234,7 +1236,7 @@ function valueHasHookMarker(value) {
+ 
+ function hookEnabledAt(root) {
+   if (truthyEnv(process.env.IMPECCABLE_HOOK_DISABLED)) return false;
+-  let enabled = true;
++  let enabled = !(process.env.CURSOR_PLUGIN_ROOT || process.env.GELDMACHER_DESIGN_PLUGIN_ROOT);
+   for (const name of ['.impeccable/config.json', '.impeccable/config.local.json']) {
+     const raw = readJson(path.join(root, name));
+     if (raw?.hook && Object.prototype.hasOwnProperty.call(raw.hook, 'enabled')) {
+diff --git a/skills/impeccable/scripts/hook-admin.mjs b/skills/impeccable/scripts/hook-admin.mjs
+index fd3ef63..d0ac623 100644
+--- a/skills/impeccable/scripts/hook-admin.mjs
++++ b/skills/impeccable/scripts/hook-admin.mjs
+@@ -47,6 +47,7 @@ const IMPECCABLE_HOOK_COMMAND_MARKERS = [
+ ];
+ const TIMEOUT_SECONDS = 5;
+ const STATUS_MESSAGE = 'Checking UI changes';
++const PLUGIN_MANAGED_HOOK = true;
+ // The Stop deep pass scans every UI file touched in the session with the full
+ // rule set, so it gets a longer budget than the per-edit pass. Only Claude
+ // Code and Codex dispatch a native Stop hook event, so only those manifests
+@@ -119,14 +120,14 @@ const HOOK_MANIFEST_TARGETS = [
+   },
+   {
+     provider: '.cursor',
+-    skillRel: '.cursor/skills/impeccable',
++    skillRel: '${CURSOR_PLUGIN_ROOT}/skills/impeccable',
+     destRel: '.cursor/hooks.json',
+     manifest: () => ({
+       version: 1,
+       hooks: {
+         preToolUse: [
+           {
+-            command: 'node ".cursor/skills/impeccable/scripts/hook-before-edit.mjs"',
++            command: 'node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-before-edit.mjs"',
+             timeout: TIMEOUT_SECONDS,
+           },
+         ],
+@@ -300,6 +301,7 @@ function statusReport(cwd) {
+   const shared = readRawConfigFile(getConfigPath(cwd));
+   const local = readRawConfigFile(getLocalConfigPath(cwd));
+   const cfg = readConfig(cwd);
++  const explicitEnabled = hookSection(local.raw)?.enabled ?? hookSection(shared.raw)?.enabled ?? false;
+   const envKill = process.env.IMPECCABLE_HOOK_DISABLED;
+   const envState = envKill ? `IMPECCABLE_HOOK_DISABLED=${envKill}` : 'unset';
+   const cfgPath = path.relative(cwd, getConfigPath(cwd)) || '.impeccable/config.json';
+@@ -321,7 +323,7 @@ function statusReport(cwd) {
+ 
+   const lines = [
+     `Impeccable design hook`,
+-    `  state:        ${cfg.enabled ? 'enabled' : 'disabled'}`,
++    `  state:        ${explicitEnabled ? 'enabled' : 'disabled'}`,
+     `  shared file:  ${fileState(shared, cfgPath, 'using defaults; file not present')}`,
+     `  local file:   ${fileState(local, localPath, 'not present')}`,
+     `  ignoreRules:  ${cfg.ignoreRules.length ? cfg.ignoreRules.join(', ') : '(none)'}`,
+@@ -344,7 +346,9 @@ function setEnabled(cwd, value) {
+   }
+ 
+   const localTarget = writeHookConfig(cwd, { consent: 'accepted' }, { local: true });
+-  const repaired = repairHookManifests(cwd);
++  const repaired = PLUGIN_MANAGED_HOOK
++    ? { written: [], already: ['geldmacher-design plugin'], backups: [] }
++    : repairHookManifests(cwd);
+   const parts = [
+     `Design hook enabled for this project (wrote ${path.relative(cwd, target) || target}).`,
+     `Recorded local hook consent in ${path.relative(cwd, localTarget) || localTarget}.`,
+diff --git a/skills/impeccable/scripts/lib/staleness-deep.mjs b/skills/impeccable/scripts/lib/staleness-deep.mjs
+index bae03bc..3f46a48 100644
+--- a/skills/impeccable/scripts/lib/staleness-deep.mjs
++++ b/skills/impeccable/scripts/lib/staleness-deep.mjs
+@@ -275,6 +275,7 @@ function resolveHookScriptPath(token, root) {
+  */
+ export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {
+   const findings = [];
++  if (providerId === 'cursor' && (process.env.CURSOR_PLUGIN_ROOT || process.env.GELDMACHER_DESIGN_PLUGIN_ROOT)) return findings;
+   const manifests = HOOK_MANIFESTS_BY_PROVIDER[providerId] || [];
+   if (!manifests.length) return findings;
+ 
+diff --git a/skills/impeccable/scripts/pin.mjs b/skills/impeccable/scripts/pin.mjs
+index a3d1a12..7dbddb5 100644
+--- a/skills/impeccable/scripts/pin.mjs
++++ b/skills/impeccable/scripts/pin.mjs
+@@ -1,221 +1,3 @@
+ #!/usr/bin/env node
+-/**
+- * Pin/unpin sub-commands as standalone skill shortcuts.
+- *
+- * Usage:
+- *   node <scripts_path>/pin.mjs pin <command>
+- *   node <scripts_path>/pin.mjs unpin <command>
+- *
+- * `pin audit` creates a lightweight audit skill that redirects to Impeccable's audit workflow.
+- * `unpin audit` removes that shortcut.
+- *
+- * The script discovers harness directories (.claude/skills, .cursor/skills, etc.)
+- * in the project root and creates/removes the pin in all of them.
+- */
+-
+-import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync } from 'node:fs';
+-import { basename, join, resolve, dirname } from 'node:path';
+-import { fileURLToPath } from 'node:url';
+-
+-const __dirname = dirname(fileURLToPath(import.meta.url));
+-
+-// All known harness directories
+-const HARNESS_DIRS = [
+-  '.claude', '.cursor', '.gemini', '.codex', '.agents', '.github', '.grok',
+-  '.trae', '.trae-cn', '.pi', '.opencode', '.kiro', '.rovodev', '.vibe', '.qoder',
+-];
+-
+-const CODEX_HARNESSES = new Set(['.codex', '.agents']);
+-
+-// Valid sub-command names
+-const VALID_COMMANDS = [
+-  'craft', 'init', 'extract', 'document', 'shape',
+-  'critique', 'audit',
+-  'polish', 'bolder', 'quieter', 'distill', 'harden', 'onboard', 'live',
+-  'animate', 'colorize', 'typeset', 'layout', 'delight', 'overdrive',
+-  'clarify', 'adapt', 'optimize',
+-];
+-
+-// Marker to identify pinned skills (so unpin doesn't delete user skills)
+-const PIN_MARKER = '<!-- impeccable-pinned-skill -->';
+-
+-/**
+- * Walk up from startDir to find a project root.
+- */
+-function findProjectRoot(startDir = process.cwd()) {
+-  let dir = resolve(startDir);
+-  while (dir !== '/') {
+-    if (
+-      existsSync(join(dir, 'package.json')) ||
+-      existsSync(join(dir, '.git')) ||
+-      existsSync(join(dir, 'skills-lock.json'))
+-    ) {
+-      return dir;
+-    }
+-    const parent = resolve(dir, '..');
+-    if (parent === dir) break;
+-    dir = parent;
+-  }
+-  return resolve(startDir);
+-}
+-
+-/**
+- * Find harness skill directories that have an impeccable skill installed.
+- */
+-function findHarnessDirs(projectRoot) {
+-  const dirs = [];
+-  for (const harness of HARNESS_DIRS) {
+-    const skillsDir = join(projectRoot, harness, 'skills');
+-    // Only pin in harness dirs that already have impeccable installed
+-    const impeccableDir = join(skillsDir, 'impeccable');
+-    if (existsSync(impeccableDir) || existsSync(join(skillsDir, 'i-impeccable'))) {
+-      dirs.push(skillsDir);
+-    }
+-  }
+-  return dirs;
+-}
+-
+-/**
+- * Load command metadata (descriptions for pinned skills).
+- */
+-function loadCommandMetadata() {
+-  const metadataPath = join(__dirname, 'command-metadata.json');
+-  if (existsSync(metadataPath)) {
+-    return JSON.parse(readFileSync(metadataPath, 'utf-8'));
+-  }
+-  return {};
+-}
+-
+-/**
+- * Generate a pinned skill's SKILL.md content.
+- */
+-function commandPrefixForSkillsDir(skillsDir) {
+-  return CODEX_HARNESSES.has(basename(dirname(skillsDir))) ? '$' : '/';
+-}
+-
+-function generatePinnedSkill(command, metadata, commandPrefix) {
+-  const desc = metadata[command]?.description || `Shortcut for ${commandPrefix}impeccable ${command}.`;
+-  const hint = metadata[command]?.argumentHint || '[target]';
+-
+-  return `---
+-name: ${command}
+-description: "${desc}"
+-argument-hint: "${hint}"
+-user-invocable: true
+----
+-
+-${PIN_MARKER}
+-
+-This is a pinned shortcut for \`${commandPrefix}impeccable ${command}\`.
+-
+-Invoke ${commandPrefix}impeccable ${command}, passing along any arguments provided here, and follow its instructions.
+-`;
+-}
+-
+-/**
+- * Pin a command: create shortcut skill in all harness dirs.
+- */
+-function pin(command, projectRoot) {
+-  const metadata = loadCommandMetadata();
+-  const harnessDirs = findHarnessDirs(projectRoot);
+-
+-  if (harnessDirs.length === 0) {
+-    console.log('No harness directories with impeccable installed found.');
+-    return false;
+-  }
+-
+-  let created = 0;
+-
+-  for (const skillsDir of harnessDirs) {
+-    const commandPrefix = commandPrefixForSkillsDir(skillsDir);
+-    const content = generatePinnedSkill(command, metadata, commandPrefix);
+-    // Check if skill already exists (and isn't a pin)
+-    const skillDir = join(skillsDir, command);
+-    if (existsSync(skillDir)) {
+-      const existingMd = join(skillDir, 'SKILL.md');
+-      if (existsSync(existingMd)) {
+-        const existing = readFileSync(existingMd, 'utf-8');
+-        if (!existing.includes(PIN_MARKER)) {
+-          console.log(`  SKIP: ${skillDir} (non-pinned skill already exists)`);
+-          continue;
+-        }
+-      }
+-    }
+-
+-    mkdirSync(skillDir, { recursive: true });
+-    writeFileSync(join(skillDir, 'SKILL.md'), content, 'utf-8');
+-    console.log(`  + ${skillDir}`);
+-    created++;
+-  }
+-
+-  if (created > 0) {
+-    console.log(`\nPinned '${command}' as a standalone shortcut in ${created} location(s).`);
+-    console.log('Use the pinned command directly in each harness.');
+-  }
+-
+-  return created > 0;
+-}
+-
+-/**
+- * Unpin a command: remove shortcut skill from all harness dirs.
+- */
+-function unpin(command, projectRoot) {
+-  const harnessDirs = findHarnessDirs(projectRoot);
+-  let removed = 0;
+-
+-  for (const skillsDir of harnessDirs) {
+-    const skillDir = join(skillsDir, command);
+-    if (!existsSync(skillDir)) continue;
+-
+-    const skillMd = join(skillDir, 'SKILL.md');
+-    if (!existsSync(skillMd)) continue;
+-
+-    // Safety: only remove if it's a pinned skill
+-    const content = readFileSync(skillMd, 'utf-8');
+-    if (!content.includes(PIN_MARKER)) {
+-      console.log(`  SKIP: ${skillDir} (not a pinned skill)`);
+-      continue;
+-    }
+-
+-    rmSync(skillDir, { recursive: true, force: true });
+-    console.log(`  - ${skillDir}`);
+-    removed++;
+-  }
+-
+-  if (removed > 0) {
+-    console.log(`\nUnpinned '${command}' from ${removed} location(s).`);
+-    console.log(`Use Impeccable's '${command}' workflow directly to access it.`);
+-  } else {
+-    console.log(`No pinned '${command}' shortcut found.`);
+-  }
+-
+-  return removed > 0;
+-}
+-
+-// --- CLI ---
+-const [,, action, command] = process.argv;
+-
+-if (!action || !command) {
+-  console.log('Usage: node pin.mjs <pin|unpin> <command>');
+-  console.log(`\nAvailable commands: ${VALID_COMMANDS.join(', ')}`);
+-  process.exit(1);
+-}
+-
+-if (action !== 'pin' && action !== 'unpin') {
+-  console.error(`Unknown action: ${action}. Use 'pin' or 'unpin'.`);
+-  process.exit(1);
+-}
+-
+-if (!VALID_COMMANDS.includes(command)) {
+-  console.error(`Unknown command: ${command}`);
+-  console.error(`Available commands: ${VALID_COMMANDS.join(', ')}`);
+-  process.exit(1);
+-}
+-
+-const root = findProjectRoot();
+-
+-if (action === 'pin') {
+-  pin(command, root);
+-} else {
+-  unpin(command, root);
+-}
++/** Geldmacher Design owns skill packaging; project-local shortcut installation is intentionally disabled. */
++process.stdout.write('Geldmacher Design bundles Impeccable. Standalone shortcut installation is disabled; use /impeccable or /design. Maintainers update the bundle through npm run sync:impeccable.\n');
+diff --git a/agents/impeccable-asset-producer.md b/agents/impeccable-asset-producer.md
+index b56580b..e5d9393 100644
+--- a/agents/impeccable-asset-producer.md
++++ b/agents/impeccable-asset-producer.md
+@@ -56,7 +56,7 @@ Ask blockers once, globally. Missing source path/crops or output directory block
+ 
+ 7. Remove baked-in UI text, navigation, buttons, body copy, and mock chrome unless the text is part of the asset.
+ 8. Think through the final DOM/CSS representation before generating. If CSS will own radius, clipping, shadows, borders, perspective, responsive cropping, captions, or card frames, do not bake those into the bitmap.
+-9. Save outputs non-destructively in the requested project directory, and leave the intent with the file: after every generation, run `node .cursor/skills/impeccable/scripts/embed-prompt.mjs <asset> --prompt "<the prompt used>"` so the prompt is embedded in the image itself, because the build thread composes what you made and needs to know what it is looking at, and the embedding survives copies where sidecars get lost.
++9. Save outputs non-destructively in the requested project directory, and leave the intent with the file: after every generation, run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/embed-prompt.mjs" <asset> --prompt "<the prompt used>"` so the prompt is embedded in the image itself, because the build thread composes what you made and needs to know what it is looking at, and the embedding survives copies where sidecars get lost.
+ 10. Compare each output against its source crop, opening every image by its workspace-relative path; sandboxed viewers reject absolute paths. If a review/QA tool is available, run it before the final manifest, then retry each major/fatal finding once before finalizing.
+ 
+ Use `texture/pattern extraction` only when the source region is already clean enough to sample as texture. If UI, cards, labels, headings, body copy, or footer chrome must be removed to make a reusable texture or background, classify it as crop-derived cleanup or clean-plate work.

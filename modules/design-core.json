@@ -1,0 +1,31 @@
+{
+  "$schema": "./module.schema.json",
+  "schemaVersion": 1,
+  "id": "design-core",
+  "version": "0.1.0",
+  "source": {
+    "type": "first-party",
+    "url": "urn:geldmacher:design"
+  },
+  "license": "MIT",
+  "capabilities": [
+    {
+      "id": "project-integration",
+      "title": "Projektaktivierung und Diagnose",
+      "skill": "design",
+      "specificity": 100,
+      "fallback": false,
+      "triggers": ["setup", "status", "doctor"],
+      "scope": ["website", "web-app"],
+      "combinableWith": []
+    }
+  ],
+  "contributes": {
+    "skills": ["skills/design"],
+    "agents": [],
+    "rules": [],
+    "hooks": ["hooks/hooks.json"],
+    "scripts": ["scripts/design-cli.mjs", "hooks/impeccable-plugin-hook.mjs"],
+    "mcpServers": []
+  }
+}
