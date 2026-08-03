@@ -93,7 +93,7 @@ export function routeRequest(request, modules) {
 
   return {
     kind: 'clarify',
-    reason: 'Mehrere gleich spezifische kuratierte Faehigkeiten passen.',
+    reason: 'Multiple equally specific curated capabilities match.',
     options: winners.map((winner) => ({
       module: winner.module.id,
       capability: winner.capability.id,

@@ -6,8 +6,8 @@ Choose the highest-specificity matching capability. A fallback is used only when
 
 | Module | Version | Capability | Skill | Specificity | Fallback | Triggers | Scope | Combinable with |
 |---|---:|---|---|---:|---|---|---|---|
-| design-core | 0.1.0 | project-integration - Projektaktivierung und Diagnose | design | 100 | no | setup, status, doctor | website, web-app | - |
-| impeccable | 4.0.4 | general-web-design - Allgemeine Website- und Web-App-Designarbeit | impeccable | 10 | yes | design, website, web app, frontend, ui, ux, landing page, dashboard, component | website, web-app | - |
+| design-core | 0.1.0 | project-integration - Project setup and diagnostics | design | 100 | no | setup, status, doctor | website, web-app | - |
+| impeccable | 4.0.4 | general-web-design - General website and web-app design | impeccable | 10 | yes | design, website, web app, frontend, ui, ux, landing page, dashboard, component | website, web-app | - |
 
 ## Module sources
 

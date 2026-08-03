@@ -11,7 +11,7 @@
   "capabilities": [
     {
       "id": "project-integration",
-      "title": "Projektaktivierung und Diagnose",
+      "title": "Project setup and diagnostics",
       "skill": "design",
       "specificity": 100,
       "fallback": false,

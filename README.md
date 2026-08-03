@@ -1,27 +1,27 @@
 # Design
 
-`geldmacher-design` ist ein lokales Cursor-Plugin fuer die Designarbeit an Websites und Web-Apps. Es verpackt den gepinnten Impeccable-Cursor-Skill und ergaenzt einen stabilen Router, projektbezogene Diagnose, opt-in Hook-Aktivierung und eine kuratierte Modularchitektur.
+`geldmacher-design` is a Cursor plugin for website and web-app design work. It packages the pinned Impeccable Cursor skill and adds a stable router, project diagnostics, opt-in hook activation, and a curated module architecture.
 
-## Einstieg
+## Entry points
 
-- `/design <Anfrage>` routet zur engsten kuratierten Faehigkeit; allgemeine Designarbeit faellt auf Impeccable zurueck.
-- `/design setup` prueft den Projektzustand und schreibt erst nach einer ausdruecklichen Bestaetigung.
-- `/design status` und `/design doctor` sind read-only.
-- `/impeccable` bleibt der direkte Upstream-Einstieg.
+- `/design <request>` routes to the narrowest curated capability; general design work falls back to Impeccable.
+- `/design setup` checks the project state and writes only after explicit confirmation.
+- `/design status` and `/design doctor` are read-only.
+- `/impeccable` remains the direct upstream entry point.
 
-Gemeinsamer Projektkontext bleibt ausschliesslich `PRODUCT.md`, `DESIGN.md` und `.impeccable/`. Das Plugin fuehrt kein paralleles Kontextformat ein.
+Shared project context remains limited to `PRODUCT.md`, `DESIGN.md`, and `.impeccable/`. The plugin does not introduce a parallel context format.
 
-## Grenzen von Version 0.1.0
+## Version 0.1.0 boundaries
 
-- Web und Web-Apps; native iOS-/Android-Faehigkeiten werden nicht beworben.
-- Impeccable `skill-v4.0.4` ist vendet und gepinnt.
-- Keine Emil-Skills, kein MCP und keine dynamischen Laufzeitmodule.
-- Keine Selbstupdates oder Netzwerkzugriffe bei normaler Nutzung und im Release-Check.
-- Kein automatisches Entfernen projektlokaler Impeccable-Installationen oder doppelter Hooks.
+- Websites and web apps; native iOS and Android capabilities are not advertised.
+- Impeccable `skill-v4.0.4` is vendored and pinned.
+- No Emil skills, MCP servers, or dynamic runtime modules.
+- No self-updates or network access during normal use or the release check.
+- No automatic removal of project-local Impeccable installations or duplicate hooks.
 
-## Entwicklung
+## Development
 
-Node 22 oder neuer ist die Entwicklungs- und Hook-Baseline.
+Node 22 or newer is the development and hook baseline.
 
 ```bash
 npm ci
@@ -29,4 +29,4 @@ npm run release-check
 git diff --check
 ```
 
-Ein Maintainer-Sync ist ein separater, ausdruecklicher Vorgang. Details stehen in [upstream/README.md](upstream/README.md). Repository-Gates ersetzen nicht den dokumentierten Cursor-Live-Smoke.
+A maintainer sync is a separate, explicit operation. See [upstream/README.md](upstream/README.md). Repository gates do not replace the documented Cursor live smoke test.

@@ -13,7 +13,7 @@
   "capabilities": [
     {
       "id": "general-web-design",
-      "title": "Allgemeine Website- und Web-App-Designarbeit",
+      "title": "General website and web-app design",
       "skill": "impeccable",
       "specificity": 10,
       "fallback": true,
