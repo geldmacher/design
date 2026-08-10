@@ -69,7 +69,7 @@ const VISUAL_SCAN_DEPTH_LIMIT = 4;
 // ─── Update check ──────────────────────────────────────────────────────────
 // Piggyback a lightweight skill-version check on the once-per-session boot.
 // When a newer skill ships, append an UPDATE_AVAILABLE directive so the agent
-// can offer `/design doctor`. Everything here is best-effort and
+// can offer `the Design doctor command`. Everything here is best-effort and
 // silent on failure: a network problem, sandbox, or missing cache must never
 // block context output or print an error.
 
@@ -80,6 +80,7 @@ const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // throttle the network poll to o
 const RENOTIFY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // don't re-surface the same version for a week
 const FETCH_TIMEOUT_MS = 1200;
 const PLUGIN_MANAGED_UPDATES = true;
+const PLUGIN_MANAGED_HOOK = true;
 
 export function resolveContextDir(cwd = process.cwd(), options = {}) {
   return resolveContext(cwd, options).contextDir;
@@ -1018,8 +1019,8 @@ function buildUpdateDirective(localVersion, latestVersion) {
     `UPDATE_AVAILABLE: A newer Impeccable skill is available ` +
     `(installed v${localVersion}, latest v${latestVersion}). ` +
     `Before continuing, ask the user once: "A newer Impeccable (v${latestVersion}) is available. ` +
-    `Update now? It runs \`/design doctor\`." ` +
-    `If they agree, run \`/design doctor\` (the update applies to the next session, not this one). ` +
+    `Update now? It runs \`the Design doctor command\`." ` +
+    `If they agree, run \`the Design doctor command\` (the update applies to the next session, not this one). ` +
     `Either way, continue the current task without waiting, and do not raise this again.`
   );
 }
@@ -1236,7 +1237,7 @@ function valueHasHookMarker(value) {
 
 function hookEnabledAt(root) {
   if (truthyEnv(process.env.IMPECCABLE_HOOK_DISABLED)) return false;
-  let enabled = !(process.env.CURSOR_PLUGIN_ROOT || process.env.GELDMACHER_DESIGN_PLUGIN_ROOT);
+  let enabled = PLUGIN_MANAGED_HOOK ? false : true;
   for (const name of ['.impeccable/config.json', '.impeccable/config.local.json']) {
     const raw = readJson(path.join(root, name));
     if (raw?.hook && Object.prototype.hasOwnProperty.call(raw.hook, 'enabled')) {
@@ -1254,6 +1255,7 @@ function automaticHookMode(ctx) {
   }
   const activeRoot = path.resolve(ctx.projectRoot || process.cwd());
   if (!hookEnabledAt(activeRoot)) return 'none';
+  if (PLUGIN_MANAGED_HOOK) return STOP_REVIEW_PROVIDERS.has(IMPECCABLE_PROVIDER_ID) ? 'stop' : 'per-edit';
   const manifests = HOOK_MANIFESTS_BY_PROVIDER[IMPECCABLE_PROVIDER_ID] || [];
   const roots = [...new Set([process.cwd(), ctx.projectRoot, ctx.repoRoot].filter(Boolean).map((root) => path.resolve(root)))];
   for (const root of roots) {

@@ -1,8 +1,8 @@
 {
   "name": "geldmacher-design",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Marketplace-ready Cursor wrapper for curated web design workflows powered by Impeccable.",
+  "description": "Dual-target Cursor and Codex plugin for curated web design workflows powered by Impeccable.",
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/geldmacher/geldmacher-design#readme",

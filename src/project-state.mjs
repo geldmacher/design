@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { hostInvocation, resolveHost } from './host.mjs';
 import { loadModules } from './registry.mjs';
 
 const DEFAULT_PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -50,32 +51,64 @@ export function readHookActivation(projectRoot) {
   return { state: enabled ? 'enabled' : 'disabled', enabled, explicit, path: configPath };
 }
 
-export function detectProjectConflicts(projectRoot) {
+function repositoryRoot(projectRoot) {
+  let current = path.resolve(projectRoot);
+  while (true) {
+    if (fs.existsSync(path.join(current, '.git'))) return current;
+    const parent = path.dirname(current);
+    if (parent === current) return path.resolve(projectRoot);
+    current = parent;
+  }
+}
+
+function codexSkillCandidates(projectRoot) {
+  const root = path.resolve(projectRoot);
+  const repoRoot = repositoryRoot(root);
+  const candidates = [];
+  let current = root;
+  while (true) {
+    candidates.push(path.join(current, '.agents', 'skills', 'impeccable'));
+    if (current === repoRoot) break;
+    current = path.dirname(current);
+  }
+  return candidates;
+}
+
+export function detectProjectConflicts(projectRoot, options = {}) {
+  const host = resolveHost(options.host, options.env);
+  const root = path.resolve(projectRoot);
   const conflicts = [];
-  const directSkill = path.join(projectRoot, '.cursor', 'skills', 'impeccable');
-  if (fs.existsSync(directSkill)) {
+  const directSkills = host === 'cursor'
+    ? [path.join(root, '.cursor', 'skills', 'impeccable')]
+    : codexSkillCandidates(root);
+  for (const directSkill of directSkills.filter((candidate) => fs.existsSync(candidate))) {
     conflicts.push({
       id: 'direct-impeccable-installation',
       severity: 'conflict',
-      path: path.relative(projectRoot, directSkill),
-      message: 'A project-local Impeccable skill can shadow the plugin copy.',
+      host,
+      path: path.relative(root, directSkill),
+      message: host === 'cursor'
+        ? 'A project-local Cursor Impeccable skill can shadow the plugin copy.'
+        : 'A repository Codex Impeccable skill duplicates the plugin skill name.',
     });
   }
 
-  const hooksPath = path.join(projectRoot, '.cursor', 'hooks.json');
+  const hooksPath = path.join(root, host === 'cursor' ? '.cursor' : '.codex', 'hooks.json');
   const hooks = safeJson(hooksPath);
   if (hooks.malformed) {
     conflicts.push({
-      id: 'malformed-cursor-hooks',
+      id: `malformed-${host}-hooks`,
       severity: 'diagnostic',
-      path: path.relative(projectRoot, hooksPath),
-      message: 'The project Cursor hook manifest is malformed; it was not changed.',
+      host,
+      path: path.relative(root, hooksPath),
+      message: `The project ${host === 'cursor' ? 'Cursor' : 'Codex'} hook manifest is malformed; it was not changed.`,
     });
   } else if (hooks.value?.hooks && valueContainsMarker(hooks.value.hooks)) {
     conflicts.push({
       id: 'duplicate-impeccable-hook',
       severity: 'conflict',
-      path: path.relative(projectRoot, hooksPath),
+      host,
+      path: path.relative(root, hooksPath),
       message: 'A project-local Impeccable hook would run beside the plugin hook.',
     });
   }
@@ -97,20 +130,27 @@ export function projectRootFromEvent(event, fallback = process.cwd()) {
 export function inspectProject(projectRoot = process.cwd(), options = {}) {
   const pluginRoot = path.resolve(options.pluginRoot || DEFAULT_PLUGIN_ROOT);
   const root = path.resolve(projectRoot);
-  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.cursor-plugin', 'plugin.json'), 'utf8'));
+  const host = resolveHost(options.host, options.env);
+  const manifestDirectory = host === 'cursor' ? '.cursor-plugin' : '.codex-plugin';
+  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifestDirectory, 'plugin.json'), 'utf8'));
   const modules = loadModules(pluginRoot);
   const upstreamLock = JSON.parse(fs.readFileSync(path.join(pluginRoot, 'upstream', 'impeccable.lock.json'), 'utf8'));
   const skillText = fs.readFileSync(path.join(pluginRoot, 'skills', 'impeccable', 'SKILL.md'), 'utf8');
   const skillVersion = skillText.match(/^version:\s*([^\s]+)\s*$/m)?.[1] || null;
   const impeccableModule = modules.find((module) => module.id === 'impeccable');
-  const hook = readHookActivation(root);
-  const conflicts = detectProjectConflicts(root);
+  const activation = readHookActivation(root);
+  const hook = {
+    ...activation,
+    mode: host === 'cursor' ? 'pre-write' : 'post-write-stop',
+  };
+  const conflicts = detectProjectConflicts(root, { host });
   const context = {
     product: fs.existsSync(path.join(root, 'PRODUCT.md')),
     design: fs.existsSync(path.join(root, 'DESIGN.md')),
     impeccableDirectory: fs.existsSync(path.join(root, '.impeccable')),
   };
   return {
+    host,
     projectRoot: root,
     plugin: { name: manifest.name, version: manifest.version },
     upstream: {
@@ -177,8 +217,8 @@ export function setupProject(projectRoot = process.cwd(), options = {}) {
   const plan = {
     writes: enableHook ? ['.impeccable/config.json: set hook.enabled=true'] : [],
     offers: [
-      state.context.product ? 'PRODUCT.md already exists.' : 'Offer /impeccable init; do not create PRODUCT.md without confirmation.',
-      state.context.design ? 'DESIGN.md already exists.' : 'Offer /impeccable document when an incumbent design should be captured.',
+      state.context.product ? 'PRODUCT.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} init; do not create PRODUCT.md without confirmation.`,
+      state.context.design ? 'DESIGN.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} document when an incumbent design should be captured.`,
     ],
   };
 

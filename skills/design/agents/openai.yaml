@@ -1,0 +1,7 @@
+interface:
+  display_name: Design
+  short_description: Curated website and web-app design router
+  brand_color: "#7C3AED"
+  default_prompt: Use $design for a controlled website or web-app design workflow.
+policy:
+  allow_implicit_invocation: false

@@ -13,7 +13,7 @@ export function loadModules(pluginRoot = DEFAULT_ROOT, moduleDir = 'modules') {
 }
 
 function normalizeRequest(request) {
-  return String(request || '').trim().toLowerCase().replace(/^\/design\b\s*/, '');
+  return String(request || '').trim().toLowerCase().replace(/^[/$]design\b\s*/, '');
 }
 
 function triggerMatches(input, trigger) {
@@ -36,11 +36,11 @@ function canCombine(candidates) {
 
 export function routeRequest(request, modules) {
   const raw = String(request || '').trim();
-  if (/^\/impeccable(?:\s|$)/i.test(raw)) {
+  if (/^[/$]impeccable(?:\s|$)/i.test(raw)) {
     return {
       kind: 'direct',
       skill: 'impeccable',
-      reason: 'Explicit /impeccable bypasses the wrapper.',
+      reason: 'Explicit Impeccable invocation bypasses the wrapper.',
     };
   }
 

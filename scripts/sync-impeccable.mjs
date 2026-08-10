@@ -6,6 +6,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const overlayRoot = path.join(pluginRoot, 'overlays', 'skills', 'impeccable');
 const PIN = Object.freeze({
   tag: 'skill-v4.0.4',
   tagObject: 'fb0942f57736841580a65088637f94da4a4ba87c',
@@ -65,8 +66,8 @@ function replaceSection(text, start, end, replacement, label) {
 
 function portableMarkdown(text) {
   return text
-    .replace(/node \.cursor\/skills\/impeccable\/([A-Za-z0-9_./-]+\.(?:mjs|js|json))/g, 'node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/$1"')
-    .replace(/\.cursor\/skills\/impeccable/g, '${CURSOR_PLUGIN_ROOT}/skills/impeccable');
+    .replace(/node \.cursor\/skills\/impeccable\/([A-Za-z0-9_./-]+\.(?:mjs|js|json))/g, 'node "<IMPECCABLE_SKILL_ROOT>/$1"')
+    .replace(/\.cursor\/skills\/impeccable/g, '<IMPECCABLE_SKILL_ROOT>');
 }
 
 function transformSkillFile(relative, original) {
@@ -74,11 +75,26 @@ function transformSkillFile(relative, original) {
   const operations = [];
   if (relative.endsWith('.md')) {
     if (relative === 'SKILL.md') {
+      text = mustReplace(
+        text,
+        'This skill gives you the tools and permission to create design',
+        [
+          '## Geldmacher Design host contract',
+          '',
+          'This bundled skill targets Cursor and Codex. Cursor invokes it as `/impeccable`; Codex invokes it as `$impeccable`. Before running any command, replace `<IMPECCABLE_SKILL_ROOT>` with the absolute directory containing this `SKILL.md`; never execute an unresolved placeholder. Runtime scripts derive the host from `IMPECCABLE_HOST`, then `CURSOR_PLUGIN_ROOT`, and otherwise use Codex semantics.',
+          '',
+          'Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. If the host exposes no subagent capability, use the corresponding `reference/degraded/` fallback and disclose the degradation.',
+          '',
+          'This skill gives you the tools and permission to create design',
+        ].join('\n'),
+        'SKILL dual-host contract',
+      );
+      operations.push('dual-host-provider-routing', 'codex-generic-subagent-contract');
       text = replaceSection(
         text,
         '**Pin / Unpin:**',
         '**Hooks:**',
-        '**Pin / Unpin:** Standalone shortcut installation is disabled in Geldmacher Design. Use `/impeccable <command>` or `/design <request>`; update the vendored skill only through the plugin maintainer sync.\n\n',
+        '**Pin / Unpin:** Standalone shortcut installation is disabled in Geldmacher Design. Use the host-native Design or Impeccable skill invocation; update the vendored skill only through the plugin maintainer sync.\n\n',
         'SKILL Pin / Unpin',
       );
       operations.push('redirect-standalone-installer');
@@ -87,29 +103,29 @@ function transformSkillFile(relative, original) {
       text = mustReplace(
         text,
         '# /impeccable hooks\n',
-        '# /impeccable hooks\n\n> Geldmacher Design integration: Cursor uses the plugin-registered hook. This command changes only `.impeccable/` config and never installs or edits a project-local Cursor hook manifest.\n',
+        '# /impeccable hooks\n\n> Geldmacher Design integration: Cursor and Codex use plugin-registered host adapters. This command changes only `.impeccable/` config and never installs or edits a project-local hook manifest.\n',
         'hooks integration banner',
       );
       text = text.replace(
         'record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed.',
-        'record local hook consent as accepted, and use the already registered Geldmacher Design plugin hook without writing provider hook manifests.',
+        'record local hook consent as accepted, and use the already registered Geldmacher Design host adapter without writing provider hook manifests.',
       );
       text = text.replace(
         /- The hook is bundled with the Impeccable skill and installed through project-local manifests:[^\n]*\n/,
-        '- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the plugin hook. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.\n',
+        '- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.\n',
       );
       operations.push('replace-project-hook-installation-with-plugin-hook');
     }
-    const updateRedirected = text.replaceAll('npx impeccable update', '/design doctor');
+    const updateRedirected = text.replaceAll('npx impeccable update', 'the Design doctor command');
     if (updateRedirected !== text) operations.push('disable-runtime-self-update');
     text = updateRedirected;
     const portable = portableMarkdown(text);
-    if (portable !== text) operations.push('portable-plugin-script-paths');
+    if (portable !== text) operations.push('portable-dual-host-script-paths');
     text = portable;
   }
 
   if (relative === 'scripts/hook-admin.mjs') {
-    text = text.replaceAll('.cursor/skills/impeccable', '${CURSOR_PLUGIN_ROOT}/skills/impeccable');
+    text = text.replaceAll('.cursor/skills/impeccable', '<IMPECCABLE_SKILL_ROOT>');
     text = mustReplace(text, "const STATUS_MESSAGE = 'Checking UI changes';", "const STATUS_MESSAGE = 'Checking UI changes';\nconst PLUGIN_MANAGED_HOOK = true;", 'hook admin plugin constant');
     text = mustReplace(
       text,
@@ -128,8 +144,8 @@ function transformSkillFile(relative, original) {
   }
 
   if (relative === 'scripts/context.mjs') {
-    text = mustReplace(text, 'const FETCH_TIMEOUT_MS = 1200;', 'const FETCH_TIMEOUT_MS = 1200;\nconst PLUGIN_MANAGED_UPDATES = true;', 'context update guard');
-    text = text.replaceAll('npx impeccable update', '/design doctor');
+    text = mustReplace(text, 'const FETCH_TIMEOUT_MS = 1200;', 'const FETCH_TIMEOUT_MS = 1200;\nconst PLUGIN_MANAGED_UPDATES = true;\nconst PLUGIN_MANAGED_HOOK = true;', 'context plugin guards');
+    text = text.replaceAll('npx impeccable update', 'the Design doctor command');
     text = mustReplace(
       text,
       'async function computeUpdateDirective(now = Date.now()) {\n  try {',
@@ -139,24 +155,52 @@ function transformSkillFile(relative, original) {
     text = mustReplace(
       text,
       '  let enabled = true;\n  for (const name of',
-      "  let enabled = !(process.env.CURSOR_PLUGIN_ROOT || process.env.GELDMACHER_DESIGN_PLUGIN_ROOT);\n  for (const name of",
+      '  let enabled = PLUGIN_MANAGED_HOOK ? false : true;\n  for (const name of',
       'strict plugin hook default',
     );
+    text = mustReplace(
+      text,
+      "  if (!hookEnabledAt(activeRoot)) return 'none';\n  const manifests = HOOK_MANIFESTS_BY_PROVIDER[IMPECCABLE_PROVIDER_ID] || [];",
+      "  if (!hookEnabledAt(activeRoot)) return 'none';\n  if (PLUGIN_MANAGED_HOOK) return STOP_REVIEW_PROVIDERS.has(IMPECCABLE_PROVIDER_ID) ? 'stop' : 'per-edit';\n  const manifests = HOOK_MANIFESTS_BY_PROVIDER[IMPECCABLE_PROVIDER_ID] || [];",
+      'plugin managed automatic hook mode',
+    );
     operations.push('disable-runtime-self-update', 'recognize-plugin-hook');
+  }
+
+  if (relative === 'scripts/lib/provider.mjs') {
+    text = [
+      '// Geldmacher Design resolves one explicit dual-target provider at runtime.',
+      'export function resolveImpeccableProvider(env = process.env) {',
+      '  const explicit = String(env.IMPECCABLE_HOST || "").trim().toLowerCase();',
+      '  if (explicit && explicit !== "cursor" && explicit !== "codex") {',
+      '    throw new Error(`Unsupported IMPECCABLE_HOST: ${explicit}. Expected cursor or codex.`);',
+      '  }',
+      '  if (explicit) return explicit;',
+      '  if (env.CURSOR_PLUGIN_ROOT) return "cursor";',
+      '  if (env.PLUGIN_ROOT) return "codex";',
+      '  throw new Error("Impeccable host is unknown. Set IMPECCABLE_HOST to cursor or codex.");',
+      '}',
+      '',
+      'export const IMPECCABLE_PROVIDER_ID = resolveImpeccableProvider();',
+      'export const IMPECCABLE_COMMAND_PREFIX = IMPECCABLE_PROVIDER_ID === "cursor" ? "/" : "$";',
+      'export const IMPECCABLE_COMMAND = `${IMPECCABLE_COMMAND_PREFIX}impeccable`;',
+      '',
+    ].join('\n');
+    operations.push('dual-host-provider-routing');
   }
 
   if (relative === 'scripts/lib/staleness-deep.mjs') {
     text = mustReplace(
       text,
       'export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];',
-      "export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];\n  if (providerId === 'cursor' && (process.env.CURSOR_PLUGIN_ROOT || process.env.GELDMACHER_DESIGN_PLUGIN_ROOT)) return findings;",
+      "export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];\n  if (['cursor', 'codex'].includes(providerId)) return findings;",
       'doctor plugin hook recognition',
     );
     operations.push('recognize-plugin-hook');
   }
 
   if (relative === 'scripts/pin.mjs') {
-    text = `#!/usr/bin/env node\n/** Geldmacher Design owns skill packaging; project-local shortcut installation is intentionally disabled. */\nprocess.stdout.write('Geldmacher Design bundles Impeccable. Standalone shortcut installation is disabled; use /impeccable or /design. Maintainers update the bundle through npm run sync:impeccable.\\n');\n`;
+    text = `#!/usr/bin/env node\n/** Geldmacher Design owns skill packaging; project-local shortcut installation is intentionally disabled. */\nprocess.stdout.write('Geldmacher Design bundles Impeccable. Standalone shortcut installation is disabled; use the host-native Design or Impeccable invocation. Maintainers update the bundle through npm run sync:impeccable.\\n');\n`;
     operations.push('redirect-standalone-installer');
   }
   return { text, operations };
@@ -166,7 +210,7 @@ function transformAgentFile(original) {
   const text = portableMarkdown(original);
   return {
     text,
-    operations: text === original ? [] : ['portable-plugin-script-paths'],
+    operations: text === original ? [] : ['portable-dual-host-script-paths'],
   };
 }
 
@@ -297,7 +341,9 @@ function main() {
       sourceDirectory: '.cursor/skills/impeccable',
       agentsDirectory: '.cursor/agents',
       transformations: [
-        'portable-plugin-script-paths',
+        'portable-dual-host-script-paths',
+        'dual-host-provider-routing',
+        'codex-generic-subagent-contract',
         'replace-project-hook-installation-with-plugin-hook',
         'disable-runtime-self-update',
         'redirect-standalone-installer',
@@ -328,6 +374,7 @@ function main() {
   fs.mkdirSync(path.dirname(skillTarget), { recursive: true });
   fs.cpSync(transformedDir, skillTarget, { recursive: true });
   fs.cpSync(transformedAgentsDir, agentsTarget, { recursive: true });
+  if (fs.existsSync(overlayRoot)) fs.cpSync(overlayRoot, skillTarget, { recursive: true });
   fs.mkdirSync(path.join(pluginRoot, 'upstream', 'patches'), { recursive: true });
   fs.writeFileSync(path.join(pluginRoot, 'upstream', 'patches', 'impeccable-plugin.patch'), patchText);
   fs.copyFileSync(path.join(source, 'LICENSE'), path.join(pluginRoot, 'upstream', 'LICENSE'));

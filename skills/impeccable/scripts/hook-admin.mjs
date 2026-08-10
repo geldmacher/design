@@ -120,14 +120,14 @@ const HOOK_MANIFEST_TARGETS = [
   },
   {
     provider: '.cursor',
-    skillRel: '${CURSOR_PLUGIN_ROOT}/skills/impeccable',
+    skillRel: '<IMPECCABLE_SKILL_ROOT>',
     destRel: '.cursor/hooks.json',
     manifest: () => ({
       version: 1,
       hooks: {
         preToolUse: [
           {
-            command: 'node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-before-edit.mjs"',
+            command: 'node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-before-edit.mjs"',
             timeout: TIMEOUT_SECONDS,
           },
         ],

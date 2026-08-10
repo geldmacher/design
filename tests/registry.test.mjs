@@ -6,18 +6,19 @@ const modules = loadModules();
 
 test('general website and web-app work routes to Impeccable', () => {
   const website = routeRequest('/design Improve this website navigation', modules);
-  const app = routeRequest('/design Design a web app dashboard', modules);
+  const app = routeRequest('$design Design a web app dashboard', modules);
   assert.equal(website.kind, 'route');
   assert.equal(website.skill, 'impeccable');
   assert.equal(app.skill, 'impeccable');
 });
 
-test('explicit /impeccable bypasses the wrapper', () => {
+test('explicit Cursor and Codex Impeccable invocations bypass the wrapper', () => {
   assert.deepEqual(routeRequest('/impeccable audit src', modules), {
     kind: 'direct',
     skill: 'impeccable',
-    reason: 'Explicit /impeccable bypasses the wrapper.',
+    reason: 'Explicit Impeccable invocation bypasses the wrapper.',
   });
+  assert.equal(routeRequest('$impeccable audit src', modules).kind, 'direct');
 });
 
 test('a narrower module wins over the Impeccable fallback', () => {
@@ -44,7 +45,7 @@ test('equal narrow matches ask once instead of guessing', () => {
     capabilities: [{ id: 'checkout', title: id, skill: `${id}-skill`, specificity: 80, triggers: ['checkout'], scope: ['web-app'], fallback: false, combinableWith: [] }],
     contributes: { skills: [], agents: [], rules: [], hooks: [], scripts: [], mcpServers: [] },
   }));
-  const result = routeRequest('/design checkout', [...modules, ...fixtures]);
+  const result = routeRequest('$design checkout', [...modules, ...fixtures]);
   assert.equal(result.kind, 'clarify');
   assert.equal(result.options.length, 2);
 });

@@ -1,6 +1,6 @@
 # /impeccable hooks
 
-> Geldmacher Design integration: Cursor uses the plugin-registered hook. This command changes only `.impeccable/` config and never installs or edits a project-local Cursor hook manifest.
+> Geldmacher Design integration: Cursor and Codex use plugin-registered host adapters. This command changes only `.impeccable/` config and never installs or edits a project-local hook manifest.
 
 Manage the **design detector hook** for the current project.
 
@@ -27,7 +27,7 @@ The first argument is the action. Defaults to `status`.
 | Action | What it does |
 |---|---|
 | `status` | Print current state, shared/local config paths, ignored rules / files / values, env override. |
-| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and use the already registered Geldmacher Design plugin hook without writing provider hook manifests. |
+| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and use the already registered Geldmacher Design host adapter without writing provider hook manifests. |
 | `off` | Set `enabled: false` in `.impeccable/config.json`. |
 | `ignore-rule <id>` | Append `<id>` to `detector.ignoreRules`; for `overused-font`, requires `--all-values`. Suppresses the rule across the whole project. |
 | `ignore-file <glob>` | Append `<glob>` to `detector.ignoreFiles`. Suppresses **every** rule for matching files. |
@@ -42,7 +42,7 @@ The first argument is the action. Defaults to `status`.
 2. Invoke the admin script and pass the user's output through verbatim:
 
    ```bash
-   node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" <action> [args...]
+   node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-admin.mjs" <action> [args...]
    ```
 
 3. If `<action>` is `off`, follow up with a one-line note: "Done. New edits will not trigger the design hook in this project until you run `/impeccable hooks on`."
@@ -66,32 +66,32 @@ Prefer the narrowest exception:
 Example value-specific exception:
 
 ```bash
-node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-value overused-font Inter --shared --reason "User confirmed Inter is intentional"
+node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-admin.mjs" ignore-value overused-font Inter --shared --reason "User confirmed Inter is intentional"
 ```
 
 Example intentional motion exception:
 
 ```bash
-node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-value bounce-easing bounce-ball --shared --reason "User confirmed ball bounce animation is intentional"
+node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-admin.mjs" ignore-value bounce-easing bounce-ball --shared --reason "User confirmed ball bounce animation is intentional"
 ```
 
 Example whole-rule font exception:
 
 ```bash
-node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-rule overused-font --all-values --reason "User asked to ignore overused fonts generally"
+node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-admin.mjs" ignore-rule overused-font --all-values --reason "User asked to ignore overused fonts generally"
 ```
 
 Example one-rule-in-one-file exception, for a file that is still worth reviewing
 for everything else:
 
 ```bash
-node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-value design-system-font-size "*" --file "src/overlay/widget.js" --reason "Injected widget builds its own type scale; DESIGN.md's ramp describes the site"
+node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-admin.mjs" ignore-value design-system-font-size "*" --file "src/overlay/widget.js" --reason "Injected widget builds its own type scale; DESIGN.md's ramp describes the site"
 ```
 
 Example whole-file exception, for a file that is out of scope entirely:
 
 ```bash
-node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-file "src/legacy/Card.tsx"
+node "<IMPECCABLE_SKILL_ROOT>/scripts/hook-admin.mjs" ignore-file "src/legacy/Card.tsx"
 ```
 
 ## Constraints
@@ -99,7 +99,7 @@ node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/hook-admin.mjs" ignore-fil
 - Never modify `.impeccable/config.json` or `.impeccable/config.local.json` by hand from this command. Always go through `hook-admin.mjs` so writes stay validated and the file shape stays consistent. One exception: `detector.extensions` has no admin action, so when the user asks to cover a template stack, edit that one field in `.impeccable/config.json` directly and leave the rest of the file untouched.
 - Do not edit the hook scripts themselves (`hook.mjs`, `hook-lib.mjs`, `hook-before-edit.mjs`) from this flow. Those are skill plumbing.
 - Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.
-- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the plugin hook. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.
+- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.
 
 ## Failure modes
 

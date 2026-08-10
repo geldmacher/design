@@ -2,7 +2,7 @@
   "$schema": "./module.schema.json",
   "schemaVersion": 1,
   "id": "design-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "source": {
     "type": "first-party",
     "url": "urn:geldmacher:design"
@@ -24,8 +24,8 @@
     "skills": ["skills/design"],
     "agents": [],
     "rules": [],
-    "hooks": ["hooks/hooks.json"],
-    "scripts": ["scripts/design-cli.mjs", "hooks/impeccable-plugin-hook.mjs"],
+    "hooks": ["hooks/cursor-hooks.json", "hooks/hooks.json"],
+    "scripts": ["scripts/design-cli.mjs", "hooks/impeccable-plugin-hook.mjs", "hooks/impeccable-codex-hook.mjs"],
     "mcpServers": []
   }
 }

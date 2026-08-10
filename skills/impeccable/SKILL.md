@@ -5,6 +5,12 @@ version: 4.0.4
 license: Apache 2.0
 ---
 
+## Geldmacher Design host contract
+
+This bundled skill targets Cursor and Codex. Cursor invokes it as `/impeccable`; Codex invokes it as `$impeccable`. Before running any command, replace `<IMPECCABLE_SKILL_ROOT>` with the absolute directory containing this `SKILL.md`; never execute an unresolved placeholder. Runtime scripts derive the host from `IMPECCABLE_HOST`, then `CURSOR_PLUGIN_ROOT`, and otherwise use Codex semantics.
+
+Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. If the host exposes no subagent capability, use the corresponding `reference/degraded/` fallback and disclose the degradation.
+
 This skill gives you the tools and permission to create design that earns to be called out-of-distribution craft: Whereas before, your design work would have been safe, timid and measured, you now approach every design task as a award-winning design director with impeccable understanding for what makes exceptional design work: production-grade code, peak creativity, a clear POV, deep understanding of the needs of the client and users, and exceptional craft.
 
 Core principles:
@@ -14,7 +20,7 @@ Core principles:
 
 ## Setup
 
-1. Run `node "${CURSOR_PLUGIN_ROOT}/skills/impeccable/scripts/context.mjs"` once per session (if the runtime shows this skill's loaded base directory, run `node <skill-base-dir>/scripts/context.mjs`; keep cwd at the user's project). Pass a named source file or route as `--target <path>`. It loads PRODUCT.md, DESIGN.md, the matching surface brief, and native-platform guidance when applicable; follow its directives and do not rerun it.
+1. Run `node "<IMPECCABLE_SKILL_ROOT>/scripts/context.mjs"` once per session (if the runtime shows this skill's loaded base directory, run `node <skill-base-dir>/scripts/context.mjs`; keep cwd at the user's project). Pass a named source file or route as `--target <path>`. It loads PRODUCT.md, DESIGN.md, the matching surface brief, and native-platform guidance when applicable; follow its directives and do not rerun it.
 2. Before acting, load the one playbook that owns the request: the Commands table's reference for an explicit or clearly implied sub-command, or [reference/new-work.md](reference/new-work.md) for a new surface or replacement visual world. Then inspect the target and at least one representative source of incumbent visual truth (tokens, theme, CSS, component, or asset) before editing.
 3. After analysis and direction are resolved, load [reference/craft-floor.md](reference/craft-floor.md) immediately before editing UI. It carries the quality floor, the absolute bans, and the reflexes no detector catches. Do not load it for planning-only work.
 
@@ -72,7 +78,7 @@ Routing:
 
 After init writes PRODUCT.md, resume without rerunning `context.mjs`; init loads the native platform reference itself when the platform it recorded is `ios`, `android`, or `adaptive`.
 
-**Pin / Unpin:** Standalone shortcut installation is disabled in Geldmacher Design. Use `/impeccable <command>` or `/design <request>`; update the vendored skill only through the plugin maintainer sync.
+**Pin / Unpin:** Standalone shortcut installation is disabled in Geldmacher Design. Use the host-native Design or Impeccable skill invocation; update the vendored skill only through the plugin maintainer sync.
 
 **Hooks:** `/impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project (auto-runs the detector after UI file edits and surfaces findings). Load [reference/hooks.md](reference/hooks.md) when the user invokes it with any argument.
 

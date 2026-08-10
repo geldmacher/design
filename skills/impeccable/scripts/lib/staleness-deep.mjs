@@ -275,7 +275,7 @@ function resolveHookScriptPath(token, root) {
  */
 export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {
   const findings = [];
-  if (providerId === 'cursor' && (process.env.CURSOR_PLUGIN_ROOT || process.env.GELDMACHER_DESIGN_PLUGIN_ROOT)) return findings;
+  if (['cursor', 'codex'].includes(providerId)) return findings;
   const manifests = HOOK_MANIFESTS_BY_PROVIDER[providerId] || [];
   if (!manifests.length) return findings;
 

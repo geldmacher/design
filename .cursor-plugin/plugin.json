@@ -2,7 +2,7 @@
   "name": "geldmacher-design",
   "displayName": "Design",
   "description": "Curated design workflows for websites and web apps, powered by Impeccable.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"
@@ -27,5 +27,5 @@
     "./skills/impeccable"
   ],
   "agents": "./agents/*.md",
-  "hooks": "./hooks/hooks.json"
+  "hooks": "./hooks/cursor-hooks.json"
 }

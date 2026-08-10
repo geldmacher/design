@@ -19,6 +19,6 @@ The generated `skills/design/references/capabilities.md` is the runtime routing 
 1. The module must improve website or web-app design work without introducing a competing project-context format.
 2. `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` remain canonical.
 3. No runtime download, dynamic module URL, package installation, unpinned foreign skill, or hidden model/provider routing.
-4. Every contribution must exist, be declared by the Cursor manifest where required, and be owned by exactly one curated module.
+4. Every contribution must exist, be declared by the applicable Cursor or Codex package contract where required, and be owned by exactly one curated module.
 5. Vendored code needs source/license notices, a pin, hashes, an explicit transformation allowlist, tests, and a maintainer-only sync.
 6. An MCP module must add the real MCP configuration and manifest entry together. Do not add empty MCP scaffolding.

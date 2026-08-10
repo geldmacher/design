@@ -21,7 +21,7 @@ export function evaluatePluginHook({ event = {}, projectRoot, pluginRoot, nodePa
   }
   if (!activation.enabled) return { payload: allow(), diagnostic: false };
 
-  const conflicts = detectProjectConflicts(root).filter((finding) => finding.id === 'direct-impeccable-installation' || finding.id === 'duplicate-impeccable-hook');
+  const conflicts = detectProjectConflicts(root, { host: 'cursor' }).filter((finding) => finding.id === 'direct-impeccable-installation' || finding.id === 'duplicate-impeccable-hook');
   if (conflicts.length > 0) {
     return {
       payload: allow(diagnostic(`Hook skipped to avoid double execution: ${conflicts.map((finding) => finding.id).join(', ')}`)),

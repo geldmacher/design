@@ -14,10 +14,12 @@ Any missing patch anchor, new upstream layout, different tag/commit, or archive 
 
 ## Closed transformation list
 
-1. Rewrite generated project-local Cursor skill command paths to `${CURSOR_PLUGIN_ROOT}/skills/impeccable/...`.
-2. Keep hook configuration management but bypass all project-local hook manifest installation; Cursor uses `hooks/hooks.json` from the plugin.
-3. Disable the runtime upstream update poll and redirect update/installer guidance to the plugin maintainer flow.
-4. Disable project-local pinned shortcut generation.
-5. Teach Impeccable context and doctor scripts that the registered plugin hook is the active Cursor integration.
+1. Replace generated project-local skill paths with `<IMPECCABLE_SKILL_ROOT>` and inject a host contract that resolves the actually loaded skill directory before command execution.
+2. Add host-aware provider routing: Cursor emits `/impeccable`; Codex emits `$impeccable`; unknown explicit hosts fail diagnostically.
+3. Preserve Cursor-native roles and add the Codex role contract: read the canonical prompt, start a fresh generic subagent without conversation fork or model override, or mark the inline fallback as degraded.
+4. Keep hook configuration management but bypass all project-local hook manifest installation; the plugin owns `hooks/cursor-hooks.json` for Cursor and `hooks/hooks.json` for Codex.
+5. Disable the runtime upstream update poll and redirect update/installer guidance to the plugin maintainer flow.
+6. Disable project-local pinned shortcut generation.
+7. Teach Impeccable context, doctor, pin, and staleness scripts that the registered plugin hook is the active integration for either host.
 
 The complete generated patch and every before/after file hash are release artifacts, not narrative claims.
