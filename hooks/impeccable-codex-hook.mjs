@@ -109,7 +109,7 @@ async function main() {
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   main().catch((error) => {
     process.stdout.write(JSON.stringify(contextPayload({}, `Unexpected hook failure; edit retained: ${error.message}`)));
   });

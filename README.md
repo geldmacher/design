@@ -2,58 +2,93 @@
 
 **Ship interfaces that feel intentional.**
 
-Design turns Cursor and Codex into a focused UI design partner for websites and web apps. It combines the full [Impeccable](https://github.com/pbakaus/impeccable) 4.0.4 toolkit with clear routing, project-aware guidance, diagnostics, and optional quality checks.
+Design turns Agent Plugins clients, Cursor, and Codex into a focused UI design partner for websites and web apps. It combines the reproducibly pinned [Impeccable](https://github.com/pbakaus/impeccable) toolkit with clear routing, project-aware guidance, diagnostics, and optional native quality checks.
 
 ## Why Design?
 
 - **One clear entry point** for planning, building, critiquing, and polishing interfaces.
 - **Better project context** through the existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` files.
-- **Specialized design roles** for research, architecture, visual direction, and asset production.
+- **Specialized design roles** through native host agents or bundled portable role instructions.
 - **Guardrails you control**: skills run only when invoked, and UI checks remain off until you enable them.
 
-## Install locally
+## Package targets
 
-Until Design is available in a plugin store, install it from the repository. Git and Node.js 22 or newer are required.
+One source checkout produces three deterministic packages:
 
-### Cursor
+| Target | Package | Portable or native behavior |
+| --- | --- | --- |
+| Agent Plugins v1 | `.build/plugins/agent-plugin/geldmacher-design` | Standard `plugin.json` plus the `design` and `impeccable` skills; no MCP, registered/native hook integration, or native agents |
+| Cursor | `.build/plugins/cursor/geldmacher-design` | `/design`, `/impeccable`, pre-write hook, and native agents |
+| Codex | `.build/plugins/codex/geldmacher-design` | `$design`, `$impeccable`, PostToolUse/Stop hook, and inherited generic subagents |
+
+Run `npm run build:targets` to materialize all three. The Agent Plugins package follows v1.0.0 and declares the skill identities `design` and `impeccable`. Discovery, presentation, and invocation syntax remain client-specific because the standard does not define distribution, permissions, hooks, native agents, commands, or client UX. See [the Agent Plugins target guide](docs/agent-plugin-target.md).
+
+## Install native targets locally
+
+Design is not yet available in a public plugin store. Keep the Git checkout as the canonical source and deploy generated host copies from it. Do not clone into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
+
+### Requirements and clone
+
+Install Git, Node.js 22 or newer, and npm. The selected host must also be installed: Cursor for a Cursor deployment, or the Codex CLI with plugin support for a Codex deployment.
 
 ```bash
-mkdir -p ~/.cursor/plugins/local
-git clone https://github.com/geldmacher/design.git ~/.cursor/plugins/local/geldmacher-design
+mkdir -p ~/src/geldmacher-plugins
+git clone https://github.com/geldmacher/design.git ~/src/geldmacher-plugins/design
+cd ~/src/geldmacher-plugins/design
+npm ci
 ```
 
-Restart Cursor, open a fresh conversation, and run:
+If you already have a checkout, use it instead and run `npm ci` from its repository root.
 
-```text
-/design status
-```
+### Preview and install
 
-### Codex
+Choose one host or deploy both:
 
-Clone the repository to any local directory, then register its bundled local Marketplace:
+| Target | Preview without changing host state | Install or update |
+| --- | --- | --- |
+| Cursor only | `npm run deploy:local -- --dry-run --cursor-only` | `npm run deploy:local -- --cursor-only` |
+| Codex only | `npm run deploy:local -- --dry-run --codex-only` | `npm run deploy:local -- --codex-only` |
+| Cursor and Codex | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
+
+Append `--full` to an install command to run the complete repository `release-check` before deployment. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
+
+The deploy command builds and validates all three packages, but deploys only the native bundles under `.build/plugins/{cursor,codex}/geldmacher-design`. It then atomically replaces only the selected physical host copies:
+
+- Cursor: `~/.cursor/plugins/local/geldmacher-design`
+- Codex source: `~/.codex/plugins/geldmacher-design`
+
+Every installed copy contains a `.local-deploy.json` receipt with its content-derived local version, Git revision, dirty status, source path, and deployment time. Dirty checkouts are allowed and explicitly recorded. For Codex, the command also creates or updates only this plugin's entry in the `personal` Marketplace and refreshes the verified Codex cache with `codex plugin add geldmacher-design@personal --json`. Do not delete Codex caches manually.
+
+After installation or an update, reload Cursor before testing its plugin surface and start a new Codex task before testing Codex discovery. Review changed hooks manually before granting trust. The deploy command does not restart either host or grant hook trust. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
+
+### Update from the origin repository
+
+First protect any local work, then fast-forward the checkout and redeploy:
 
 ```bash
-git clone https://github.com/geldmacher/design.git
-cd design
-codex plugin marketplace add "$PWD"
-codex plugin add geldmacher-design@geldmacher-design-local
+cd ~/src/geldmacher-plugins/design
+git status --short
+git fetch origin
+git pull --ff-only
+npm ci
+npm run deploy:local -- --dry-run
+npm run deploy:local
+npm run deploy:status
 ```
 
-Restart Codex, open a fresh task, and run:
-
-```text
-$design status
-```
+Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last three commands above update both hosts; use the matching `--cursor-only` or `--codex-only` flag when only one host is installed. An unchanged bundle is a verified no-op; changed content receives a new host-specific local version and replaces the previous copy transactionally.
 
 ## Use it
 
-| Goal | Cursor | Codex |
-| --- | --- | --- |
-| Design or improve an interface | `/design <request>` | `$design <request>` |
-| Check the project setup | `/design status` | `$design status` |
-| Prepare project integration | `/design setup` | `$design setup` |
-| Diagnose conflicts | `/design doctor` | `$design doctor` |
-| Use Impeccable directly | `/impeccable <request>` | `$impeccable <request>` |
+| Goal | Agent Plugins v1 skill identity | Cursor invocation | Codex invocation |
+| --- | --- | --- | --- |
+| Design or improve an interface | `design` | `/design <request>` | `$design <request>` |
+| Check the project setup | `design` | `/design status` | `$design status` |
+| Prepare project integration | `design` | `/design setup` | `$design setup` |
+| Diagnose conflicts | `design` | `/design doctor` | `$design doctor` |
+| Use Impeccable directly | `impeccable` | `/impeccable <request>` | `$impeccable <request>` |
+
+The Agent Plugins column identifies the declared skill, not a universal user-facing command. A compatible client decides how users or models discover and load that skill.
 
 For example:
 
@@ -68,11 +103,11 @@ Design chooses the most specific bundled capability for the request and falls ba
 
 Design never activates itself. Setup shows its proposed changes and waits for confirmation. Optional UI checks stay silent until `.impeccable/config.json` contains `hook.enabled: true`.
 
-Cursor can stop a proposed UI write when it finds a known issue. Codex checks after the edit and requests a correction without rolling the change back. Infrastructure failures remain visible but never block edits.
+Cursor can stop a proposed UI write when it finds a known issue. Codex checks after the edit and requests a correction without rolling the change back. The Agent Plugins target reports hooks as unavailable and uses bundled degraded role instructions instead of pretending native agents exist. Infrastructure failures remain visible but never block edits.
 
 ## Development
 
-Repository agents share the concise development contract in [AGENTS.md](AGENTS.md). It guides Cursor and Codex during repository work and is not a plugin runtime component.
+Repository agents share the concise development contract in [AGENTS.md](AGENTS.md). It guides repository work and is not a plugin runtime component in any target.
 
 ```bash
 npm ci
@@ -80,4 +115,4 @@ npm run release-check
 git diff --check
 ```
 
-Impeccable is reproducibly pinned; see [upstream provenance](upstream/README.md). Runtime verification is documented separately for [Cursor](docs/runtime-smoke.md) and [Codex](docs/codex-runtime-smoke.md). Repository checks do not prove host discovery, hook trust, Marketplace behavior, or publication.
+Impeccable is reproducibly pinned; see [upstream provenance](upstream/README.md) and the [maintainer workflow](docs/impeccable-maintenance.md). Runtime verification is documented separately for [Cursor](docs/runtime-smoke.md) and [Codex](docs/codex-runtime-smoke.md). Repository checks and isolated target simulations do not prove real client discovery, hook trust, Marketplace behavior, or publication.

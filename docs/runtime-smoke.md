@@ -20,7 +20,7 @@ Before the run, record:
 2. Start a fresh conversation.
 3. Confirm `Design` is discovered as a local plugin.
 4. Confirm `/design` and `/impeccable` are visible.
-5. Run `/design status`; confirm plugin `0.2.0`, Impeccable `4.0.4`, disabled hook, and the project context state.
+5. Run `/design status`; confirm plugin `0.3.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
 6. Confirm the command succeeds while cwd is the disposable project rather than the plugin root.
 7. Resolve each agent: `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer`, and `impeccable-manual-edit-applier`. Do not infer agent discovery from files alone.
 
@@ -38,7 +38,7 @@ Before the run, record:
    ```
 
 6. Edit a non-UI file such as `README.md` and confirm it is unaffected.
-7. Run `node "${CURSOR_PLUGIN_ROOT}/scripts/design-cli.mjs" hook off` through `/design`, then confirm a UI write is no longer scanned.
+7. Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host cursor hook off` through `/design` after resolving the skill root, then confirm a UI write is no longer scanned.
 8. Activate and deactivate once more. Confirm the original `.cursor/hooks.json` hash/absence is unchanged and no second entry exists.
 
 ## Conflict and failure diagnostics

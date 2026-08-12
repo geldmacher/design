@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { flattenCapabilities, loadModules } from '../src/registry.mjs';
 
-const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const scriptPath = fileURLToPath(import.meta.url);
+const pluginRoot = path.resolve(path.dirname(scriptPath), '..');
 const outputPath = path.join(pluginRoot, 'skills', 'design', 'references', 'capabilities.md');
 
 export function renderCapabilityIndex(modules) {
@@ -29,17 +30,19 @@ export function renderCapabilityIndex(modules) {
   return lines.join('\n');
 }
 
-const rendered = renderCapabilityIndex(loadModules(pluginRoot));
-if (process.argv.includes('--check')) {
-  const current = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : '';
-  if (current !== rendered) {
-    process.stderr.write('Capability index is stale. Run npm run build:capabilities.\n');
-    process.exitCode = 1;
+if (process.argv[1] && path.resolve(process.argv[1]) === scriptPath) {
+  const rendered = renderCapabilityIndex(loadModules(pluginRoot));
+  if (process.argv.includes('--check')) {
+    const current = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : '';
+    if (current !== rendered) {
+      process.stderr.write('Capability index is stale. Run npm run build:capabilities.\n');
+      process.exitCode = 1;
+    } else {
+      process.stdout.write('Capability index is current.\n');
+    }
   } else {
-    process.stdout.write('Capability index is current.\n');
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, rendered);
+    process.stdout.write(`Wrote ${path.relative(pluginRoot, outputPath)}.\n`);
   }
-} else {
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, rendered);
-  process.stdout.write(`Wrote ${path.relative(pluginRoot, outputPath)}.\n`);
 }

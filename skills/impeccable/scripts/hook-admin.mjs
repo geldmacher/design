@@ -23,7 +23,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { IMPECCABLE_COMMAND } from './lib/provider.mjs';
+import { IMPECCABLE_COMMAND, IMPECCABLE_PROVIDER_ID } from './lib/provider.mjs';
 
 import {
   getConfigPath,
@@ -725,6 +725,13 @@ function main() {
   }
 
   try {
+    if (IMPECCABLE_PROVIDER_ID === 'agent-plugin') {
+      if (action === 'status') {
+        process.stdout.write('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.\n');
+        return;
+      }
+      throw new Error('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.');
+    }
     let out = '';
     switch (action) {
       case 'status': out = statusReport(cwd); break;

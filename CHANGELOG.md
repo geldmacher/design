@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 - 2026-08-11
+
+- Added a deterministic Agent Plugins v1.0.0 package alongside the native Cursor and Codex packages.
+- Added the canonical root manifest, vendored schema provenance, and Agent Skills frontmatter validation without adding runtime dependencies.
+- Added an explicit portable provider with bare skill names, unavailable hook state, and bundled degraded-role fallbacks.
+- Kept Cursor pre-write hooks, Codex PostToolUse/Stop hooks, native invocations, and role contracts separate and unchanged.
+- Made every generated package self-contained by moving runtime Impeccable provenance into the packaged module.
+- Added isolated lifecycle, provider, hook, path-containment, and deterministic package simulations for all three targets.
+- Projected every portable Impeccable role path and live/context directive to its bundled degraded contract while preserving native package bytes.
+- Restricted destructive target cleanup to the canonical repository output or a process-owned temporary build workspace with symlink checks.
+- Made Codex deployment rollback remove partial activation, restore source and Marketplace state, reactivate the prior version when present, verify cache identity, and aggregate incomplete rollback errors.
+- Isolated runtime and deployment simulations behind fixture-only home, Codex, XDG, and update-cache paths with escape sentinels.
+- Clarified that Agent Plugins declares skill identities while discovery presentation and invocation syntax remain client-specific.
+- Added one validated Impeccable pin manifest, an honest read-only upstream checker, reviewable prepare/apply candidates with drift detection and rollback, and a least-privilege issue-only weekly monitor while keeping runtime and release checks offline.
+
 ## 0.2.0 - 2026-08-03
 
 - Added a Codex plugin package and repository-local Marketplace entry while preserving the Cursor package.

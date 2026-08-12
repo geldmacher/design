@@ -20,16 +20,18 @@
     "sourceDirectory": ".cursor/skills/impeccable",
     "agentsDirectory": ".cursor/agents",
     "transformations": [
+      "agent-skills-frontmatter",
       "portable-dual-host-script-paths",
       "dual-host-provider-routing",
       "codex-generic-subagent-contract",
+      "agent-plugin-provider-routing",
       "replace-project-hook-installation-with-plugin-hook",
       "disable-runtime-self-update",
       "redirect-standalone-installer",
       "recognize-plugin-hook"
     ],
     "patch": "upstream/patches/impeccable-plugin.patch",
-    "patchSha256": "b2ac965da75c8c4819c25d9638c3d995c981b8593471ff0e02de0364de578eee",
+    "patchSha256": "8809ade8eb4e9a507629c88149d835c455dc1dd3a02aff97c915cc6fa6548b75",
     "files": [
       {
         "source": ".cursor/agents/impeccable-asset-producer.md",
@@ -385,8 +387,9 @@
         "source": ".cursor/skills/impeccable/scripts/context.mjs",
         "destination": "skills/impeccable/scripts/context.mjs",
         "sourceSha256": "9624eec1da4235b4f9d45d5cdb29ecb812ae01cb7e8a3953fcbfdc55f011d03e",
-        "vendoredSha256": "fb99180c29f1798d3a500406a6278d27ef3054784eae871a801713e118077474",
+        "vendoredSha256": "44e20d5a403391f9c7593c531adbe464cf985eaa7bb978b254ec3b542b8cff2b",
         "transformations": [
+          "agent-plugin-provider-routing",
           "disable-runtime-self-update",
           "recognize-plugin-hook"
         ]
@@ -577,9 +580,10 @@
         "source": ".cursor/skills/impeccable/scripts/hook-admin.mjs",
         "destination": "skills/impeccable/scripts/hook-admin.mjs",
         "sourceSha256": "d767c332a64f09cdeecb53bb103725cdcacde4a6b5b4468fedd1cc0ce1e0947d",
-        "vendoredSha256": "259d5737924a9f29df8473317d33ff5c94e0f4d6ef71ae64762335ddeee5e0dd",
+        "vendoredSha256": "cc918fde6f05556c269774a538f697f117df45c3a9bf26e26ad0b377b8c494ec",
         "transformations": [
-          "replace-project-hook-installation-with-plugin-hook"
+          "replace-project-hook-installation-with-plugin-hook",
+          "agent-plugin-provider-routing"
         ]
       },
       {
@@ -656,9 +660,10 @@
         "source": ".cursor/skills/impeccable/scripts/lib/provider.mjs",
         "destination": "skills/impeccable/scripts/lib/provider.mjs",
         "sourceSha256": "3be66b886312991ae31c3e333512c0719496793b0946daac5a7671895c57265e",
-        "vendoredSha256": "c5998b8eb3fd463eab25568c223297884baf589e063cf7821892b72e451570f0",
+        "vendoredSha256": "e4caa1204138585b56a82a7b38d45a64d3f0dfd55aa9fd9b77164f3a9a472a88",
         "transformations": [
-          "dual-host-provider-routing"
+          "dual-host-provider-routing",
+          "agent-plugin-provider-routing"
         ]
       },
       {
@@ -1124,10 +1129,12 @@
         "source": ".cursor/skills/impeccable/SKILL.md",
         "destination": "skills/impeccable/SKILL.md",
         "sourceSha256": "d70d09da58c2fe8bc7d9e2598c43482e53d1e280092bb2230670ff1eae9b2e72",
-        "vendoredSha256": "279236d29b50a3b856ba501c1a27ce1f183233e9c20c7f0272f32b2bfab173aa",
+        "vendoredSha256": "4c6fe1bac5353fd546406c2bfb4184e380f6a6c419378b9388e9a94e19c85aa3",
         "transformations": [
+          "agent-skills-frontmatter",
           "dual-host-provider-routing",
           "codex-generic-subagent-contract",
+          "agent-plugin-provider-routing",
           "redirect-standalone-installer",
           "portable-dual-host-script-paths"
         ]

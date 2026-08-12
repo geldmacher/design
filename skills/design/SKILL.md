@@ -1,6 +1,8 @@
 ---
 name: design
 description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.
+license: MIT
+compatibility: Requires Node.js 22 or newer.
 ---
 
 # Design router
@@ -9,7 +11,7 @@ This is the stable Geldmacher Design router for websites and web apps. It adds i
 
 ## Host contract
 
-Determine the active host from the invocation: Cursor uses `/design` and `/impeccable`; Codex uses `$design` and `$impeccable`. Resolve `<PLUGIN_ROOT>` to the plugin root containing this skill before running a command, replace `<host>` with `cursor` or `codex`, and keep cwd at the user's project. Never execute an unresolved placeholder.
+Determine the active host from the invocation: Cursor uses `/design` and `/impeccable`; Codex uses `$design` and `$impeccable`; a generic Agent Plugins client loads the bare `design` and `impeccable` skill names. Resolve `<DESIGN_SKILL_ROOT>` to the absolute directory containing this `SKILL.md`, replace `<host>` with `cursor`, `codex`, or `agent-plugin`, and keep cwd at the user's project. Never execute an unresolved placeholder.
 
 ## First step
 
@@ -32,23 +34,24 @@ All commands keep the cwd at the user's project.
 
 ### `design setup`
 
-1. Run `node "<PLUGIN_ROOT>/scripts/design-cli.mjs" --host <host> setup --json` after replacing both placeholders.
+1. Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> setup --json` after replacing both placeholders.
 2. Report conflicts and the exact proposed writes. A host-local Impeccable skill or hook entry (`.cursor/...` on Cursor, `.agents/skills/...` or `.codex/hooks.json` on Codex) is a conflict; never remove or overwrite it.
 3. Ask for explicit confirmation before applying. Without a clear yes, stop with no writes.
-4. After confirmation only, run `node "<PLUGIN_ROOT>/scripts/design-cli.mjs" --host <host> setup --apply --json` after replacing both placeholders.
+4. After confirmation only, run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> setup --apply --json` after replacing both placeholders. In the generic Agent Plugins target this completes without enabling or emulating a hook.
 5. If `PRODUCT.md` is missing, offer the host-native Impeccable `init` invocation reported by setup; do not create it implicitly. If an incumbent design should be captured and `DESIGN.md` is missing, offer the corresponding `document` invocation.
 
 ### `design status`
 
-Run `node "<PLUGIN_ROOT>/scripts/design-cli.mjs" --host <host> status --json` after replacing both placeholders, then report plugin/module versions, strict opt-in hook state, conflicts, and existing canonical context. This command is read-only.
+Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> status --json` after replacing both placeholders, then report plugin/module versions, hook availability, conflicts, and existing canonical context. This command is read-only.
 
 ### `design doctor`
 
-Run `node "<PLUGIN_ROOT>/scripts/design-cli.mjs" --host <host> doctor --json` after replacing both placeholders. Diagnose only. Do not repair anything unless the user separately asks for an apply action.
+Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> doctor --json` after replacing both placeholders. Diagnose only. Do not repair anything unless the user separately asks for an apply action.
 
 ## Safety boundary
 
 - The plugin hook is inactive unless `.impeccable/config.json` parses and contains `hook.enabled: true`.
 - On Cursor, a real Impeccable detector finding may deny a proposed UI write. On Codex, findings arrive after the edit and again through the deduplicated Stop deep pass.
+- Agent Plugins v1 does not standardize hooks or native subagents. Its portable target reports hooks as unavailable and uses Impeccable's bundled degraded role instructions.
 - Missing runtime files, malformed config, malformed hook input, or detector failure are visible diagnostics and allow the edit.
 - Non-UI files remain unaffected by Impeccable's detector.

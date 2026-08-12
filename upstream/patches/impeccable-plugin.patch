@@ -1,21 +1,29 @@
 diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
-index a367627..a12cf8f 100644
+index a367627..9c7d76f 100644
 --- a/skills/impeccable/SKILL.md
 +++ b/skills/impeccable/SKILL.md
-@@ -5,6 +5,12 @@ version: 4.0.4
- license: Apache 2.0
+@@ -1,10 +1,18 @@
+ ---
+ name: impeccable
+ description: Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.
+-version: 4.0.4
+-license: Apache 2.0
++license: Apache-2.0
++compatibility: Requires Node.js 22 or newer.
++metadata:
++  version: "4.0.4"
  ---
  
 +## Geldmacher Design host contract
 +
-+This bundled skill targets Cursor and Codex. Cursor invokes it as `/impeccable`; Codex invokes it as `$impeccable`. Before running any command, replace `<IMPECCABLE_SKILL_ROOT>` with the absolute directory containing this `SKILL.md`; never execute an unresolved placeholder. Runtime scripts derive the host from `IMPECCABLE_HOST`, then `CURSOR_PLUGIN_ROOT`, and otherwise use Codex semantics.
++This bundled skill targets Cursor, Codex, and Agent Plugins v1 clients. Cursor invokes it as `/impeccable`; Codex invokes it as `$impeccable`; a generic standard client loads the bare `impeccable` skill name. Before running any command, replace `<IMPECCABLE_SKILL_ROOT>` with the absolute directory containing this `SKILL.md`; never execute an unresolved placeholder. Runtime scripts derive the host from `IMPECCABLE_HOST`, then the native plugin-root variables, or the canonical Agent Plugins root manifest.
 +
-+Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. If the host exposes no subagent capability, use the corresponding `reference/degraded/` fallback and disclose the degradation.
++Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. Agent Plugins v1 does not standardize native agents; use the corresponding `reference/degraded/` fallback there. If any other host exposes no subagent capability, use the same fallback and disclose the degradation.
 +
  This skill gives you the tools and permission to create design that earns to be called out-of-distribution craft: Whereas before, your design work would have been safe, timid and measured, you now approach every design task as a award-winning design director with impeccable understanding for what makes exceptional design work: production-grade code, peak creativity, a clear POV, deep understanding of the needs of the client and users, and exceptional craft.
  
  Core principles:
-@@ -14,7 +20,7 @@ Core principles:
+@@ -14,7 +22,7 @@ Core principles:
  
  ## Setup
  
@@ -24,7 +32,7 @@ index a367627..a12cf8f 100644
  2. Before acting, load the one playbook that owns the request: the Commands table's reference for an explicit or clearly implied sub-command, or [reference/new-work.md](reference/new-work.md) for a new surface or replacement visual world. Then inspect the target and at least one representative source of incumbent visual truth (tokens, theme, CSS, component, or asset) before editing.
  3. After analysis and direction are resolved, load [reference/craft-floor.md](reference/craft-floor.md) immediately before editing UI. It carries the quality floor, the absolute bans, and the reflexes no detector catches. Do not load it for planning-only work.
  
-@@ -72,7 +78,7 @@ Routing:
+@@ -72,10 +80,10 @@ Routing:
  
  After init writes PRODUCT.md, resume without rerunning `context.mjs`; init loads the native platform reference itself when the platform it recorded is `ios`, `android`, or `adaptive`.
  
@@ -33,6 +41,11 @@ index a367627..a12cf8f 100644
  
  **Hooks:** `/impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project (auto-runs the detector after UI file edits and surfaces findings). Load [reference/hooks.md](reference/hooks.md) when the user invokes it with any argument.
  
+ **Doctor:** `/impeccable doctor` reports and repairs drift between this project's Impeccable artifacts (PRODUCT.md, DESIGN.md and its sidecar, config, surface briefs, the hook) and what this version reads. Load [reference/doctor.md](reference/doctor.md) when the user invokes it, or when they ask what is out of date, stale, or needs refreshing. A `CONTEXT_STALE` directive in Setup's output is the cheap subset of the same report; act on it there per its own instructions rather than running doctor unasked.
+ 
+-**Never repair drift as a side effect of a design task.** A `CONTEXT_STALE` finding is reported, not acted on, unless the user asks. The one exception is a finding marked `auto`, which the next write to that file performs anyway.
+\ No newline at end of file
++**Never repair drift as a side effect of a design task.** A `CONTEXT_STALE` finding is reported, not acted on, unless the user asks. The one exception is a finding marked `auto`, which the next write to that file performs anyway.
 diff --git a/skills/impeccable/reference/critique.md b/skills/impeccable/reference/critique.md
 index 1d609ba..1ae36f5 100644
 --- a/skills/impeccable/reference/critique.md
@@ -441,7 +454,7 @@ index 1491503..c15d9bd 100644
  When clean raster ingredients are required and the harness runs subagents, use the shipped asset producer, `impeccable-asset-producer` (`impeccable_asset_producer` in codex; `/impeccable-asset-producer` in Cursor; on GitHub Copilot say "Use the impeccable-asset-producer agent"): give it the approved comp, output paths, required dimensions and formats, transparency needs, crop notes, and what must remain semantic code. Otherwise produce the minimum required assets in the current thread by the book: load [degraded/asset-producer.md](degraded/asset-producer.md) and follow it inline, with whatever generation exists, the native tool or generate-image.mjs.
  
 diff --git a/skills/impeccable/scripts/context.mjs b/skills/impeccable/scripts/context.mjs
-index b8413e0..82d73e0 100644
+index b8413e0..30ca295 100644
 --- a/skills/impeccable/scripts/context.mjs
 +++ b/skills/impeccable/scripts/context.mjs
 @@ -69,7 +69,7 @@ const VISUAL_SCAN_DEPTH_LIMIT = 4;
@@ -490,8 +503,11 @@ index b8413e0..82d73e0 100644
    for (const name of ['.impeccable/config.json', '.impeccable/config.local.json']) {
      const raw = readJson(path.join(root, name));
      if (raw?.hook && Object.prototype.hasOwnProperty.call(raw.hook, 'enabled')) {
-@@ -1252,6 +1255,7 @@ function automaticHookMode(ctx) {
+@@ -1250,8 +1253,10 @@ function automaticHookMode(ctx) {
+   if (ctx.platform === 'ios' || ctx.platform === 'android' || ctx.platform === 'adaptive') {
+     return 'none';
    }
++  if (IMPECCABLE_PROVIDER_ID === 'agent-plugin') return 'none';
    const activeRoot = path.resolve(ctx.projectRoot || process.cwd());
    if (!hookEnabledAt(activeRoot)) return 'none';
 +  if (PLUGIN_MANAGED_HOOK) return STOP_REVIEW_PROVIDERS.has(IMPECCABLE_PROVIDER_ID) ? 'stop' : 'per-edit';
@@ -499,9 +515,18 @@ index b8413e0..82d73e0 100644
    const roots = [...new Set([process.cwd(), ctx.projectRoot, ctx.repoRoot].filter(Boolean).map((root) => path.resolve(root)))];
    for (const root of roots) {
 diff --git a/skills/impeccable/scripts/hook-admin.mjs b/skills/impeccable/scripts/hook-admin.mjs
-index fd3ef63..0393e72 100644
+index fd3ef63..d11e5a1 100644
 --- a/skills/impeccable/scripts/hook-admin.mjs
 +++ b/skills/impeccable/scripts/hook-admin.mjs
+@@ -23,7 +23,7 @@
+ 
+ import fs from 'node:fs';
+ import path from 'node:path';
+-import { IMPECCABLE_COMMAND } from './lib/provider.mjs';
++import { IMPECCABLE_COMMAND, IMPECCABLE_PROVIDER_ID } from './lib/provider.mjs';
+ 
+ import {
+   getConfigPath,
 @@ -47,6 +47,7 @@ const IMPECCABLE_HOOK_COMMAND_MARKERS = [
  ];
  const TIMEOUT_SECONDS = 5;
@@ -555,29 +580,65 @@ index fd3ef63..0393e72 100644
    const parts = [
      `Design hook enabled for this project (wrote ${path.relative(cwd, target) || target}).`,
      `Recorded local hook consent in ${path.relative(cwd, localTarget) || localTarget}.`,
+@@ -721,6 +725,13 @@ function main() {
+   }
+ 
+   try {
++    if (IMPECCABLE_PROVIDER_ID === 'agent-plugin') {
++      if (action === 'status') {
++        process.stdout.write('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.\n');
++        return;
++      }
++      throw new Error('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.');
++    }
+     let out = '';
+     switch (action) {
+       case 'status': out = statusReport(cwd); break;
 diff --git a/skills/impeccable/scripts/lib/provider.mjs b/skills/impeccable/scripts/lib/provider.mjs
-index ea6fd8e..ce78b77 100644
+index ea6fd8e..f3a50cd 100644
 --- a/skills/impeccable/scripts/lib/provider.mjs
 +++ b/skills/impeccable/scripts/lib/provider.mjs
-@@ -1,5 +1,15 @@
+@@ -1,5 +1,37 @@
 -// Source scripts default to slash commands. The provider build replaces only
 -// this exact declaration, avoiding heuristic rewrites across executable code.
 -export const IMPECCABLE_COMMAND_PREFIX = "/";
 -export const IMPECCABLE_PROVIDER_ID = "cursor";
-+// Geldmacher Design resolves one explicit dual-target provider at runtime.
++import fs from "node:fs";
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++
++const AGENT_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
++
++function isAgentPluginPackage() {
++  const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
++  const manifestPath = path.join(pluginRoot, "plugin.json");
++  if (!fs.existsSync(manifestPath)) return false;
++  try {
++    return JSON.parse(fs.readFileSync(manifestPath, "utf8")).$schema === AGENT_PLUGIN_SCHEMA;
++  } catch {
++    return false;
++  }
++}
++
++// Geldmacher Design resolves one explicit multi-target provider at runtime.
 +export function resolveImpeccableProvider(env = process.env) {
 +  const explicit = String(env.IMPECCABLE_HOST || "").trim().toLowerCase();
-+  if (explicit && explicit !== "cursor" && explicit !== "codex") {
-+    throw new Error(`Unsupported IMPECCABLE_HOST: ${explicit}. Expected cursor or codex.`);
++  if (explicit && !["agent-plugin", "cursor", "codex"].includes(explicit)) {
++    throw new Error(`Unsupported IMPECCABLE_HOST: ${explicit}. Expected agent-plugin, cursor, or codex.`);
 +  }
 +  if (explicit) return explicit;
 +  if (env.CURSOR_PLUGIN_ROOT) return "cursor";
 +  if (env.PLUGIN_ROOT) return "codex";
-+  throw new Error("Impeccable host is unknown. Set IMPECCABLE_HOST to cursor or codex.");
++  if (isAgentPluginPackage()) return "agent-plugin";
++  throw new Error("Impeccable host is unknown. Set IMPECCABLE_HOST to agent-plugin, cursor, or codex.");
 +}
 +
 +export const IMPECCABLE_PROVIDER_ID = resolveImpeccableProvider();
-+export const IMPECCABLE_COMMAND_PREFIX = IMPECCABLE_PROVIDER_ID === "cursor" ? "/" : "$";
++export const IMPECCABLE_COMMAND_PREFIX = IMPECCABLE_PROVIDER_ID === "cursor"
++  ? "/"
++  : IMPECCABLE_PROVIDER_ID === "codex"
++    ? "$"
++    : "";
  export const IMPECCABLE_COMMAND = `${IMPECCABLE_COMMAND_PREFIX}impeccable`;
 diff --git a/skills/impeccable/scripts/lib/staleness-deep.mjs b/skills/impeccable/scripts/lib/staleness-deep.mjs
 index bae03bc..d3b43e8 100644

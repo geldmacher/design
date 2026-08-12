@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:geldmacher:schemas:impeccable-pin:1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "name", "version", "repository", "tag", "tagObject", "commit", "archive"],
+  "properties": {
+    "$schema": { "const": "./impeccable.pin.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "name": { "const": "Impeccable" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "repository": { "const": "https://github.com/pbakaus/impeccable" },
+    "tag": { "type": "string", "pattern": "^skill-v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "tagObject": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "url", "sha256"],
+      "properties": {
+        "name": { "const": "universal.zip" },
+        "url": { "type": "string", "format": "uri" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

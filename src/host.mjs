@@ -1,4 +1,4 @@
-export const HOST_IDS = Object.freeze(['cursor', 'codex']);
+export const HOST_IDS = Object.freeze(['agent-plugin', 'cursor', 'codex']);
 
 export function resolveHost(explicit, env = process.env) {
   const candidate = typeof explicit === 'string' && explicit.trim()
@@ -12,15 +12,17 @@ export function resolveHost(explicit, env = process.env) {
           : null;
 
   if (!candidate) {
-    throw new Error('Plugin host is unknown. Pass --host cursor or --host codex.');
+    throw new Error('Plugin host is unknown. Pass --host agent-plugin, cursor, or codex.');
   }
   if (!HOST_IDS.includes(candidate)) {
-    throw new Error(`Unsupported plugin host: ${candidate}. Expected cursor or codex.`);
+    throw new Error(`Unsupported plugin host: ${candidate}. Expected agent-plugin, cursor, or codex.`);
   }
   return candidate;
 }
 
 export function hostInvocation(host, skill) {
   const resolved = resolveHost(host, {});
-  return `${resolved === 'cursor' ? '/' : '$'}${skill}`;
+  if (resolved === 'cursor') return `/${skill}`;
+  if (resolved === 'codex') return `$${skill}`;
+  return skill;
 }

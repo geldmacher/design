@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const skippedDirectories = new Set([
+  '.agents',
+  '.build',
+  '.cursor',
   '.git',
   '.tests',
   'node_modules',

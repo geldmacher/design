@@ -17,7 +17,8 @@
         "type": { "enum": ["first-party", "vendored"] },
         "url": { "type": "string", "format": "uri" },
         "tag": { "type": "string" },
-        "commit": { "type": "string" }
+        "commit": { "type": "string" },
+        "archiveSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
       }
     },
     "license": { "type": "string", "minLength": 1 },

@@ -4,9 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
+import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import YAML from 'yaml';
 import { flattenCapabilities, loadModules } from '../src/registry.mjs';
+import { readPin } from './lib/impeccable-maintenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let checks = 0;
@@ -73,6 +75,10 @@ check(nodeMajor >= 22, `Node 22+ required, found ${process.versions.node}.`);
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
+const pinDocument = readJson('upstream/impeccable.pin.json');
+const validatePinDocument = ajv.compile(readJson('upstream/impeccable.pin.schema.json'));
+check(validatePinDocument(pinDocument), `Impeccable pin is invalid: ${ajv.errorsText(validatePinDocument.errors)}`);
+const pin = readPin(root);
 const pluginSchema = readJson('schemas/plugin.schema.json');
 const packageManifest = readJson('package.json');
 const manifest = readJson('.cursor-plugin/plugin.json');
@@ -81,11 +87,11 @@ const validateManifest = ajv.compile(pluginSchema);
 check(validateManifest(manifest), `Plugin manifest is invalid: ${ajv.errorsText(validateManifest.errors)}`);
 check(manifest.name === 'geldmacher-design', 'Unexpected plugin name.');
 check(manifest.displayName === 'Design', 'Unexpected display name.');
-check(manifest.version === '0.2.0', 'Cursor manifest version must be 0.2.0.');
+check(manifest.version === '0.3.0', 'Cursor manifest version must be 0.3.0.');
 check(packageManifest.version === manifest.version, 'Package and Cursor manifest versions differ.');
 check(manifest.license === 'MIT', 'Wrapper license must be MIT.');
-check(manifest.repository === 'https://github.com/geldmacher/geldmacher-design', 'Manifest repository must reference the public source repository.');
-check(manifest.homepage === 'https://github.com/geldmacher/geldmacher-design#readme', 'Manifest homepage must reference the public README.');
+check(manifest.repository === 'https://github.com/geldmacher/design', 'Manifest repository must reference the public source repository.');
+check(manifest.homepage === 'https://github.com/geldmacher/design#readme', 'Manifest homepage must reference the public README.');
 for (const intentionallyAbsent of ['minClientVersions', 'mcpServers']) {
   check(!Object.hasOwn(manifest, intentionallyAbsent), `${intentionallyAbsent} must remain absent until real and verified.`);
 }
@@ -123,11 +129,34 @@ check(marketplacePlugin.policy?.authentication === 'ON_USE', 'Marketplace authen
 const schemaLock = readJson('schemas/plugin.schema.lock.json');
 check(sha256('schemas/plugin.schema.json') === schemaLock.sha256, 'Vendored Cursor schema hash does not match its lock.');
 check(/^[0-9a-f]{40}$/.test(schemaLock.commit), 'Cursor schema lock needs an exact commit.');
+const agentPluginSchemaLock = readJson('schemas/agent-plugin/1.0.0/source.lock.json');
+check(agentPluginSchemaLock.specification === '1.0.0', 'Unexpected Agent Plugins schema version.');
+check(sha256('schemas/agent-plugin/1.0.0/plugin.schema.json') === agentPluginSchemaLock.sha256, 'Vendored Agent Plugins schema hash does not match its lock.');
+check(agentPluginSchemaLock.source === 'https://raw.githubusercontent.com/agentplugins/agent-plugins-spec/main/schemas/1.0.0/plugin.schema.json', 'Unexpected Agent Plugins schema source.');
+const agentPluginManifest = readJson('manifests/agent-plugin.json');
+const validateAgentPluginManifest = new Ajv2020({ allErrors: true, strict: false }).compile(readJson('schemas/agent-plugin/1.0.0/plugin.schema.json'));
+check(validateAgentPluginManifest(agentPluginManifest), `Agent Plugins manifest template is invalid: ${JSON.stringify(validateAgentPluginManifest.errors)}`);
+check(agentPluginManifest.name === manifest.name && agentPluginManifest.version === manifest.version, 'Agent Plugins manifest identity or version differs from native manifests.');
+check(agentPluginManifest.repository === manifest.repository && agentPluginManifest.homepage === manifest.homepage, 'Agent Plugins repository metadata differs from native manifests.');
+check(!Object.hasOwn(agentPluginManifest, 'extensions'), 'Agent Plugins manifest must not invent an extension namespace.');
+check(!fs.existsSync(path.join(root, 'plugin.json')), 'The source workspace must not masquerade as the generated Agent Plugins package.');
 
 const skillPaths = manifestValues(manifest.skills).flatMap(expandManifestPath);
 const skillFiles = skillPaths.map((relative) => `${relative}/SKILL.md`);
 for (const relative of skillFiles) check(fs.existsSync(path.join(root, relative)), `Missing declared skill: ${relative}`);
-const skillNames = skillFiles.map((relative) => frontmatter(relative).name);
+const agentSkillFields = new Set(['name', 'description', 'license', 'compatibility', 'metadata', 'allowed-tools']);
+const skillFrontmatters = skillFiles.map((relative) => ({ relative, value: frontmatter(relative) }));
+for (const { relative, value } of skillFrontmatters) {
+  assertOnlyKeys(value, agentSkillFields, `${relative} frontmatter`);
+  check(typeof value.description === 'string' && value.description.length > 0 && value.description.length <= 1024, `${relative} needs a valid Agent Skills description.`);
+  check(value.license === undefined || typeof value.license === 'string', `${relative} license must be a string.`);
+  check(value.compatibility === undefined || (typeof value.compatibility === 'string' && value.compatibility.length <= 500), `${relative} compatibility is invalid.`);
+  if (value.metadata !== undefined) {
+    check(value.metadata && typeof value.metadata === 'object' && !Array.isArray(value.metadata), `${relative} metadata must be an object.`);
+    check(Object.values(value.metadata).every((entry) => typeof entry === 'string'), `${relative} metadata values must be strings.`);
+  }
+}
+const skillNames = skillFrontmatters.map(({ value }) => value.name);
 assertUnique(skillNames, 'Skill names');
 check(skillNames.includes('design') && skillNames.includes('impeccable'), 'Both design and impeccable skills must be declared.');
 for (const skillPath of skillPaths) {
@@ -182,7 +211,7 @@ check(fs.existsSync(path.join(root, 'hooks/impeccable-codex-hook.mjs')), 'Codex 
 const moduleSchema = readJson('modules/module.schema.json');
 const validateModule = ajv.compile(moduleSchema);
 const modules = loadModules(root);
-check(modules.length === 2, `Version 0.2.0 must contain exactly design-core and impeccable modules, found ${modules.length}.`);
+check(modules.length === 2, `Version 0.3.0 must contain exactly design-core and impeccable modules, found ${modules.length}.`);
 assertUnique(modules.map((module) => module.id), 'Module ids');
 for (const module of modules) {
   check(validateModule(module), `Module ${module.id} is invalid: ${ajv.errorsText(validateModule.errors)}`);
@@ -192,7 +221,12 @@ assertUnique(capabilities.map((capability) => `${capability.module}:${capability
 check(capabilities.filter((capability) => capability.fallback).length === 1, 'Exactly one fallback capability is required.');
 check(capabilities.find((capability) => capability.fallback)?.skill === 'impeccable', 'Impeccable must own the fallback.');
 check(modules.find((module) => module.id === 'design-core')?.version === manifest.version, 'First-party module version differs from the plugin package.');
-check(modules.find((module) => module.id === 'impeccable')?.version === '4.0.4', 'Impeccable module must remain pinned to 4.0.4.');
+const impeccableModule = modules.find((module) => module.id === 'impeccable');
+check(impeccableModule?.version === pin.version, 'Impeccable module version differs from the approved pin.');
+check(impeccableModule?.source?.url === pin.repository, 'Impeccable module repository differs from the approved pin.');
+check(impeccableModule?.source?.tag === pin.tag, 'Impeccable module tag differs from the approved pin.');
+check(impeccableModule?.source?.commit === pin.commit, 'Impeccable module commit differs from the approved pin.');
+check(impeccableModule?.source?.archiveSha256 === pin.archive.sha256, 'Impeccable module archive hash differs from the approved pin.');
 
 const contributedSkills = modules.flatMap((module) => module.contributes.skills).sort();
 const contributedAgents = modules.flatMap((module) => module.contributes.agents).sort();
@@ -204,24 +238,40 @@ for (const module of modules) {
   for (const field of ['skills', 'agents', 'rules', 'hooks', 'scripts']) {
     for (const relative of module.contributes[field]) check(fs.existsSync(path.join(root, relative)), `Orphan ${module.id} ${field} contribution: ${relative}`);
   }
-  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP in 0.2.0.`);
+  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP in 0.3.0.`);
 }
 const contributedHooks = new Set(modules.flatMap((module) => module.contributes.hooks));
 check(contributedHooks.has(cursorHookRelative), 'The Cursor hook must be owned by a module.');
 check(contributedHooks.has(codexHookRelative), 'The Codex hook must be owned by a module.');
 
 const lock = readJson('upstream/impeccable.lock.json');
-check(lock.upstream.tag === 'skill-v4.0.4', 'Unexpected Impeccable tag.');
-check(lock.upstream.tagObject === 'fb0942f57736841580a65088637f94da4a4ba87c', 'Unexpected annotated tag object.');
-check(lock.upstream.commit === '9a949fb543d44cfb406f61bcab99d95d7f12cf1d', 'Unexpected Impeccable commit.');
-check(lock.upstream.archive.sha256 === 'bc190f6e1b31c2578013546768903c0babf1af5a6d397c4131f2f2c7c298e770', 'Unexpected Impeccable archive hash.');
+check(lock.upstream.repository === pin.repository, 'Impeccable lock repository differs from the approved pin.');
+check(lock.upstream.tag === pin.tag, 'Impeccable lock tag differs from the approved pin.');
+check(lock.upstream.tagObject === pin.tagObject, 'Impeccable lock annotated tag object differs from the approved pin.');
+check(lock.upstream.commit === pin.commit, 'Impeccable lock commit differs from the approved pin.');
+check(lock.upstream.archive.url === pin.archive.url, 'Impeccable lock archive URL differs from the approved pin.');
+check(lock.upstream.archive.sha256 === pin.archive.sha256, 'Impeccable lock archive hash differs from the approved pin.');
+check(impeccableModule.source.archiveSha256 === lock.upstream.archive.sha256, 'Packaged Impeccable archive provenance differs from the upstream lock.');
+const expectedNotice = [
+  'Geldmacher Design includes a modified, vendored Cursor build of Impeccable.',
+  '',
+  `Impeccable source: ${pin.repository}`,
+  `Pinned tag: ${pin.tag}`,
+  `Pinned commit: ${pin.commit}`,
+].join('\n');
+check(fs.readFileSync(path.join(root, 'upstream/NOTICE'), 'utf8').startsWith(expectedNotice), 'Impeccable NOTICE differs from the approved pin.');
+const thirdPartyNotice = fs.readFileSync(path.join(root, 'THIRD_PARTY_NOTICES.md'), 'utf8');
+check(thirdPartyNotice.includes(`- Source: ${pin.repository}`), 'Third-party notice repository differs from the approved pin.');
+check(thirdPartyNotice.includes(`- Pinned release: \`${pin.tag}\``), 'Third-party notice release differs from the approved pin.');
 check(lock.upstream.license.destination === 'upstream/LICENSE', 'Unexpected Impeccable license destination.');
 check(sha256(lock.upstream.license.destination) === lock.upstream.license.sha256, 'Impeccable license hash does not match lock.');
 check(sha256(lock.import.patch) === lock.import.patchSha256, 'Transformation patch hash does not match lock.');
 const allowedTransformations = new Set([
+  'agent-skills-frontmatter',
   'portable-dual-host-script-paths',
   'dual-host-provider-routing',
   'codex-generic-subagent-contract',
+  'agent-plugin-provider-routing',
   'replace-project-hook-installation-with-plugin-hook',
   'disable-runtime-self-update',
   'redirect-standalone-installer',
@@ -265,11 +315,12 @@ const providerScript = fs.readFileSync(path.join(root, 'skills/impeccable/script
 check(providerScript.includes('resolveImpeccableProvider'), 'Impeccable provider is not dual-host aware.');
 check(providerScript.includes('env.IMPECCABLE_HOST'), 'Impeccable provider does not honor the explicit host override.');
 check(providerScript.includes('env.CURSOR_PLUGIN_ROOT') && providerScript.includes('env.PLUGIN_ROOT'), 'Impeccable provider is missing a documented adapter fallback.');
+check(providerScript.includes('AGENT_PLUGIN_SCHEMA') && providerScript.includes('agent-plugin'), 'Impeccable provider is missing canonical Agent Plugins detection.');
 check(providerScript.includes('host is unknown'), 'Impeccable provider silently defaults an unknown host.');
 const hostScript = fs.readFileSync(path.join(root, 'src/host.mjs'), 'utf8');
 check(hostScript.includes('env.IMPECCABLE_HOST'), 'Shared host resolution does not honor IMPECCABLE_HOST.');
 check(hostScript.includes('Plugin host is unknown'), 'Shared host resolution silently defaults an unknown host.');
-const cliScript = fs.readFileSync(path.join(root, 'scripts/design-cli.mjs'), 'utf8');
+const cliScript = fs.readFileSync(path.join(root, 'skills/design/scripts/design-cli.mjs'), 'utf8');
 check(cliScript.includes("arg === '--host'") && cliScript.includes("arg.startsWith('--host=')"), 'Design CLI does not expose both --host forms.');
 
 process.stdout.write(`Plugin validation passed (${checks} checks).\n`);

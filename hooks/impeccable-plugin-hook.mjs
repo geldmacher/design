@@ -76,7 +76,7 @@ async function main() {
   process.stdout.write(JSON.stringify(result.payload));
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   main().catch((error) => {
     process.stderr.write(`${diagnostic(`Unexpected hook failure: ${error.message}`)}\n`);
     process.stdout.write(JSON.stringify(allow(diagnostic('Unexpected hook failure; edit allowed. Run /design doctor.'))));

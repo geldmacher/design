@@ -76,6 +76,7 @@ function codexSkillCandidates(projectRoot) {
 
 export function detectProjectConflicts(projectRoot, options = {}) {
   const host = resolveHost(options.host, options.env);
+  if (host === 'agent-plugin') return [];
   const root = path.resolve(projectRoot);
   const conflicts = [];
   const directSkills = host === 'cursor'
@@ -131,17 +132,24 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
   const pluginRoot = path.resolve(options.pluginRoot || DEFAULT_PLUGIN_ROOT);
   const root = path.resolve(projectRoot);
   const host = resolveHost(options.host, options.env);
-  const manifestDirectory = host === 'cursor' ? '.cursor-plugin' : '.codex-plugin';
-  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifestDirectory, 'plugin.json'), 'utf8'));
+  const manifestPath = host === 'cursor'
+    ? path.join(pluginRoot, '.cursor-plugin', 'plugin.json')
+    : host === 'codex'
+      ? path.join(pluginRoot, '.codex-plugin', 'plugin.json')
+      : path.join(pluginRoot, 'plugin.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   const modules = loadModules(pluginRoot);
-  const upstreamLock = JSON.parse(fs.readFileSync(path.join(pluginRoot, 'upstream', 'impeccable.lock.json'), 'utf8'));
   const skillText = fs.readFileSync(path.join(pluginRoot, 'skills', 'impeccable', 'SKILL.md'), 'utf8');
-  const skillVersion = skillText.match(/^version:\s*([^\s]+)\s*$/m)?.[1] || null;
+  const skillVersion = skillText.match(/^\s+version:\s*["']?([^\s"']+)["']?\s*$/m)?.[1]
+    || skillText.match(/^version:\s*([^\s]+)\s*$/m)?.[1]
+    || null;
   const impeccableModule = modules.find((module) => module.id === 'impeccable');
-  const activation = readHookActivation(root);
+  const activation = host === 'agent-plugin'
+    ? { state: 'unavailable', enabled: false, explicit: false, path: null }
+    : readHookActivation(root);
   const hook = {
     ...activation,
-    mode: host === 'cursor' ? 'pre-write' : 'post-write-stop',
+    mode: host === 'cursor' ? 'pre-write' : host === 'codex' ? 'post-write-stop' : 'none',
   };
   const conflicts = detectProjectConflicts(root, { host });
   const context = {
@@ -154,12 +162,12 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
     projectRoot: root,
     plugin: { name: manifest.name, version: manifest.version },
     upstream: {
-      name: upstreamLock.upstream.name,
+      name: 'Impeccable',
       version: impeccableModule?.version || null,
       skillVersion,
-      tag: upstreamLock.upstream.tag,
-      commit: upstreamLock.upstream.commit,
-      archiveSha256: upstreamLock.upstream.archive.sha256,
+      tag: impeccableModule?.source?.tag || null,
+      commit: impeccableModule?.source?.commit || null,
+      archiveSha256: impeccableModule?.source?.archiveSha256 || null,
     },
     modules: modules.map((module) => ({ id: module.id, version: module.version, license: module.license })),
     hook,
@@ -171,6 +179,13 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
 export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
   const state = inspectProject(projectRoot, options);
   const findings = [...state.conflicts];
+  if (state.host === 'agent-plugin') {
+    findings.push({
+      id: 'hook-unavailable',
+      severity: 'diagnostic',
+      message: 'Agent Plugins v1 does not standardize plugin hooks; design checks remain unavailable in this target.',
+    });
+  }
   const tagVersion = state.upstream.tag.replace(/^skill-v/, '');
   if (new Set([state.upstream.version, state.upstream.skillVersion, tagVersion]).size !== 1) {
     findings.push({
@@ -213,7 +228,7 @@ function writeHookEnabled(projectRoot, enabled) {
 
 export function setupProject(projectRoot = process.cwd(), options = {}) {
   const state = inspectProject(projectRoot, options);
-  const enableHook = options.enableHook !== false;
+  const enableHook = state.host !== 'agent-plugin' && options.enableHook !== false;
   const plan = {
     writes: enableHook ? ['.impeccable/config.json: set hook.enabled=true'] : [],
     offers: [
@@ -235,6 +250,9 @@ export function setupProject(projectRoot = process.cwd(), options = {}) {
 
 export function setProjectHook(projectRoot, enabled, options = {}) {
   const state = inspectProject(projectRoot, options);
+  if (state.host === 'agent-plugin') {
+    throw new Error('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.');
+  }
   if (state.hook.state === 'malformed') throw new Error('Malformed config requires a deliberate manual repair.');
   if (enabled && state.conflicts.some((finding) => finding.severity === 'conflict')) {
     throw new Error('Activation refused because a direct Impeccable installation or duplicate hook exists.');

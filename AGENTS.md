@@ -13,6 +13,7 @@ Design helps people ship websites and web apps that feel intentional. Act as a f
 ## Architecture
 
 - Keep a shared, host-neutral core behind thin host-native adapters.
+- Keep the Agent Plugins v1 package as the portable skills-only floor; do not emulate hooks, native agents, distribution, or activation.
 - Cursor enters through `/design`, resolves plugin files from `${CURSOR_PLUGIN_ROOT}`, and may enforce known UI issues before a write.
 - Codex enters through `$design`, resolves plugin files from `${PLUGIN_ROOT}`, and reports issues after a change or at Stop. It does not pretend to roll back completed edits.
 - Do not silently guess an unknown host, provider, or tool contract. Preserve observable host differences.

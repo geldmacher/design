@@ -1,26 +1,34 @@
 {
   "name": "geldmacher-design",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Dual-target Cursor and Codex plugin for curated web design workflows powered by Impeccable.",
+  "description": "Multi-target design plugin for Agent Plugins, Cursor, and Codex, powered by Impeccable.",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://github.com/geldmacher/geldmacher-design#readme",
+  "homepage": "https://github.com/geldmacher/design#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/geldmacher/geldmacher-design.git"
+    "url": "https://github.com/geldmacher/design.git"
   },
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "build:capabilities": "node scripts/build-capability-index.mjs",
+    "build:targets": "node scripts/build-plugin-targets.mjs",
+    "check:targets": "node scripts/build-plugin-targets.mjs --check",
+    "deploy:prepare": "npm run build:capabilities && npm run build:targets && npm run check:targets && npm run check:english && npm run validate && node --test tests/plugin-targets.test.mjs tests/portable-runtime.test.mjs tests/local-plugin-deploy.test.mjs",
+    "deploy:status": "node scripts/local-plugin-deploy.mjs status",
+    "deploy:local": "node scripts/local-plugin-deploy.mjs deploy",
     "check:english": "node scripts/check-english.mjs",
+    "check:impeccable-upstream": "node scripts/check-impeccable-upstream.mjs",
     "sync:impeccable": "node scripts/sync-impeccable.mjs",
+    "prepare:impeccable-update": "node scripts/prepare-impeccable-update.mjs",
+    "apply:impeccable-update": "node scripts/apply-impeccable-update.mjs",
     "validate": "node scripts/validate-plugin.mjs",
     "test": "node --test tests/*.test.mjs",
     "check:links": "node scripts/check-links.mjs",
-    "release-check": "npm run build:capabilities -- --check && npm run check:english && npm run validate && npm test && npm run check:links"
+    "release-check": "npm run build:capabilities -- --check && npm run check:targets && npm run check:english && npm run validate && npm test && npm run check:links"
   },
   "devDependencies": {
     "ajv": "8.20.0",

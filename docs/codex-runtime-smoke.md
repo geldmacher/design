@@ -14,19 +14,26 @@ Before the run, record:
 - initial project file list and `.codex/hooks.json` hash or absence;
 - every installation, activation, and hook-trust confirmation.
 
-## Marketplace, install, and discovery
+## Preview, install, and discovery
 
-The following operations change the user's Codex configuration and therefore remain manual:
+Start with the repository helper's read-only Codex preview:
 
 ```bash
-codex plugin marketplace add /absolute/path/to/geldmacher-design
-codex plugin add geldmacher-design@geldmacher-design-local
+npm run deploy:local -- --dry-run --codex-only
 ```
 
-1. Add the repository-local Marketplace and install `geldmacher-design` from it.
-2. Confirm the installed package reports version `0.2.0` and is enabled.
+Inspect the exact source, destination, content hash, local version, Marketplace change, and cache path. Applying the deployment changes the user's Codex configuration and requires a separate human authorization. Only after that approval, run:
+
+```bash
+npm run deploy:local -- --codex-only
+```
+
+The helper deploys the built Codex target, updates only the `geldmacher-design` entry in the `personal` Marketplace, and activates `geldmacher-design@personal`. It does not install the repository root as a Marketplace.
+
+1. Confirm `geldmacher-design@personal` is installed and enabled.
+2. Confirm its installed version is the content-addressed `0.3.0+local.codex.<digest>` reported by the preview, not the plain product version.
 3. Start a fresh task in the disposable project.
-4. Explicitly invoke `$design status`; confirm Impeccable `4.0.4`, disabled hook, and Codex-specific project diagnostics.
+4. Explicitly invoke `$design status`; confirm the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and Codex-specific project diagnostics.
 5. Explicitly invoke `$impeccable`; confirm it resolves through the installed skill rather than a project-local copy.
 6. Verify ordinary UI work without either skill invocation does not implicitly activate a skill.
 
@@ -64,4 +71,4 @@ In disposable copies only:
 3. Malform `.impeccable/config.json`; a non-blocking event-correct diagnostic may appear and the edit must remain.
 4. Simulate a missing detector runtime; a non-blocking diagnostic may appear and the edit must remain.
 
-Store receipts in `.tests/` only. Remove the local test installation manually when no longer needed. A successful run is local runtime evidence, not Marketplace certification or publication.
+Store receipts in `.tests/` only. Remove the local test installation manually when no longer needed. A successful run is local runtime evidence, not Marketplace certification or publication. None of these live operations is part of the repository release gate.

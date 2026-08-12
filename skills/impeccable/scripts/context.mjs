@@ -1253,6 +1253,7 @@ function automaticHookMode(ctx) {
   if (ctx.platform === 'ios' || ctx.platform === 'android' || ctx.platform === 'adaptive') {
     return 'none';
   }
+  if (IMPECCABLE_PROVIDER_ID === 'agent-plugin') return 'none';
   const activeRoot = path.resolve(ctx.projectRoot || process.cwd());
   if (!hookEnabledAt(activeRoot)) return 'none';
   if (PLUGIN_MANAGED_HOOK) return STOP_REVIEW_PROVIDERS.has(IMPECCABLE_PROVIDER_ID) ? 'stop' : 'per-edit';

@@ -2,14 +2,14 @@
   "name": "geldmacher-design",
   "displayName": "Design",
   "description": "Curated design workflows for websites and web apps, powered by Impeccable.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"
   },
   "publisher": "Geldmacher",
-  "homepage": "https://github.com/geldmacher/geldmacher-design#readme",
-  "repository": "https://github.com/geldmacher/geldmacher-design",
+  "homepage": "https://github.com/geldmacher/design#readme",
+  "repository": "https://github.com/geldmacher/design",
   "license": "MIT",
   "logo": "./assets/logo.svg",
   "keywords": [

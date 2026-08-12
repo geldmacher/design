@@ -58,6 +58,7 @@ test('AGENTS.md stays outside package and runtime declarations', () => {
   const declarationFiles = [
     path.join(root, '.cursor-plugin/plugin.json'),
     path.join(root, '.codex-plugin/plugin.json'),
+    path.join(root, 'manifests/agent-plugin.json'),
     path.join(root, '.agents/plugins/marketplace.json'),
     ...filesBelow(path.join(root, 'modules')).filter((file) => file.endsWith('.json')),
   ];

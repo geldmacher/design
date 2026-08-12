@@ -7,7 +7,8 @@
     "type": "vendored",
     "url": "https://github.com/pbakaus/impeccable",
     "tag": "skill-v4.0.4",
-    "commit": "9a949fb543d44cfb406f61bcab99d95d7f12cf1d"
+    "commit": "9a949fb543d44cfb406f61bcab99d95d7f12cf1d",
+    "archiveSha256": "bc190f6e1b31c2578013546768903c0babf1af5a6d397c4131f2f2c7c298e770"
   },
   "license": "Apache-2.0",
   "capabilities": [
