@@ -24,3 +24,9 @@ The generated `skills/design/references/capabilities.md` is the runtime routing 
 6. An MCP module must add the real MCP configuration and manifest entry together. Do not add empty MCP scaffolding.
 
 Build projection narrows contributions per target. Cursor and Codex retain their host adapters and role contracts. The Agent Plugins v1 package contributes only the two skills and their generic runtime; native hooks and root agents are removed from its projected module manifests.
+
+## First-party change review
+
+`design-core:change-interface-review` is a first-party capability inside the existing `design` skill, not a third skill or vendored module. It owns Git scope resolution, change classification, finding caps, and the task-local report. Impeccable remains the fallback and supplies canonical context, design principles, detector evidence, and the separately approved refinement flow.
+
+The method was independently authored with inspiration from [`jakubkrehel/skills` commit `c25a8437`](https://github.com/jakubkrehel/skills/tree/c25a8437afc6fecf277158f7c6e2f9aa45f4993d). No upstream files, runtime imports, or sync relationship are included. Substantial future copying would require a separate vendored-module decision, exact provenance, the MIT notice, and the admission controls above.

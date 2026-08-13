@@ -50,7 +50,10 @@ export function routeRequest(request, modules) {
 
   for (const module of modules) {
     for (const capability of module.capabilities || []) {
-      const matches = (capability.triggers || []).filter((trigger) => triggerMatches(input, trigger));
+      const commandScopedInput = module.id === 'design-core' && capability.id === 'change-interface-review'
+        ? (/^review(?:\s|$)/i.test(input) ? input : '')
+        : input;
+      const matches = (capability.triggers || []).filter((trigger) => triggerMatches(commandScopedInput, trigger));
       const candidate = { module, capability, matches };
       if (capability.fallback) fallbacks.push(candidate);
       if (matches.length > 0 && !capability.fallback) candidates.push(candidate);

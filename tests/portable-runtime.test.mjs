@@ -44,6 +44,12 @@ function run(script, args, options = {}) {
   return result;
 }
 
+function runGit(cwd, args) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return result.stdout.trim();
+}
+
 function runJson(script, args, options = {}) {
   const result = run(script, args, options);
   assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -58,6 +64,14 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   const outsideSentinel = join(fixtureRoot, "outside-project-sentinel.txt");
   mkdirSync(project, { recursive: true });
   mkdirSync(home, { recursive: true });
+  mkdirSync(join(project, 'src'), { recursive: true });
+  writeFileSync(join(project, 'src', 'Card.tsx'), 'export const Card = () => <button>Open</button>;\n');
+  runGit(project, ['init', '-b', 'main']);
+  runGit(project, ['config', 'user.name', 'Portable Test']);
+  runGit(project, ['config', 'user.email', 'portable@example.test']);
+  runGit(project, ['add', '.']);
+  runGit(project, ['commit', '-m', 'initial interface']);
+  writeFileSync(join(project, 'src', 'Card.tsx'), 'export const Card = () => <button aria-label="Open">Open</button>;\n');
   writeFileSync(outsideSentinel, "unchanged\n");
   t.after(() => {
     removeTargetBuildWorkspace(buildWorkspace);
@@ -66,13 +80,25 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   const targets = buildPluginTargets(buildWorkspace.targets);
   const envFor = (extra = {}) => isolatedEnv(home, extra);
 
+  for (const host of ['cursor', 'codex', 'agent-plugin']) {
+    const resolver = join(targets[host].path, 'skills', 'design', 'scripts', 'review-scope.mjs');
+    const scope = runJson(resolver, ['--mode', 'quick', '--target', 'working', '--json'], {
+      cwd: project,
+      env: envFor({ IMPECCABLE_HOST: host }),
+    });
+    assert.equal(scope.status, 'ready');
+    assert.equal(scope.mode, 'quick');
+    assert.deepEqual(scope.files.map((file) => file.path), ['src/Card.tsx']);
+    assert.equal(scope.operations.some((operation) => operation.command === 'git' && ['checkout', 'switch', 'stash'].includes(operation.args[0])), false);
+  }
+
   for (const host of ["cursor", "codex"]) {
     const target = targets[host].path;
     const impeccableModule = JSON.parse(readFileSync(join(target, "modules", "impeccable.json"), "utf8"));
     assert.equal(existsSync(join(target, "upstream")), false);
     const cli = join(target, "skills", "design", "scripts", "design-cli.mjs");
     const status = runJson(cli, ["--host", host, "status", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
-    assert.equal(status.plugin.version, "0.3.0");
+    assert.equal(status.plugin.version, "0.4.0");
     assert.equal(status.upstream.archiveSha256, impeccableModule.source.archiveSha256);
     assert.equal(status.hook.mode, host === "cursor" ? "pre-write" : "post-write-stop");
     const preview = runJson(cli, ["--host", host, "setup", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });

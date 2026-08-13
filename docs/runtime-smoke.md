@@ -20,9 +20,20 @@ Before the run, record:
 2. Start a fresh conversation.
 3. Confirm `Design` is discovered as a local plugin.
 4. Confirm `/design` and `/impeccable` are visible.
-5. Run `/design status`; confirm plugin `0.3.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
+5. Run `/design status`; confirm plugin `0.4.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
 6. Confirm the command succeeds while cwd is the disposable project rather than the plugin root.
 7. Resolve each agent: `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer`, and `impeccable-manual-edit-applier`. Do not infer agent discovery from files alone.
+
+## Change review
+
+Use a disposable Git history with one committed UI change, one uncommitted UI file, and one changed lockfile.
+
+1. Run `/design review`. Confirm it defaults to `quick`, selects the branch plus uncommitted change, excludes and names the lockfile, caps actionable findings at five, and changes no file.
+2. In a clean branch with no commits ahead, run `/design review`. Confirm it names the current branch and last commit, offers an explicit target or `/design critique <surface>`, and does not review `HEAD~1..HEAD` automatically.
+3. Start a disposable preview, then run `/design review quick working`. Confirm it may reuse the preview but starts no server and creates no worktree.
+4. Stop the preview and run `/design review full branch`. Confirm it starts at most one documented safe preview, records verification, stops the process, and leaves the working tree unchanged.
+5. Review a disposable pull request. Confirm the head is fetched into a remote-tracking ref, the active checkout does not change, every `.git` write is reported, and unavailable rendering is marked `Not verified`.
+6. Confirm no `.impeccable/critique/` snapshot is written. Then explicitly run `/design polish <surface> using review finding 1`; confirm the router hands the approved refinement to bundled Impeccable.
 
 ## Strict activation and blocking
 

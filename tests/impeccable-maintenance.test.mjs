@@ -240,7 +240,7 @@ function createRepositoryFixture(base) {
   write(join(root, "upstream", "patches", "impeccable-plugin.patch"), "old patch\n");
   write(join(root, "THIRD_PARTY_NOTICES.md"), "- Source: https://github.com/pbakaus/impeccable\n- Pinned release: `skill-v4.0.4`\n");
   write(join(root, "modules", "impeccable.json"), `${JSON.stringify(moduleDocument("impeccable", approved.version, { type: "vendored", url: approved.repository, tag: approved.tag, commit: approved.commit, archiveSha256: approved.archive.sha256 }), null, 2)}\n`);
-  write(join(root, "modules", "design-core.json"), `${JSON.stringify(moduleDocument("design-core", "0.3.0"), null, 2)}\n`);
+  write(join(root, "modules", "design-core.json"), `${JSON.stringify(moduleDocument("design-core", "0.4.0"), null, 2)}\n`);
   write(join(root, "skills", "design", "references", "capabilities.md"), "old capabilities\n");
   write(join(root, "skills", "impeccable", "old.txt"), "old skill\n");
   for (const name of agentNames) write(join(root, "agents", name), `old ${name}\n`);

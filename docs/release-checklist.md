@@ -13,6 +13,8 @@
 - [ ] The builder accepts only repository `.build/plugins` or a newly owned `geldmacher-design-build-*/targets` workspace and rejects repository roots, protected ancestors, the temp root, foreign temp directories, and symlink segments before cleanup.
 - [ ] Portable Markdown and runtime resources contain no native role aliases or `SUBAGENT_AUTHORIZATION`; context and live manual apply point to bundled degraded roles.
 - [ ] Built-target simulations cover status, doctor, setup preview, generic hook refusal, portable context/live events, native fail-open adapters, and Impeccable provider selection without writing to real host state.
+- [ ] Review-scope fixtures cover branch-plus-dirty work, staged and untracked files, exact two-dot and three-dot ranges, renames, exclusions, detached HEAD, shallow history, PR fetches, empty scope, and in-progress Git operations without checkout mutation.
+- [ ] All three target packages include the review reference and resolver while retaining exactly the `design` and `impeccable` skills.
 - [ ] Runtime subprocesses override home, Codex, local-plugin, XDG, and Impeccable update-cache paths with fixtures, and outside-project sentinels remain unchanged.
 - [ ] Codex deployment fixtures mutate registry and versioned caches, restore prior or absent installation state after failure, and aggregate incomplete rollback errors.
 - [ ] `upstream/impeccable.lock.json` inventories every vendored skill/agent file and all hashes match.
@@ -36,12 +38,13 @@ Follow `docs/runtime-smoke.md` in a fresh Cursor window after reload. Record the
 - [ ] Strict project-local activation and deactivation behave as documented.
 - [ ] A clean UI write is allowed and the known detector fixture is denied.
 - [ ] No duplicate `.cursor/hooks.json` entry is created.
+- [ ] `/design review` defaults to task-local quick mode, preserves the checkout, and hands separately approved refinement to Impeccable through `/design`.
 
 Until this section has fresh evidence, report these points as unverified, not failed and not passed.
 
 ## Agent Plugins client gate
 
-Version 0.3.0 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that hooks and native subagents are reported as unavailable rather than emulated.
+Version 0.4.0 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that hooks and native subagents are reported as unavailable rather than emulated.
 
 Until that separately authorized gate exists, report real Agent Plugins client discovery, permissions, and activation as unverified. Do not infer them from schema validation or from Cursor/Codex behavior.
 
@@ -58,6 +61,7 @@ Follow `docs/codex-runtime-smoke.md` after a read-only helper preview and separa
 - [ ] Stop reports deferred findings once and then deduplicates them.
 - [ ] A representative canonical role runs in a fresh generic subagent with inherited model and no conversation fork.
 - [ ] No `.codex/hooks.json` or `.agents/skills/impeccable` path is created in the target project.
+- [ ] `$design review` defaults to task-local quick mode, preserves the checkout, and hands separately approved refinement to Impeccable through `$design`.
 
 Until this section has fresh evidence, report these points as unverified, not failed and not passed.
 

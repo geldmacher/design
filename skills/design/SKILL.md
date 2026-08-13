@@ -1,6 +1,6 @@
 ---
 name: design
-description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.
+description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.
 license: MIT
 compatibility: Requires Node.js 22 or newer.
 ---
@@ -21,10 +21,11 @@ Read [references/capabilities.md](references/capabilities.md). It is generated f
 
 1. An explicit `/impeccable ...` or `$impeccable ...` request is never intercepted. Load and follow the bundled [impeccable skill](../impeccable/SKILL.md) directly.
 2. For `/design setup|status|doctor` or `$design setup|status|doctor`, follow the lifecycle flow below.
-3. For any other request, choose the single highest-specificity matching capability from the capability index.
-4. If nothing narrower matches, load and follow the bundled [impeccable skill](../impeccable/SKILL.md) with the user's request unchanged.
-5. If equal-specificity capabilities match, ask one concise clarification question. Do not guess.
-6. Combine capabilities only when every selected manifest explicitly lists every other capability in `combinableWith`.
+3. When `design-core:change-interface-review` wins, read and follow [change-review.md](references/change-review.md). The review is read-only and task-local.
+4. For any other request, choose the single highest-specificity matching capability from the capability index.
+5. If nothing narrower matches, load and follow the bundled [impeccable skill](../impeccable/SKILL.md) with the user's request unchanged.
+6. If equal-specificity capabilities match, ask one concise clarification question. Do not guess.
+7. Combine capabilities only when every selected manifest explicitly lists every other capability in `combinableWith`.
 
 Do not download skills, resolve dynamic URLs, install packages, or invent a module at runtime.
 

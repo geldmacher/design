@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 - 2026-08-13
+
+- Added `/design review` and `$design review` as a first-party, change-scoped interface review backed by bundled Impeccable context and detector evidence.
+- Added deterministic quick/full mode contracts, task-local findings, explicit severity and change classifications, bounded rendering, and approved follow-up routing through Design to Impeccable.
+- Added a self-contained JSON Git scope resolver for working, staged, branch, pull-request, ref, and exact range targets without switching the active checkout.
+- Added real-repository fixtures for branch-plus-dirty work, untracked files, exclusions, ranges, renames, PR fetches, shallow history, detached HEAD, empty scopes, and in-progress Git operations.
+- Preserved exactly two packaged skills, direct Impeccable invocation, opt-in host hooks, and the reproducibly pinned Impeccable upstream.
+
 ## 0.3.0 - 2026-08-11
 
 - Added a deterministic Agent Plugins v1.0.0 package alongside the native Cursor and Codex packages.

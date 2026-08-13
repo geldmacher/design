@@ -12,6 +12,20 @@ test('general website and web-app work routes to Impeccable', () => {
   assert.equal(app.skill, 'impeccable');
 });
 
+test('explicit Design review requests use the first-party change review capability', () => {
+  for (const request of ['/design review', '$design review full pr 482', '/design review working']) {
+    const result = routeRequest(request, modules);
+    assert.equal(result.kind, 'route');
+    assert.equal(result.module, 'design-core');
+    assert.equal(result.capability, 'change-interface-review');
+    assert.equal(result.skill, 'design');
+    assert.equal(result.specificity, 90);
+  }
+  assert.equal(routeRequest('/design critique this dashboard', modules).skill, 'impeccable');
+  assert.equal(routeRequest('$design polish this dashboard using review finding 1', modules).skill, 'impeccable');
+  assert.equal(routeRequest('/design improve the reviewed dashboard', modules).skill, 'impeccable');
+});
+
 test('explicit Cursor and Codex Impeccable invocations bypass the wrapper', () => {
   assert.deepEqual(routeRequest('/impeccable audit src', modules), {
     kind: 'direct',

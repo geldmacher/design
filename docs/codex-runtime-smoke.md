@@ -31,11 +31,22 @@ npm run deploy:local -- --codex-only
 The helper deploys the built Codex target, updates only the `geldmacher-design` entry in the `personal` Marketplace, and activates `geldmacher-design@personal`. It does not install the repository root as a Marketplace.
 
 1. Confirm `geldmacher-design@personal` is installed and enabled.
-2. Confirm its installed version is the content-addressed `0.3.0+local.codex.<digest>` reported by the preview, not the plain product version.
+2. Confirm its installed version is the content-addressed `0.4.0+local.codex.<digest>` reported by the preview, not the plain product version.
 3. Start a fresh task in the disposable project.
 4. Explicitly invoke `$design status`; confirm the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and Codex-specific project diagnostics.
 5. Explicitly invoke `$impeccable`; confirm it resolves through the installed skill rather than a project-local copy.
 6. Verify ordinary UI work without either skill invocation does not implicitly activate a skill.
+
+## Change review
+
+Use a disposable Git history with one committed UI change, one uncommitted UI file, and one changed lockfile.
+
+1. Run `$design review`. Confirm it defaults to `quick`, selects the branch plus uncommitted change, excludes and names the lockfile, caps actionable findings at five, and changes no file.
+2. In a clean branch with no commits ahead, run `$design review`. Confirm it names the current branch and last commit, offers an explicit target or `$design critique <surface>`, and does not review `HEAD~1..HEAD` automatically.
+3. With an already running disposable preview, run `$design review quick working`; confirm it reuses but does not start the preview.
+4. Run `$design review full branch` without a preview. Confirm at most one documented safe server is started, then stopped, with unverifiable claims marked `Not verified`.
+5. Review a disposable pull request. Confirm fetch occurs without checkout, `.git` writes are reported, and any temporary worktree used for full rendering is removed.
+6. Confirm the review writes no `.impeccable/critique/` snapshot. Then explicitly run `$design polish <surface> using review finding 1`; confirm bundled Impeccable owns the approved refinement.
 
 ## Strict activation and PostToolUse behavior
 

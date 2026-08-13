@@ -38,7 +38,7 @@ export function runDesignCli(argv = process.argv.slice(2)) {
   if (command === 'status') return print(inspectProject(projectRoot, options));
   if (command === 'doctor') {
     const report = diagnoseProject(projectRoot, options);
-    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered in 0.3.0.' };
+    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered in 0.4.0.' };
     return print(report);
   }
   if (command === 'setup') {

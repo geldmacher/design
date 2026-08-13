@@ -191,12 +191,16 @@ function narrowModules(destination, host) {
   const impeccable = JSON.parse(readFileSync(impeccablePath, "utf8"));
   if (host === "agent-plugin") {
     design.contributes.hooks = [];
-    design.contributes.scripts = ["skills/design/scripts/design-cli.mjs"];
+    design.contributes.scripts = [
+      "skills/design/scripts/design-cli.mjs",
+      "skills/design/scripts/review-scope.mjs",
+    ];
     impeccable.contributes.agents = [];
   } else {
     design.contributes.hooks = [host === "cursor" ? "hooks/cursor-hooks.json" : "hooks/hooks.json"];
     design.contributes.scripts = [
       "skills/design/scripts/design-cli.mjs",
+      "skills/design/scripts/review-scope.mjs",
       "scripts/design-cli.mjs",
       host === "cursor" ? "hooks/impeccable-plugin-hook.mjs" : "hooks/impeccable-codex-hook.mjs",
     ];
@@ -373,8 +377,8 @@ function adaptAgentPluginSkills(destination) {
   let design = readFileSync(designPath, "utf8");
   design = replaceRequired(
     design,
-    "description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
-    "description: Use when a user loads the design skill for project setup, status, diagnostics, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
+    "description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
+    "description: Use when a user loads the design skill for project setup, status, diagnostics, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
     "design description",
   );
   design = replaceRequired(
@@ -548,7 +552,13 @@ function validateAgentPlugin(destination, version) {
   }
   const designModule = JSON.parse(readFileSync(join(destination, "modules", "design-core.json"), "utf8"));
   const impeccableModule = JSON.parse(readFileSync(join(destination, "modules", "impeccable.json"), "utf8"));
-  if (designModule.contributes.hooks.length !== 0 || JSON.stringify(designModule.contributes.scripts) !== JSON.stringify(["skills/design/scripts/design-cli.mjs"])) {
+  if (
+    designModule.contributes.hooks.length !== 0
+    || JSON.stringify(designModule.contributes.scripts) !== JSON.stringify([
+      "skills/design/scripts/design-cli.mjs",
+      "skills/design/scripts/review-scope.mjs",
+    ])
+  ) {
     throw new Error("agent-plugin design module contains native contributions");
   }
   if (impeccableModule.contributes.agents.length !== 0) throw new Error("agent-plugin Impeccable module contains native agents");
