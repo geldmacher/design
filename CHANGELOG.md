@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - 2026-08-14
+
+- Added explicit `/design questionnaire [topic]` and `$design questionnaire [topic]` first-party stakeholder questionnaire flows, plus the equivalent leading intent in the loaded portable `design` skill.
+- Added canonical-context reuse, no-reask discovery, recipient-aware language, bounded atomic questions, and complete Markdown previews before any write.
+- Required an exact post-preview `.md` destination, separate overwrite confirmation for existing files, and exactly one output file without sending, importing answers, or changing Design context or configuration.
+- Preserved exactly two packaged skills and two modules with no added script, hook, agent, or MCP contribution.
+- Documented the independently authored adaptation and its pinned `to-questionnaire` inspiration without vendoring, runtime imports, or an upstream sync relationship.
+
 ## 0.5.0 - 2026-08-14
 
 - Added explicit `/design detect -- <target...>` and `$design detect -- <target...>` read-only scans over the bundled Impeccable detector.

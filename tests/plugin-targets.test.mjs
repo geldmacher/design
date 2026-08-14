@@ -35,7 +35,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.equal(codexManifest.name, "geldmacher-design");
     const agentPluginManifest = JSON.parse(readFileSync(join(first["agent-plugin"].path, "plugin.json")));
     assert.equal(agentPluginManifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-    assert.equal(agentPluginManifest.version, "0.5.0");
+    assert.equal(agentPluginManifest.version, "0.6.0");
     assert.equal(Object.hasOwn(agentPluginManifest, "extensions"), false);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "cursor-hooks.json")), true);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "hooks.json")), false);
@@ -58,17 +58,27 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(agentPluginDesignSkill, /`setup`, `status`, or `doctor` intent addressed to the loaded Design skill/);
     assert.match(agentPluginDesignSkill, /### Detect request/);
     assert.match(agentPluginDesignSkill, /change-interface-review/);
+    assert.match(agentPluginDesignSkill, /stakeholder-questionnaire/);
     for (const host of ["agent-plugin", "cursor", "codex"]) {
       assert.equal(existsSync(join(first[host].path, "skills", "design", "references", "change-review.md")), true);
+      assert.equal(existsSync(join(first[host].path, "skills", "design", "references", "questionnaire.md")), true);
       assert.equal(existsSync(join(first[host].path, "skills", "design", "scripts", "review-scope.mjs")), true);
       assert.equal(existsSync(join(first[host].path, "src", "detector-scan.mjs")), true);
       assert.equal(existsSync(join(first[host].path, "src", "impeccable-runtime.mjs")), true);
       const designModule = JSON.parse(readFileSync(join(first[host].path, "modules", "design-core.json"), "utf8"));
       assert.equal(designModule.capabilities.some((capability) => capability.id === "change-interface-review"), true);
       assert.equal(designModule.capabilities.some((capability) => capability.id === "detector-scan"), true);
+      assert.equal(designModule.capabilities.some((capability) => capability.id === "stakeholder-questionnaire"), true);
       assert.equal(designModule.contributes.scripts.includes("skills/design/scripts/review-scope.mjs"), true);
+      assert.equal(designModule.contributes.agents.length, 0);
+      assert.equal(designModule.contributes.mcpServers.length, 0);
+      assert.deepEqual(
+        readFileSync(join(first[host].path, "skills", "design", "references", "questionnaire.md")),
+        readFileSync(join(repositoryRoot, "skills", "design", "references", "questionnaire.md")),
+        `${host} drifted the host-neutral stakeholder questionnaire`,
+      );
     }
-    assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|doctor|detect)\b/);
+    assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|doctor|detect|questionnaire)\b/);
     const portableResourcePaths = resourceFiles(join(first["agent-plugin"].path, "skills"))
       .filter((path) => /\.(?:md|mjs|js)$/.test(path));
     const portableResources = portableResourcePaths
@@ -131,6 +141,7 @@ test("deterministic target allowlists isolate the portable package and native ad
       for (const relativePath of [
         "skills/design/SKILL.md",
         "skills/design/references/change-review.md",
+        "skills/design/references/questionnaire.md",
         "skills/design/scripts/review-scope.mjs",
         "skills/impeccable/SKILL.md",
         "agents/impeccable-asset-producer.md",

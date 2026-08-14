@@ -31,7 +31,7 @@ npm run deploy:local -- --codex-only
 The helper deploys the built Codex target, updates only the `geldmacher-design` entry in the `personal` Marketplace, and activates `geldmacher-design@personal`. It does not install the repository root as a Marketplace.
 
 1. Confirm `geldmacher-design@personal` is installed and enabled.
-2. Confirm its installed version is the content-addressed `0.5.0+local.codex.<digest>` reported by the preview, not the plain product version.
+2. Confirm its installed version is the content-addressed `0.6.0+local.codex.<digest>` reported by the preview, not the plain product version.
 3. Start a fresh task in the disposable project.
 4. Explicitly invoke `$design status`; confirm the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and Codex-specific project diagnostics.
 5. Explicitly invoke `$impeccable`; confirm it resolves through the installed skill rather than a project-local copy.
@@ -45,6 +45,16 @@ Keep the hook disabled for this section and record the project file list before 
 2. Add the known `side-tab` fixture below, then run `$design detect -- <fixture>`; confirm status `findings`, exit `2`, primary count greater than zero, and a normalized `side-tab` finding. Confirm the file remains unchanged.
 3. Run `$design detect --` with no target, then try a URL and a path outside the disposable project. Confirm each returns one `blocked` JSON envelope with exit `1` and never invokes a remote or repository-local detector.
 4. Confirm the manual scan works without setup, never enables the hook, and never edits source, config, or ignores. Any `$impeccable polish <target>` text must remain a separate optional next invocation.
+
+## Stakeholder questionnaire
+
+Keep the hook disabled and record the project file list plus hashes of `PRODUCT.md`, `DESIGN.md`, relevant `.impeccable/` files, and host hook configuration before this section.
+
+1. Put the questionnaire topic, audience, decision need, and answer use across the invocation and canonical project context. Run `$design questionnaire checkout approval`; confirm known facts are not asked again and only missing required facts are requested in one compact round.
+2. Complete any missing facts. Confirm the full questionnaire appears as Markdown in the task, contains 5–10 prioritized atomic questions and no more than 12, covers every stated information need, and has written no file.
+3. After the preview, provide the exact new path `docs/checkout-questionnaire.md`. Confirm exactly one file is created, its bytes match the approved preview, and the recorded context and hook hashes are unchanged.
+4. Repeat with an already existing `.md` destination. Confirm Design reports the conflict or diff and does not overwrite it until a separate explicit overwrite confirmation is given.
+5. Confirm the flow sends nothing, imports no completed answers, and creates no second file.
 
 ## Change review
 

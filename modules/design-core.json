@@ -2,7 +2,7 @@
   "$schema": "./module.schema.json",
   "schemaVersion": 1,
   "id": "design-core",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "source": {
     "type": "first-party",
     "url": "urn:geldmacher:design"
@@ -26,6 +26,16 @@
       "specificity": 100,
       "fallback": false,
       "triggers": ["detect"],
+      "scope": ["website", "web-app"],
+      "combinableWith": []
+    },
+    {
+      "id": "stakeholder-questionnaire",
+      "title": "Stakeholder decision questionnaire",
+      "skill": "design",
+      "specificity": 100,
+      "fallback": false,
+      "triggers": ["questionnaire"],
       "scope": ["website", "web-app"],
       "combinableWith": []
     },

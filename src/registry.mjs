@@ -27,6 +27,7 @@ function commandScopedInput(moduleId, capabilityId, input) {
   if (moduleId !== 'design-core') return input;
   if (capabilityId === 'change-interface-review') return /^review(?:\s|$)/i.test(input) ? input : '';
   if (capabilityId === 'detector-scan') return /^detect(?:\s|$)/i.test(input) ? input : '';
+  if (capabilityId === 'stakeholder-questionnaire') return /^questionnaire(?:\s|$)/i.test(input) ? input : '';
   return input;
 }
 

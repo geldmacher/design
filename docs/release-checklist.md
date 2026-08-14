@@ -15,6 +15,8 @@
 - [ ] Built-target simulations cover status, doctor, setup preview, generic hook refusal, portable context/live events, native fail-open adapters, and Impeccable provider selection without writing to real host state.
 - [ ] Review-scope fixtures cover branch-plus-dirty work, staged and untracked files, exact two-dot and three-dot ranges, renames, exclusions, detached HEAD, shallow history, PR fetches, empty scope, and in-progress Git operations without checkout mutation.
 - [ ] All three target packages include the review reference and resolver while retaining exactly the `design` and `impeccable` skills.
+- [ ] All three target packages include the host-neutral questionnaire reference while retaining exactly two skills, two modules, no added agent, hook, script, or MCP contribution, and byte-identical native projections.
+- [ ] Questionnaire fixtures cover leading Cursor, Codex, and loaded-skill intents; non-leading false positives; canonical context; no-reask; one audience; bounded complete previews; post-preview path approval; existing-file protection; and no answer import or context mutation.
 - [ ] All three target packages expose the explicit local `design detect -- <target...>` scan through the same bundled runtime facade and versioned JSON envelope.
 - [ ] Detector fixtures cover no-findings, primary, advisory-only, config and inline waivers, missing targets, URLs, missing/outside/symlinked paths, runtime failure, timeout, invalid JSON, and exit-code mismatch without project writes.
 - [ ] Runtime subprocesses override home, Codex, local-plugin, XDG, and Impeccable update-cache paths with fixtures, and outside-project sentinels remain unchanged.
@@ -41,13 +43,14 @@ Follow `docs/runtime-smoke.md` in a fresh Cursor window after reload. Record the
 - [ ] A clean UI write is allowed and the known detector fixture is denied.
 - [ ] No duplicate `.cursor/hooks.json` entry is created.
 - [ ] `/design review` defaults to task-local quick mode, preserves the checkout, and hands separately approved refinement to Impeccable through `/design`.
+- [ ] `/design questionnaire` previews the complete document before writing, creates exactly one file only after a post-preview path, leaves context and hooks unchanged, and never silently overwrites an existing file.
 - [ ] `/design detect -- <target>` works while the hook is disabled, uses bundled provenance, distinguishes exits `0/2/1`, and changes no file.
 
 Until this section has fresh evidence, report these points as unverified, not failed and not passed.
 
 ## Agent Plugins client gate
 
-Version 0.5.0 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that hooks and native subagents are reported as unavailable rather than emulated.
+Version 0.6.0 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that the loaded `design` skill recognizes a leading `questionnaire` intent while hooks and native subagents are reported as unavailable rather than emulated.
 
 Until that separately authorized gate exists, report real Agent Plugins client discovery, permissions, and activation as unverified. Do not infer them from schema validation or from Cursor/Codex behavior.
 
@@ -65,6 +68,7 @@ Follow `docs/codex-runtime-smoke.md` after a read-only helper preview and separa
 - [ ] A representative canonical role runs in a fresh generic subagent with inherited model and no conversation fork.
 - [ ] No `.codex/hooks.json` or `.agents/skills/impeccable` path is created in the target project.
 - [ ] `$design review` defaults to task-local quick mode, preserves the checkout, and hands separately approved refinement to Impeccable through `$design`.
+- [ ] `$design questionnaire` previews the complete document before writing, creates exactly one file only after a post-preview path, leaves context and hooks unchanged, and never silently overwrites an existing file.
 - [ ] `$design detect -- <target>` works while the hook is disabled, uses bundled provenance, distinguishes exits `0/2/1`, and changes no file.
 
 Until this section has fresh evidence, report these points as unverified, not failed and not passed.

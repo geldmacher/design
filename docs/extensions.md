@@ -31,6 +31,12 @@ Build projection narrows contributions per target. Cursor and Codex retain their
 
 The method was independently authored with inspiration from [`jakubkrehel/skills` commit `c25a8437`](https://github.com/jakubkrehel/skills/tree/c25a8437afc6fecf277158f7c6e2f9aa45f4993d). No upstream files, runtime imports, or sync relationship are included. Substantial future copying would require a separate vendored-module decision, exact provenance, the MIT notice, and the admission controls above.
 
+## First-party stakeholder questionnaire
+
+`design-core:stakeholder-questionnaire` is a first-party capability inside the existing `design` skill, not a third skill or vendored module. It owns only a leading `questionnaire` intent, reads the canonical Design context without changing it, previews the complete Markdown, and requires an exact post-preview `.md` destination before writing at most one file. It sends nothing and does not import or analyze completed answers.
+
+The method was independently authored with inspiration from Matt Pocock's [`to-questionnaire` snapshot at commit `8b78b531`](https://github.com/mattpocock/skills/blob/8b78b531ab965735c5dc74f6f7a219e1e37326df/skills/productivity/to-questionnaire/SKILL.md). No upstream files, runtime imports, or sync relationship are included. Substantial future copying would require a separate vendored-module decision, exact provenance, the MIT notice, and the admission controls above.
+
 ## First-party detector orchestration
 
 `design-core:detector-scan` owns the explicit `design detect -- <target...>` surface. It validates local project containment, invokes only the detector bundled with the approved Impeccable skill, and returns a versioned Design JSON envelope. The operation is read-only, works independently of hook activation, and does not expose upstream installation, update, URL, stdin, or automatic-fix paths.

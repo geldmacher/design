@@ -87,7 +87,7 @@ const validateManifest = ajv.compile(pluginSchema);
 check(validateManifest(manifest), `Plugin manifest is invalid: ${ajv.errorsText(validateManifest.errors)}`);
 check(manifest.name === 'geldmacher-design', 'Unexpected plugin name.');
 check(manifest.displayName === 'Design', 'Unexpected display name.');
-check(manifest.version === '0.5.0', 'Cursor manifest version must be 0.5.0.');
+check(manifest.version === '0.6.0', 'Cursor manifest version must be 0.6.0.');
 check(packageManifest.version === manifest.version, 'Package and Cursor manifest versions differ.');
 check(manifest.license === 'MIT', 'Wrapper license must be MIT.');
 check(manifest.repository === 'https://github.com/geldmacher/design', 'Manifest repository must reference the public source repository.');
@@ -211,7 +211,7 @@ check(fs.existsSync(path.join(root, 'hooks/impeccable-codex-hook.mjs')), 'Codex 
 const moduleSchema = readJson('modules/module.schema.json');
 const validateModule = ajv.compile(moduleSchema);
 const modules = loadModules(root);
-check(modules.length === 2, `Version 0.5.0 must contain exactly design-core and impeccable modules, found ${modules.length}.`);
+check(modules.length === 2, `Version 0.6.0 must contain exactly design-core and impeccable modules, found ${modules.length}.`);
 assertUnique(modules.map((module) => module.id), 'Module ids');
 for (const module of modules) {
   check(validateModule(module), `Module ${module.id} is invalid: ${ajv.errorsText(validateModule.errors)}`);
@@ -220,6 +220,8 @@ const capabilities = flattenCapabilities(modules);
 assertUnique(capabilities.map((capability) => `${capability.module}:${capability.id}`), 'Capability ids');
 check(capabilities.filter((capability) => capability.fallback).length === 1, 'Exactly one fallback capability is required.');
 check(capabilities.find((capability) => capability.fallback)?.skill === 'impeccable', 'Impeccable must own the fallback.');
+const designCoreModule = modules.find((module) => module.id === 'design-core');
+check(designCoreModule?.source?.type === 'first-party' && designCoreModule?.source?.url === 'urn:geldmacher:design', 'Design core capabilities must remain first-party owned.');
 const reviewCapability = capabilities.find((capability) => capability.module === 'design-core' && capability.id === 'change-interface-review');
 check(reviewCapability?.skill === 'design', 'Change review must remain inside the Design router.');
 check(reviewCapability?.specificity === 90 && reviewCapability?.fallback === false, 'Change review must be a narrow non-fallback capability at specificity 90.');
@@ -228,7 +230,11 @@ const detectorCapability = capabilities.find((capability) => capability.module =
 check(detectorCapability?.skill === 'design', 'Detector scan must remain inside the Design router.');
 check(detectorCapability?.specificity === 100 && detectorCapability?.fallback === false, 'Detector scan must be an explicit non-fallback capability at specificity 100.');
 check(JSON.stringify(detectorCapability?.triggers) === JSON.stringify(['detect']), 'Detector scan must have the single explicit detect trigger.');
-check(modules.find((module) => module.id === 'design-core')?.version === manifest.version, 'First-party module version differs from the plugin package.');
+const questionnaireCapability = capabilities.find((capability) => capability.module === 'design-core' && capability.id === 'stakeholder-questionnaire');
+check(questionnaireCapability?.skill === 'design', 'Stakeholder questionnaire must remain inside the Design router.');
+check(questionnaireCapability?.specificity === 100 && questionnaireCapability?.fallback === false, 'Stakeholder questionnaire must be an explicit non-fallback capability at specificity 100.');
+check(JSON.stringify(questionnaireCapability?.triggers) === JSON.stringify(['questionnaire']), 'Stakeholder questionnaire must have the single explicit questionnaire trigger.');
+check(designCoreModule?.version === manifest.version, 'First-party module version differs from the plugin package.');
 const impeccableModule = modules.find((module) => module.id === 'impeccable');
 check(impeccableModule?.version === pin.version, 'Impeccable module version differs from the approved pin.');
 check(impeccableModule?.source?.url === pin.repository, 'Impeccable module repository differs from the approved pin.');
@@ -246,7 +252,7 @@ for (const module of modules) {
   for (const field of ['skills', 'agents', 'rules', 'hooks', 'scripts']) {
     for (const relative of module.contributes[field]) check(fs.existsSync(path.join(root, relative)), `Orphan ${module.id} ${field} contribution: ${relative}`);
   }
-  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP in 0.5.0.`);
+  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP in 0.6.0.`);
 }
 const designModule = modules.find((module) => module.id === 'design-core');
 check(designModule?.contributes.scripts.includes('skills/design/scripts/review-scope.mjs'), 'Design module must own the review scope resolver.');
@@ -341,5 +347,7 @@ const detectorRuntimeText = fs.readFileSync(path.join(root, 'src/impeccable-runt
 check(detectorRuntimeText.includes("shell: false") && detectorRuntimeText.includes("IMPECCABLE_NO_UPDATE_CHECK: '1'"), 'Detector runtime must disable shell execution and upstream self-update checks.');
 const designSkillText = fs.readFileSync(path.join(root, 'skills/design/SKILL.md'), 'utf8');
 check(designSkillText.includes('design-core:detector-scan') && designSkillText.includes('detect -- <target>'), 'Design skill is missing the explicit detector contract.');
+check(designSkillText.includes('design-core:stakeholder-questionnaire') && designSkillText.includes('references/questionnaire.md'), 'Design skill is missing the stakeholder questionnaire contract.');
+check(fs.existsSync(path.join(root, 'skills/design/references/questionnaire.md')), 'Stakeholder questionnaire reference is missing.');
 
 process.stdout.write(`Plugin validation passed (${checks} checks).\n`);

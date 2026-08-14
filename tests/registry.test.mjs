@@ -39,6 +39,24 @@ test('only a leading explicit Design detect request uses the detector capability
   assert.equal(routeRequest('$design improve detector output', modules).skill, 'impeccable');
 });
 
+test('only a leading explicit Design questionnaire request uses the stakeholder questionnaire capability', () => {
+  for (const request of [
+    '/design questionnaire checkout approval',
+    '$design questionnaire onboarding research',
+    'questionnaire pricing decision',
+  ]) {
+    const result = routeRequest(request, modules);
+    assert.equal(result.kind, 'route');
+    assert.equal(result.module, 'design-core');
+    assert.equal(result.capability, 'stakeholder-questionnaire');
+    assert.equal(result.skill, 'design');
+    assert.equal(result.specificity, 100);
+  }
+  assert.equal(routeRequest('/design improve this questionnaire', modules).skill, 'impeccable');
+  assert.equal(routeRequest('$design review the stakeholder questionnaire', modules).capability, 'change-interface-review');
+  assert.equal(routeRequest('/design polish questionnaire layout', modules).skill, 'impeccable');
+});
+
 test('explicit Cursor and Codex Impeccable invocations bypass the wrapper', () => {
   assert.deepEqual(routeRequest('/impeccable audit src', modules), {
     kind: 'direct',

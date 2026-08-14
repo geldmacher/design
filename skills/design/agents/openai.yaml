@@ -1,7 +1,7 @@
 interface:
-  display_name: Design
-  short_description: Curated design, detector, and interface review router
+  display_name: "Design"
+  short_description: "Curated design, questionnaire, detector, and review router"
   brand_color: "#7C3AED"
-  default_prompt: Use $design for a controlled design or interface change review workflow.
+  default_prompt: "Use $design questionnaire [topic] to prepare a preview-first stakeholder questionnaire."
 policy:
   allow_implicit_invocation: false

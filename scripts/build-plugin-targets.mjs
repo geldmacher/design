@@ -377,8 +377,8 @@ function adaptAgentPluginSkills(destination) {
   let design = readFileSync(designPath, "utf8");
   design = replaceRequired(
     design,
-    "description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
-    "description: Use when a user loads the design skill for project setup, status, diagnostics, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
+    "description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
+    "description: Use when a user loads the design skill for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
     "design description",
   );
   design = replaceRequired(
