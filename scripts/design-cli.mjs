@@ -2,7 +2,7 @@
 import { runDesignCli } from '../skills/design/scripts/design-cli.mjs';
 
 try {
-  runDesignCli();
+  process.exitCode = runDesignCli();
 } catch (error) {
   process.stderr.write(`Design CLI error: ${error.message}\n`);
   process.exitCode = 1;

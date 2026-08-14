@@ -28,7 +28,7 @@ After reviewing an `update-available` result, prepare a specific stable tag:
 npm run prepare:impeccable-update -- --to skill-vX.Y.Z
 ```
 
-Preparation fetches that exact annotated tag and its canonical release archive into an isolated temporary directory. It never executes upstream code and never extracts the archive. Archive entries are inspected and streamed with `unzip`; unsafe, duplicate, missing, extra, or non-regular entries fail closed. Every vendored skill and agent byte must match the exact tag checkout before transformations run.
+Preparation fetches that exact annotated tag and its canonical release archive into an isolated temporary directory. It never executes upstream code and never extracts the archive. Archive entries are inspected and streamed with `unzip`; unsafe, duplicate, missing, unknown extra, or non-regular entries fail closed. The one recognized packaging artifact, an empty generated `.cursor/skills/impeccable/scripts/.impeccable/hook.cache.json`, is accepted only with its exact canonical bytes and is excluded from the vendored scope. Every vendored skill and agent byte must match the exact tag checkout before transformations run.
 
 The only durable output is an ignored `.build/impeccable-candidates/iu-<16 hex>` directory. Its manifest binds the approved starting pin, every owned-path baseline, tag object, commit, archive hash, import inventory, transformation patch, projected outputs, and repository preview patch. Review `candidate.json`, `repository.patch`, and `projection/` before considering application.
 

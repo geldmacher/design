@@ -23,6 +23,13 @@ function triggerMatches(input, trigger) {
   return new RegExp(`(^|\\b)${escaped}(\\b|$)`, 'i').test(input);
 }
 
+function commandScopedInput(moduleId, capabilityId, input) {
+  if (moduleId !== 'design-core') return input;
+  if (capabilityId === 'change-interface-review') return /^review(?:\s|$)/i.test(input) ? input : '';
+  if (capabilityId === 'detector-scan') return /^detect(?:\s|$)/i.test(input) ? input : '';
+  return input;
+}
+
 function candidateKey(candidate) {
   return `${candidate.module.id}:${candidate.capability.id}`;
 }
@@ -50,10 +57,8 @@ export function routeRequest(request, modules) {
 
   for (const module of modules) {
     for (const capability of module.capabilities || []) {
-      const commandScopedInput = module.id === 'design-core' && capability.id === 'change-interface-review'
-        ? (/^review(?:\s|$)/i.test(input) ? input : '')
-        : input;
-      const matches = (capability.triggers || []).filter((trigger) => triggerMatches(commandScopedInput, trigger));
+      const scopedInput = commandScopedInput(module.id, capability.id, input);
+      const matches = (capability.triggers || []).filter((trigger) => triggerMatches(scopedInput, trigger));
       const candidate = { module, capability, matches };
       if (capability.fallback) fallbacks.push(candidate);
       if (matches.length > 0 && !capability.fallback) candidates.push(candidate);

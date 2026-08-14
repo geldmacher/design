@@ -83,6 +83,7 @@ Inspect a dirty status before pulling; commit or stash intentional local changes
 | Goal | Agent Plugins v1 skill identity | Cursor invocation | Codex invocation |
 | --- | --- | --- | --- |
 | Design or improve an interface | `design` | `/design <request>` | `$design <request>` |
+| Scan explicit local paths | `design` | `/design detect -- <target> [target…]` | `$design detect -- <target> [target…]` |
 | Review a Git change's interface impact | `design` | `/design review [quick\|full] [target]` | `$design review [quick\|full] [target]` |
 | Check the project setup | `design` | `/design status` | `$design status` |
 | Prepare project integration | `design` | `/design setup` | `$design setup` |
@@ -95,11 +96,14 @@ For example:
 
 ```text
 /design critique this dashboard and prioritize the highest-impact improvements
+$design detect -- src/components app/dashboard
 $design review quick branch
 $design polish this checkout flow without changing its information architecture
 ```
 
 Design chooses the most specific bundled capability for the request and falls back to Impeccable for general design work.
+
+`design detect` is a read-only scan of one or more explicitly named local files or directories. It always uses the bundled Impeccable detector, works independently of hook activation, and returns a structured result without installing, updating, or fixing anything. A no-findings result means only that the detector returned no findings; it is not a complete interface-quality verdict.
 
 `design review` is a read-only, change-scoped interface review. It defaults to `quick`, resolves working, staged, branch, pull-request, ref, and exact Git-range targets without switching the active checkout, and keeps its findings in the current task. A separately approved `/design polish ...` or `$design polish ...` follow-up routes those findings to bundled Impeccable. The scope and reporting method was independently implemented with inspiration from [`jakubkrehel/skills` at `c25a8437`](https://github.com/jakubkrehel/skills/tree/c25a8437afc6fecf277158f7c6e2f9aa45f4993d); no files from that repository are packaged and it is not a runtime dependency.
 

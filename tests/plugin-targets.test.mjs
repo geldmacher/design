@@ -35,7 +35,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.equal(codexManifest.name, "geldmacher-design");
     const agentPluginManifest = JSON.parse(readFileSync(join(first["agent-plugin"].path, "plugin.json")));
     assert.equal(agentPluginManifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-    assert.equal(agentPluginManifest.version, "0.4.0");
+    assert.equal(agentPluginManifest.version, "0.5.0");
     assert.equal(Object.hasOwn(agentPluginManifest, "extensions"), false);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "cursor-hooks.json")), true);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "hooks.json")), false);
@@ -56,15 +56,19 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(agentPluginImpeccableSkill, /reference\/degraded\//);
     assert.match(agentPluginImpeccableSkill, /`operation: <name>`/);
     assert.match(agentPluginDesignSkill, /`setup`, `status`, or `doctor` intent addressed to the loaded Design skill/);
+    assert.match(agentPluginDesignSkill, /### Detect request/);
     assert.match(agentPluginDesignSkill, /change-interface-review/);
     for (const host of ["agent-plugin", "cursor", "codex"]) {
       assert.equal(existsSync(join(first[host].path, "skills", "design", "references", "change-review.md")), true);
       assert.equal(existsSync(join(first[host].path, "skills", "design", "scripts", "review-scope.mjs")), true);
+      assert.equal(existsSync(join(first[host].path, "src", "detector-scan.mjs")), true);
+      assert.equal(existsSync(join(first[host].path, "src", "impeccable-runtime.mjs")), true);
       const designModule = JSON.parse(readFileSync(join(first[host].path, "modules", "design-core.json"), "utf8"));
       assert.equal(designModule.capabilities.some((capability) => capability.id === "change-interface-review"), true);
+      assert.equal(designModule.capabilities.some((capability) => capability.id === "detector-scan"), true);
       assert.equal(designModule.contributes.scripts.includes("skills/design/scripts/review-scope.mjs"), true);
     }
-    assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|doctor)\b/);
+    assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|doctor|detect)\b/);
     const portableResourcePaths = resourceFiles(join(first["agent-plugin"].path, "skills"))
       .filter((path) => /\.(?:md|mjs|js)$/.test(path));
     const portableResources = portableResourcePaths

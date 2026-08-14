@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { runBundledImpeccable } from '../src/impeccable-runtime.mjs';
 import { detectProjectConflicts, projectRootFromEvent, readHookActivation } from '../src/project-state.mjs';
 
 function diagnostic(message) {
@@ -35,7 +35,7 @@ export function evaluateCodexPluginHook({
   projectRoot,
   pluginRoot,
   nodePath = process.execPath,
-  detectorPath,
+  runtime = runBundledImpeccable,
 } = {}) {
   const root = path.resolve(projectRoot || projectRootFromEvent(event));
   const activation = readHookActivation(root);
@@ -55,28 +55,19 @@ export function evaluateCodexPluginHook({
       || process.env.PLUGIN_ROOT
       || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'),
   );
-  const resolvedDetector = detectorPath
-    || path.join(resolvedPluginRoot, 'skills', 'impeccable', 'scripts', 'hook.mjs');
-  if (!nodePath || !fs.existsSync(resolvedDetector)) {
-    return result(contextPayload(event, 'Detector runtime is unavailable; edit retained. Run $design doctor.'), true);
-  }
-
-  const child = spawnSync(nodePath, [resolvedDetector], {
+  const child = runtime({
+    scriptId: 'codex-hook',
+    host: 'codex',
+    pluginRoot: resolvedPluginRoot,
     cwd: root,
     input: JSON.stringify(event),
-    encoding: 'utf8',
     timeout: eventName(event) === 'Stop' ? 28000 : 4500,
-    env: {
-      ...process.env,
-      IMPECCABLE_HOST: 'codex',
-      IMPECCABLE_HOOK_HARNESS: 'codex',
-      GELDMACHER_DESIGN_PLUGIN_ROOT: resolvedPluginRoot,
-      IMPECCABLE_NO_UPDATE_CHECK: '1',
-    },
+    nodePath,
+    extraEnv: { IMPECCABLE_HOOK_HARNESS: 'codex' },
   });
 
-  if (child.error || child.status !== 0) {
-    const reason = child.error?.message || child.stderr?.trim() || `exit ${child.status}`;
+  if (!child.started || child.status !== 0) {
+    const reason = child.error || child.stderr?.trim() || `exit ${child.status}`;
     return result(contextPayload(event, `Detector failed non-blocking; edit retained: ${reason}`), true);
   }
 

@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 function walk(relative = '.') {
   const out = [];
   for (const entry of fs.readdirSync(path.join(root, relative), { withFileTypes: true })) {
-    if (['.git', 'node_modules', '.tests'].includes(entry.name)) continue;
+    if (['.build', '.git', 'node_modules', '.tests'].includes(entry.name)) continue;
     const child = path.join(relative, entry.name);
     if (entry.isDirectory()) out.push(...walk(child));
     else if (entry.isFile() && entry.name.endsWith('.md')) out.push(child);

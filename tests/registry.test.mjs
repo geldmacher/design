@@ -26,6 +26,19 @@ test('explicit Design review requests use the first-party change review capabili
   assert.equal(routeRequest('/design improve the reviewed dashboard', modules).skill, 'impeccable');
 });
 
+test('only a leading explicit Design detect request uses the detector capability', () => {
+  for (const request of ['/design detect -- src', '$design detect -- src/Card.tsx']) {
+    const result = routeRequest(request, modules);
+    assert.equal(result.kind, 'route');
+    assert.equal(result.module, 'design-core');
+    assert.equal(result.capability, 'detector-scan');
+    assert.equal(result.skill, 'design');
+    assert.equal(result.specificity, 100);
+  }
+  assert.equal(routeRequest('/design fix the detected issue', modules).skill, 'impeccable');
+  assert.equal(routeRequest('$design improve detector output', modules).skill, 'impeccable');
+});
+
 test('explicit Cursor and Codex Impeccable invocations bypass the wrapper', () => {
   assert.deepEqual(routeRequest('/impeccable audit src', modules), {
     kind: 'direct',

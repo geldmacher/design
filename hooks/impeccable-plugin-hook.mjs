@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { runBundledImpeccable } from '../src/impeccable-runtime.mjs';
 import { detectProjectConflicts, projectRootFromEvent, readHookActivation } from '../src/project-state.mjs';
 
 function allow(message = null) {
@@ -13,7 +13,13 @@ function diagnostic(message) {
   return `[geldmacher-design] ${message}`;
 }
 
-export function evaluatePluginHook({ event = {}, projectRoot, pluginRoot, nodePath = process.execPath, detectorPath } = {}) {
+export function evaluatePluginHook({
+  event = {},
+  projectRoot,
+  pluginRoot,
+  nodePath = process.execPath,
+  runtime = runBundledImpeccable,
+} = {}) {
   const root = path.resolve(projectRoot || projectRootFromEvent(event));
   const activation = readHookActivation(root);
   if (activation.state === 'malformed') {
@@ -30,26 +36,18 @@ export function evaluatePluginHook({ event = {}, projectRoot, pluginRoot, nodePa
   }
 
   const resolvedPluginRoot = path.resolve(pluginRoot || process.env.CURSOR_PLUGIN_ROOT || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
-  const resolvedDetector = detectorPath || path.join(resolvedPluginRoot, 'skills', 'impeccable', 'scripts', 'hook-before-edit.mjs');
-  if (!nodePath || !fs.existsSync(resolvedDetector)) {
-    return { payload: allow(diagnostic('Detector runtime is unavailable; edit allowed. Run /design doctor.')), diagnostic: true };
-  }
-
-  const child = spawnSync(nodePath, [resolvedDetector], {
+  const child = runtime({
+    scriptId: 'cursor-hook',
+    host: 'cursor',
+    pluginRoot: resolvedPluginRoot,
     cwd: root,
     input: JSON.stringify(event),
-    encoding: 'utf8',
     timeout: 7000,
-    env: {
-      ...process.env,
-      CURSOR_PLUGIN_ROOT: resolvedPluginRoot,
-      GELDMACHER_DESIGN_PLUGIN_ROOT: resolvedPluginRoot,
-      IMPECCABLE_NO_UPDATE_CHECK: '1',
-    },
+    nodePath,
   });
 
-  if (child.error || child.status !== 0) {
-    const reason = child.error?.message || child.stderr?.trim() || `exit ${child.status}`;
+  if (!child.started || child.status !== 0) {
+    const reason = child.error || child.stderr?.trim() || `exit ${child.status}`;
     return { payload: allow(diagnostic(`Detector failed non-blocking: ${reason}`)), diagnostic: true };
   }
   try {

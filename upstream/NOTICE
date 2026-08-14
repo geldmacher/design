@@ -1,8 +1,8 @@
 Geldmacher Design includes a modified, vendored Cursor build of Impeccable.
 
 Impeccable source: https://github.com/pbakaus/impeccable
-Pinned tag: skill-v4.0.4
-Pinned commit: 9a949fb543d44cfb406f61bcab99d95d7f12cf1d
+Pinned tag: skill-v4.1.1
+Pinned commit: 5a149f3fdb1b5793f10567233b1dcab98fc305fd
 License: Apache License 2.0 (see upstream/LICENSE)
 
 Modifications are limited to the closed technical transformation list in

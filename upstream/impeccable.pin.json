@@ -2,14 +2,14 @@
   "$schema": "./impeccable.pin.schema.json",
   "schemaVersion": 1,
   "name": "Impeccable",
-  "version": "4.0.4",
+  "version": "4.1.1",
   "repository": "https://github.com/pbakaus/impeccable",
-  "tag": "skill-v4.0.4",
-  "tagObject": "fb0942f57736841580a65088637f94da4a4ba87c",
-  "commit": "9a949fb543d44cfb406f61bcab99d95d7f12cf1d",
+  "tag": "skill-v4.1.1",
+  "tagObject": "0c6d5c88a2ced616b42f51bbebffb7bd148bd923",
+  "commit": "5a149f3fdb1b5793f10567233b1dcab98fc305fd",
   "archive": {
     "name": "universal.zip",
-    "url": "https://github.com/pbakaus/impeccable/releases/download/skill-v4.0.4/universal.zip",
-    "sha256": "bc190f6e1b31c2578013546768903c0babf1af5a6d397c4131f2f2c7c298e770"
+    "url": "https://github.com/pbakaus/impeccable/releases/download/skill-v4.1.1/universal.zip",
+    "sha256": "e16133fcf240c042e5b6bdc20ac9f3a996a3ab9652723c6d9d1291dd1760dab4"
   }
 }

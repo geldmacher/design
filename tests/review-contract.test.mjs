@@ -63,6 +63,8 @@ test('review remains task-local, read-only, and hands approved work to Design', 
   assert.match(review, /\$design adapt <surface> using review finding 2/);
   assert.match(review, /Never run `checkout`, `switch`, or `stash`/);
   assert.match(review, /writesGit: true/);
+  assert.match(review, /design-cli\.mjs" --host <host> detect --json -- <files>/);
+  assert.doesNotMatch(review, /IMPECCABLE_SKILL_ROOT>\/scripts\/detect\.mjs/);
 });
 
 test('rendering policy is opportunistic for quick and bounded for full', () => {

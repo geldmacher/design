@@ -20,9 +20,18 @@ Before the run, record:
 2. Start a fresh conversation.
 3. Confirm `Design` is discovered as a local plugin.
 4. Confirm `/design` and `/impeccable` are visible.
-5. Run `/design status`; confirm plugin `0.4.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
+5. Run `/design status`; confirm plugin `0.5.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
 6. Confirm the command succeeds while cwd is the disposable project rather than the plugin root.
 7. Resolve each agent: `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer`, and `impeccable-manual-edit-applier`. Do not infer agent discovery from files alone.
+
+## Explicit detector scan
+
+Keep the hook disabled for this section and record the project file list before and after each command.
+
+1. Run `/design detect -- src/Card.jsx`; confirm status `no-findings`, exit `0`, plugin-bundled Impeccable provenance, and no project write. Treat the result only as no deterministic findings.
+2. Add the known `side-tab` fixture below, then run `/design detect -- <fixture>`; confirm status `findings`, exit `2`, primary count greater than zero, and a normalized `side-tab` finding. Confirm the file remains unchanged.
+3. Run `/design detect --` with no target, then try a URL and a path outside the disposable project. Confirm each returns one `blocked` JSON envelope with exit `1` and never invokes a remote or project-local detector.
+4. Confirm the scan never enables the hook, writes an ignore, or offers an automatic fix. Any `/impeccable polish <target>` text must be a separate optional next invocation only.
 
 ## Change review
 

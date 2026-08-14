@@ -2,7 +2,7 @@
   "$schema": "./module.schema.json",
   "schemaVersion": 1,
   "id": "design-core",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "source": {
     "type": "first-party",
     "url": "urn:geldmacher:design"
@@ -16,6 +16,16 @@
       "specificity": 100,
       "fallback": false,
       "triggers": ["setup", "status", "doctor"],
+      "scope": ["website", "web-app"],
+      "combinableWith": []
+    },
+    {
+      "id": "detector-scan",
+      "title": "Explicit local detector scan",
+      "skill": "design",
+      "specificity": 100,
+      "fallback": false,
+      "triggers": ["detect"],
       "scope": ["website", "web-app"],
       "combinableWith": []
     },

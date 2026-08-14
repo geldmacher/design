@@ -28,6 +28,7 @@ import {
   createCandidateFromInputs,
   hashPath,
   materializeGitSource,
+  releaseArchiveExclusions,
   validateArchiveEntryName,
   verifyArchiveMatchesSource,
 } from "../scripts/lib/impeccable-vendor.mjs";
@@ -318,7 +319,14 @@ test("HTTP, rate-limit, malformed, and request failures remain unverifiable", as
 
 test("archive validation rejects unsafe names, mismatches, missing files, and missing unzip", (t) => {
   const fixture = candidateFixture(t);
-  assert.equal(verifyArchiveMatchesSource({ archive: fixture.archive, source: fixture.source }).files, fixture.files.size - 1);
+  assert.deepEqual(verifyArchiveMatchesSource({ archive: fixture.archive, source: fixture.source }), { files: fixture.files.size - 1, excluded: [] });
+  const [generatedCachePath] = Object.keys(releaseArchiveExclusions);
+  const generatedCache = join(fixture.base, "generated-cache.zip");
+  writeArchive(generatedCache, fixture.files, [[generatedCachePath, '{"version":1,"sessions":{}}']]);
+  assert.deepEqual(verifyArchiveMatchesSource({ archive: generatedCache, source: fixture.source }).excluded, [generatedCachePath]);
+  const mutatedCache = join(fixture.base, "mutated-cache.zip");
+  writeArchive(mutatedCache, fixture.files, [[generatedCachePath, '{"version":1,"sessions":{"unexpected":{}}}']]);
+  assert.throws(() => verifyArchiveMatchesSource({ archive: mutatedCache, source: fixture.source }), /not the known empty generated state/);
   assert.throws(() => validateArchiveEntryName("../escape"), /Unsafe archive entry/);
   const unsafe = join(fixture.base, "unsafe.zip");
   writeFileSync(unsafe, storedZip([["../escape", "bad"]]));

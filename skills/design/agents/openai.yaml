@@ -1,6 +1,6 @@
 interface:
   display_name: Design
-  short_description: Curated design and interface change review router
+  short_description: Curated design, detector, and interface review router
   brand_color: "#7C3AED"
   default_prompt: Use $design for a controlled design or interface change review workflow.
 policy:

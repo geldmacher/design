@@ -37,6 +37,10 @@ export const agentNames = Object.freeze([
   "impeccable-manual-edit-applier.md",
 ]);
 
+export const releaseArchiveExclusions = Object.freeze({
+  ".cursor/skills/impeccable/scripts/.impeccable/hook.cache.json": sha256Bytes('{"version":1,"sessions":{}}'),
+});
+
 function inside(base, candidate) {
   const item = relative(resolve(base), resolve(candidate));
   return item === "" || (item !== ".." && !item.startsWith(`..${sep}`) && !item.startsWith(sep));
@@ -396,7 +400,14 @@ export function verifyArchiveMatchesSource({ archive, source, exec = execFileSyn
   const expected = walkRegularFiles(sourceSkill).map((file) => `.cursor/skills/impeccable/${relative(sourceSkill, file).split(sep).join("/")}`);
   expected.push(...agentNames.map((name) => `.cursor/agents/${name}`));
   const archiveScope = entries.filter((entry) => !entry.endsWith("/") && (entry.startsWith(".cursor/skills/impeccable/") || agentNames.some((name) => entry === `.cursor/agents/${name}`)));
-  if (JSON.stringify([...archiveScope].sort()) !== JSON.stringify([...expected].sort())) throw new Error("Release archive vendored scope differs from the exact tag checkout.");
+  const excluded = archiveScope.filter((entry) => Object.hasOwn(releaseArchiveExclusions, entry));
+  const importableScope = archiveScope.filter((entry) => !Object.hasOwn(releaseArchiveExclusions, entry));
+  if (JSON.stringify([...importableScope].sort()) !== JSON.stringify([...expected].sort())) throw new Error("Release archive vendored scope differs from the exact tag checkout.");
+  for (const entry of excluded) {
+    if (relevantModes.get(entry) !== "-") throw new Error(`Release archive exclusion is not a regular file: ${entry}`);
+    const bytes = commandOutput(exec, "unzip", ["-p", archive, entry], { encoding: null, maxBuffer: 1024 * 1024 });
+    if (sha256Bytes(bytes) !== releaseArchiveExclusions[entry]) throw new Error(`Release archive exclusion is not the known empty generated state: ${entry}`);
+  }
   for (const entry of expected) {
     if (relevantModes.get(entry) !== "-") throw new Error(`Release archive entry is not a regular file: ${entry}`);
     const sourcePath = entry.startsWith(".cursor/skills/impeccable/")
@@ -405,7 +416,7 @@ export function verifyArchiveMatchesSource({ archive, source, exec = execFileSyn
     const bytes = commandOutput(exec, "unzip", ["-p", archive, entry], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
     if (sha256Bytes(bytes) !== sha256File(sourcePath)) throw new Error(`Release archive differs from tag checkout: ${entry}`);
   }
-  return { files: expected.length };
+  return { files: expected.length, excluded: [...excluded].sort() };
 }
 
 function writeJson(path, value) {

@@ -8,7 +8,7 @@ To evaluate the approved pin offline, a maintainer separately obtains its exact 
 npm run sync:impeccable -- --source /absolute/path/to/tag-checkout --archive /absolute/path/to/universal.zip
 ```
 
-That command reads the pin, verifies the annotated tag object, commit, archive SHA-256, and byte identity between the archive and tag checkout, performs all transformations in a temporary staging directory, and writes nothing. After reviewing the result, add `--apply`; use `--replace` only for an intentional replacement of an existing vendored copy.
+That command reads the pin, verifies the annotated tag object, commit, archive SHA-256, and byte identity between the archive and tag checkout, performs all transformations in a temporary staging directory, and writes nothing. A known empty generated hook cache in the release archive is verified byte-for-byte and excluded; any other extra vendored-scope entry still fails closed. After reviewing the result, add `--apply`; use `--replace` only for an intentional replacement of an existing vendored copy.
 
 Any missing patch anchor, new upstream layout, different tag/commit, or archive checksum aborts the sync. The command never contacts the network itself.
 

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -66,6 +66,8 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   mkdirSync(home, { recursive: true });
   mkdirSync(join(project, 'src'), { recursive: true });
   writeFileSync(join(project, 'src', 'Card.tsx'), 'export const Card = () => <button>Open</button>;\n');
+  writeFileSync(join(project, 'src', 'Clean.jsx'), 'export default function Clean() { return <main>Hello</main>; }\n');
+  writeFileSync(join(project, 'src', 'Bad.html'), '<style>.card { border-left: 4px solid #7c3aed; border-radius: 16px; }</style><div class="card">Hello</div>\n');
   runGit(project, ['init', '-b', 'main']);
   runGit(project, ['config', 'user.name', 'Portable Test']);
   runGit(project, ['config', 'user.email', 'portable@example.test']);
@@ -90,6 +92,38 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
     assert.equal(scope.mode, 'quick');
     assert.deepEqual(scope.files.map((file) => file.path), ['src/Card.tsx']);
     assert.equal(scope.operations.some((operation) => operation.command === 'git' && ['checkout', 'switch', 'stash'].includes(operation.args[0])), false);
+
+    const cli = join(targets[host].path, 'skills', 'design', 'scripts', 'design-cli.mjs');
+    const detectEnv = envFor({ IMPECCABLE_HOST: host });
+    const clean = run(cli, ['--host', host, 'detect', '--json', '--', 'src/Clean.jsx'], { cwd: project, env: detectEnv });
+    assert.equal(clean.status, 0, clean.stderr);
+    const cleanEnvelope = JSON.parse(clean.stdout);
+    assert.equal(cleanEnvelope.status, 'no-findings');
+    assert.equal(cleanEnvelope.host, host);
+    assert.equal(cleanEnvelope.detector.source, 'bundled-impeccable');
+    const finding = run(cli, ['--host', host, 'detect', '--json', '--', 'src/Bad.html'], { cwd: project, env: detectEnv });
+    assert.equal(finding.status, 2, finding.stderr);
+    const findingEnvelope = JSON.parse(finding.stdout);
+    assert.equal(findingEnvelope.status, 'findings');
+    assert.ok(findingEnvelope.findings.some((item) => item.ruleId === 'side-tab'));
+
+    const boundaryDir = join(project, 'boundary-fixture');
+    mkdirSync(boundaryDir);
+    symlinkSync(outsideSentinel, join(boundaryDir, 'Escape.html'));
+    const nestedEscape = run(cli, ['--host', host, 'detect', '--json', '--', 'boundary-fixture'], { cwd: project, env: detectEnv });
+    assert.equal(nestedEscape.status, 1, nestedEscape.stderr);
+    assert.equal(JSON.parse(nestedEscape.stdout).diagnostics[0].code, 'target-symlink-outside-project');
+    rmSync(boundaryDir, { recursive: true, force: true });
+
+    const emptyTarget = run(cli, ['--host', host, 'detect', '--json', '--', ''], { cwd: project, env: detectEnv });
+    assert.equal(emptyTarget.status, 1, emptyTarget.stderr);
+    assert.equal(JSON.parse(emptyTarget.stdout).diagnostics[0].code, 'target-empty');
+
+    writeFileSync(join(project, '-'), 'stdin sentinel\n');
+    const stdinTarget = run(cli, ['--host', host, 'detect', '--json', '--', '-'], { cwd: project, env: detectEnv });
+    assert.equal(stdinTarget.status, 1, stdinTarget.stderr);
+    assert.equal(JSON.parse(stdinTarget.stdout).diagnostics[0].code, 'stdin-unsupported');
+    rmSync(join(project, '-'));
   }
 
   for (const host of ["cursor", "codex"]) {
@@ -98,7 +132,7 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
     assert.equal(existsSync(join(target, "upstream")), false);
     const cli = join(target, "skills", "design", "scripts", "design-cli.mjs");
     const status = runJson(cli, ["--host", host, "status", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
-    assert.equal(status.plugin.version, "0.4.0");
+    assert.equal(status.plugin.version, "0.5.0");
     assert.equal(status.upstream.archiveSha256, impeccableModule.source.archiveSha256);
     assert.equal(status.hook.mode, host === "cursor" ? "pre-write" : "post-write-stop");
     const preview = runJson(cli, ["--host", host, "setup", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });

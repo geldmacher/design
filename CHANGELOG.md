@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 - 2026-08-14
+
+- Added explicit `/design detect -- <target...>` and `$design detect -- <target...>` read-only scans over the bundled Impeccable detector.
+- Added a versioned Design JSON envelope with exact provenance, primary/advisory counts, normalized findings, honest blocked states, and stable exit codes.
+- Added canonical project containment, required local targets, symlink-escape rejection, and no URL, stdin, package-installation, runtime-download, or automatic-fix path.
+- Centralized bundled Impeccable path resolution, host environment, update suppression, and subprocess failures while preserving separate Cursor and Codex hook protocols.
+- Routed change-scoped review detector evidence through the same Design-owned scan surface and kept direct Impeccable behavior upstream-owned.
+
 ## 0.4.0 - 2026-08-13
 
 - Added `/design review` and `$design review` as a first-party, change-scoped interface review backed by bundled Impeccable context and detector evidence.
