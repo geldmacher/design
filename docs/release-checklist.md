@@ -10,6 +10,8 @@
 - [ ] `manifests/agent-plugin.json` validates against the locked Agent Plugins v1.0.0 schema.
 - [ ] The Agent Plugins package contains exactly the two portable skills and no native manifest, Marketplace, hook, root agent, extension namespace, or placeholder MCP configuration.
 - [ ] All three target inventories are deterministic and contain no symlink, path escape, development root, or source-only `upstream/` dependency.
+- [ ] Both native targets contain the compact package README and `docs/installation.md`; neither contains `.agents/skills/release-plugin`, `.cursor/commands/release-plugin.md`, `.cursor-plugin/marketplace.json`, the release harness, tests, or prepared release state.
+- [ ] Two builds from the same materialized commit produce byte-identical target trees and archives with exactly one `geldmacher-design/` root and the matching host manifest.
 - [ ] The builder accepts only repository `.build/plugins` or a newly owned `geldmacher-design-build-*/targets` workspace and rejects repository roots, protected ancestors, the temp root, foreign temp directories, and symlink segments before cleanup.
 - [ ] Portable Markdown and runtime resources contain no native role aliases or `SUBAGENT_AUTHORIZATION`; context and live manual apply point to bundled degraded roles.
 - [ ] Built-target simulations cover status, doctor, setup preview, generic hook refusal, portable context/live events, native fail-open adapters, and Impeccable provider selection without writing to real host state.
@@ -28,6 +30,7 @@
 - [ ] Root MIT and separate Impeccable Apache-2.0 license/NOTICE remain present.
 - [ ] Root `AGENTS.md` remains the single shared development instruction, is excluded from package content, and is not declared by either plugin manifest or a module.
 - [ ] No repository, homepage, minimum host version, MCP entry, app entry, or release claim has been added without real evidence.
+- [ ] Release fixtures cover version and manifest drift, changelog cutting, Unicode/tab/newline paths, recognizable secrets, symlinks, nested repositories, exact inventories, commit and retry binding, lightweight tags, mixed remote state, atomic push, GitHub publish and download failures, exact current releases, and byte conflicts without using a live remote.
 
 The optional upstream check is not part of the offline gate. If explicitly run, record `current`, `update-available`, or `unverifiable` exactly as returned. Candidate application and a hosted workflow dispatch require separate authorization; repository simulation is not evidence that either occurred.
 
@@ -75,4 +78,4 @@ Until this section has fresh evidence, report these points as unverified, not fa
 
 ## Publication gate
 
-Committing, pushing, creating a repository, adding public URLs, setting host-version claims, importing into a real Agent Plugins client, and publishing to any Marketplace require separate human authorization and are not part of the repository gate.
+Ordinary repository work never commits, pushes, creates a repository, imports into a real client, deploys, restarts a host, or publishes to a Marketplace. Explicit `$release-plugin` or `/release-plugin` is the bounded exception for one validated release commit, lightweight tag, atomic `main` plus tag push, and verified GitHub Release. It does not authorize version selection, Marketplace submission, local deployment, installation, or host activation. See [GitHub Release validation](release-validation.md).

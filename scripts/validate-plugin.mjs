@@ -117,14 +117,39 @@ check(codexManifest.interface.defaultPrompt.every((prompt) => /\$(?:design|impec
 check(fs.existsSync(path.join(root, codexManifest.interface.logo)), 'Codex logo path is missing.');
 
 const marketplace = readJson('.agents/plugins/marketplace.json');
-check(marketplace.name === 'geldmacher-design-local', 'Unexpected local marketplace name.');
-check(marketplace.interface?.displayName === 'Geldmacher Local', 'Unexpected local marketplace display name.');
-check(Array.isArray(marketplace.plugins) && marketplace.plugins.length === 1, 'Local marketplace must contain exactly this plugin.');
+check(marketplace.name === 'geldmacher-design', 'Unexpected Codex catalog name.');
+check(marketplace.interface?.displayName === 'Geldmacher Design', 'Unexpected Codex catalog display name.');
+check(Array.isArray(marketplace.plugins) && marketplace.plugins.length === 1, 'Codex catalog must contain exactly this plugin.');
 const marketplacePlugin = marketplace.plugins[0];
 check(marketplacePlugin.name === manifest.name, 'Marketplace plugin name differs from the manifests.');
 check(marketplacePlugin.source?.source === 'local' && marketplacePlugin.source.path === './', 'Marketplace must point at the repository plugin root.');
 check(marketplacePlugin.policy?.installation === 'AVAILABLE', 'Marketplace installation policy must be AVAILABLE.');
 check(marketplacePlugin.policy?.authentication === 'ON_USE', 'Marketplace authentication policy must be ON_USE.');
+
+const cursorMarketplace = readJson('.cursor-plugin/marketplace.json');
+check(cursorMarketplace.name === 'geldmacher', 'Unexpected Cursor Marketplace name.');
+check(cursorMarketplace.owner?.name === 'Geldmacher', 'Unexpected Cursor Marketplace owner.');
+check(Array.isArray(cursorMarketplace.plugins) && cursorMarketplace.plugins.length === 1, 'Cursor Marketplace must contain exactly this plugin.');
+check(cursorMarketplace.plugins[0]?.name === manifest.name, 'Cursor Marketplace plugin name differs from the manifest.');
+check(cursorMarketplace.plugins[0]?.source === '.', 'Cursor Marketplace must point at the repository plugin root.');
+
+check(packageManifest.scripts?.['release:plugin'] === 'node scripts/plugin-github-release.mjs', 'release:plugin must be the no-argument release harness.');
+for (const releaseSurface of [
+  '.agents/skills/release-plugin/SKILL.md',
+  '.agents/skills/release-plugin/agents/openai.yaml',
+  '.cursor/commands/release-plugin.md',
+  'scripts/plugin-github-release.mjs',
+  'docs/installation.md',
+  'docs/release-validation.md',
+]) {
+  check(fs.existsSync(path.join(root, releaseSurface)), `Missing release surface: ${releaseSurface}`);
+}
+const releaseSkill = frontmatter('.agents/skills/release-plugin/SKILL.md');
+check(releaseSkill.name === 'release-plugin', 'Unexpected release skill name.');
+check(/explicitly invokes \$release-plugin/.test(releaseSkill.description), 'Release skill must require explicit invocation.');
+const releaseMetadata = YAML.parse(fs.readFileSync(path.join(root, '.agents/skills/release-plugin/agents/openai.yaml'), 'utf8'));
+check(releaseMetadata?.policy?.allow_implicit_invocation === false, 'Release skill metadata must disable implicit invocation.');
+check(/npm run release:plugin/.test(fs.readFileSync(path.join(root, '.cursor/commands/release-plugin.md'), 'utf8')), 'Cursor release command must use the release harness.');
 
 const schemaLock = readJson('schemas/plugin.schema.lock.json');
 check(sha256('schemas/plugin.schema.json') === schemaLock.sha256, 'Vendored Cursor schema hash does not match its lock.');

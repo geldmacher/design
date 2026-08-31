@@ -1,0 +1,17 @@
+{
+  "name": "geldmacher",
+  "owner": {
+    "name": "Geldmacher",
+    "email": "geldmacher.dennis@outlook.de"
+  },
+  "metadata": {
+    "description": "GitHub Marketplace source for the Design Cursor plugin by Geldmacher."
+  },
+  "plugins": [
+    {
+      "name": "geldmacher-design",
+      "source": ".",
+      "description": "Focused design workflows, project-aware guidance, diagnostics, and optional native UI checks for Cursor."
+    }
+  ]
+}

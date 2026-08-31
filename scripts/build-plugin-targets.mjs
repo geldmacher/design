@@ -19,12 +19,12 @@ import Ajv2020 from "ajv/dist/2020.js";
 import YAML from "yaml";
 import { readPin } from "./lib/impeccable-maintenance.mjs";
 
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const impeccablePin = readPin(root);
+const defaultRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-design";
 const nativeShared = [
   "agents",
   "assets",
+  "docs/installation.md",
   "LICENSE",
   "modules",
   "scripts/design-cli.mjs",
@@ -35,7 +35,7 @@ const nativeShared = [
 ];
 const allowed = {
   cursor: [
-    ".cursor-plugin",
+    ".cursor-plugin/plugin.json",
     ...nativeShared,
     "hooks/cursor-hooks.json",
     "hooks/impeccable-plugin-hook.mjs",
@@ -56,7 +56,7 @@ const allowed = {
   ],
 };
 const developmentRoots = [".agents", ".build", ".cursor", ".git", "node_modules", "test", "tests", "upstream", "overlays"];
-const repositoryOutput = join(root, ".build", "plugins");
+const repositoryOutput = join(defaultRoot, ".build", "plugins");
 const temporaryOutputs = new Map();
 
 function inside(base, path) {
@@ -86,9 +86,9 @@ function rejectExistingSymlinkSegments(anchor, candidate) {
 function assertSafeBuildOutput(outputRoot) {
   const output = resolve(outputRoot);
   if (output === resolve(repositoryOutput)) {
-    rejectExistingSymlinkSegments(root, output);
-    const existingAncestor = lstatExists(output) ? output : lstatExists(dirname(output)) ? dirname(output) : root;
-    if (!inside(realpathSync(root), realpathSync(existingAncestor))) throw new Error("repository target output escapes its canonical root");
+    rejectExistingSymlinkSegments(defaultRoot, output);
+    const existingAncestor = lstatExists(output) ? output : lstatExists(dirname(output)) ? dirname(output) : defaultRoot;
+    if (!inside(realpathSync(defaultRoot), realpathSync(existingAncestor))) throw new Error("repository target output escapes its canonical root");
     return output;
   }
 
@@ -129,26 +129,26 @@ export function removeTargetBuildWorkspace(buildWorkspace) {
   rmSync(workspace, { recursive: true, force: true });
 }
 
-function copyRegular(source, destination) {
+function copyRegular(source, destination, sourceRoot = defaultRoot) {
   const stat = lstatSync(source);
-  if (stat.isSymbolicLink()) throw new Error(`target source may not be a symlink: ${relative(root, source)}`);
+  if (stat.isSymbolicLink()) throw new Error(`target source may not be a symlink: ${relative(sourceRoot, source)}`);
   if (stat.isDirectory()) {
     mkdirSync(destination, { recursive: true, mode: stat.mode & 0o777 });
-    for (const entry of readdirSync(source).sort()) copyRegular(join(source, entry), join(destination, entry));
+    for (const entry of readdirSync(source).sort()) copyRegular(join(source, entry), join(destination, entry), sourceRoot);
     return;
   }
-  if (!stat.isFile()) throw new Error(`target source must be a regular file: ${relative(root, source)}`);
+  if (!stat.isFile()) throw new Error(`target source must be a regular file: ${relative(sourceRoot, source)}`);
   mkdirSync(dirname(destination), { recursive: true });
   writeFileSync(destination, readFileSync(source), { mode: stat.mode & 0o777 });
   chmodSync(destination, stat.mode & 0o777);
 }
 
-function copyAllowed(destination, item) {
-  const source = resolve(root, item);
+function copyAllowed(destination, item, sourceRoot) {
+  const source = resolve(sourceRoot, item);
   const output = resolve(destination, item);
-  if (!inside(root, source) || !inside(destination, output)) throw new Error(`target path escapes its root: ${item}`);
+  if (!inside(sourceRoot, source) || !inside(destination, output)) throw new Error(`target path escapes its root: ${item}`);
   if (!existsSync(source)) throw new Error(`target source is missing: ${item}`);
-  copyRegular(source, output);
+  copyRegular(source, output, sourceRoot);
 }
 
 function files(directory) {
@@ -163,9 +163,9 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function packageThirdPartyProvenance(destination) {
+function packageThirdPartyProvenance(destination, sourceRoot, impeccablePin) {
   const licensePath = join(destination, "licenses", "impeccable-apache-2.0.txt");
-  copyRegular(join(root, "upstream", "LICENSE"), licensePath);
+  copyRegular(join(sourceRoot, "upstream", "LICENSE"), licensePath, sourceRoot);
   writeFileSync(join(destination, "THIRD_PARTY_NOTICES.md"), [
     "# Third-party notices",
     "",
@@ -528,13 +528,13 @@ function validateNative(destination, host, version) {
   files(destination);
 }
 
-function validateAgentPlugin(destination, version) {
+function validateAgentPlugin(destination, version, sourceRoot) {
   for (const name of developmentRoots) if (existsSync(join(destination, name))) throw new Error(`agent-plugin target leaked ${name}`);
   for (const name of [".agents", ".cursor-plugin", ".codex-plugin", "agents", "assets", "hooks", "mcp.json", "scripts"]) {
     if (existsSync(join(destination, name))) throw new Error(`agent-plugin target contains host-only or unsupported root ${name}`);
   }
   const manifest = JSON.parse(readFileSync(join(destination, "plugin.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "schemas", "agent-plugin", "1.0.0", "plugin.schema.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(sourceRoot, "schemas", "agent-plugin", "1.0.0", "plugin.schema.json"), "utf8"));
   const validator = new Ajv2020({ allErrors: true, strict: false }).compile(schema);
   if (!validator(manifest)) throw new Error(`agent-plugin manifest is invalid: ${JSON.stringify(validator.errors)}`);
   if (manifest.name !== plugin || manifest.version !== version) throw new Error("agent-plugin manifest identity or version drifted");
@@ -591,21 +591,51 @@ function validateAgentPlugin(destination, version) {
   files(destination);
 }
 
-export function buildPluginTargets(outputRoot) {
+function packageReadme(host) {
+  const invocation = host === "cursor" ? "`/design` and `/impeccable`" : "`$design` and `$impeccable`";
+  return [
+    "# Design",
+    "",
+    `This is the ${host === "cursor" ? "Cursor" : "Codex"} package for Geldmacher Design. Invoke it explicitly with ${invocation}.`,
+    "",
+    "See [Install Design from GitHub](docs/installation.md) for checksum verification, installation, update, rollback, trust, reload, and fresh-task boundaries.",
+    "",
+  ].join("\n");
+}
+
+function assertSourceRoot(sourceRoot) {
+  const resolved = resolve(sourceRoot);
+  if (!lstatExists(resolved) || lstatSync(resolved).isSymbolicLink() || !lstatSync(resolved).isDirectory()) {
+    throw new Error("target source root must be a physical directory");
+  }
+  for (const required of ["package.json", "manifests/agent-plugin.json", "upstream/impeccable.pin.json"]) {
+    const path = join(resolved, required);
+    if (!existsSync(path) || lstatSync(path).isSymbolicLink() || !lstatSync(path).isFile()) {
+      throw new Error(`target source root is missing a physical ${required}`);
+    }
+  }
+  return resolved;
+}
+
+export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
+  const projectRoot = assertSourceRoot(sourceRoot);
   const output = assertSafeBuildOutput(outputRoot);
   rmSync(output, { recursive: true, force: true });
-  const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
+  const version = JSON.parse(readFileSync(join(projectRoot, "package.json"), "utf8")).version;
+  const impeccablePin = readPin(projectRoot);
   const result = { version };
   for (const host of ["agent-plugin", "cursor", "codex"]) {
     const destination = join(output, host, plugin);
-    for (const item of allowed[host]) copyAllowed(destination, item);
+    for (const item of allowed[host]) copyAllowed(destination, item, projectRoot);
     if (host === "agent-plugin") {
-      copyRegular(join(root, "manifests", "agent-plugin.json"), join(destination, "plugin.json"));
+      copyRegular(join(projectRoot, "manifests", "agent-plugin.json"), join(destination, "plugin.json"), projectRoot);
       adaptAgentPluginSkills(destination);
+    } else {
+      writeFileSync(join(destination, "README.md"), packageReadme(host));
     }
-    packageThirdPartyProvenance(destination);
+    packageThirdPartyProvenance(destination, projectRoot, impeccablePin);
     narrowModules(destination, host);
-    if (host === "agent-plugin") validateAgentPlugin(destination, version);
+    if (host === "agent-plugin") validateAgentPlugin(destination, version, projectRoot);
     else validateNative(destination, host, version);
     result[host] = { path: destination, hash: digest(destination), files: files(destination).length };
   }

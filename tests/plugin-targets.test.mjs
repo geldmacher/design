@@ -138,6 +138,20 @@ test("deterministic target allowlists isolate the portable package and native ad
       }
     }
     for (const host of ["cursor", "codex"]) {
+      const target = first[host].path;
+      assert.equal(existsSync(join(target, "README.md")), true, `${host} release package is missing its compact README`);
+      assert.equal(existsSync(join(target, "docs", "installation.md")), true, `${host} release package is missing installation guidance`);
+      assert.match(readFileSync(join(target, "README.md"), "utf8"), /docs\/installation\.md/);
+      for (const sourceOnly of [
+        ".agents/skills/release-plugin",
+        ".cursor/commands/release-plugin.md",
+        ".cursor-plugin/marketplace.json",
+        "scripts/plugin-github-release.mjs",
+      ]) {
+        assert.equal(existsSync(join(target, sourceOnly)), false, `${sourceOnly} leaked into ${host}`);
+      }
+    }
+    for (const host of ["cursor", "codex"]) {
       for (const relativePath of [
         "skills/design/SKILL.md",
         "skills/design/references/change-review.md",

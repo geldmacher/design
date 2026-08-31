@@ -2,6 +2,8 @@
 
 **Ship interfaces that feel intentional.**
 
+> [Install Design for Cursor or Codex](docs/installation.md) · [Latest GitHub Release](https://github.com/geldmacher/design/releases/latest)
+
 Design turns Agent Plugins clients, Cursor, and Codex into a focused UI design partner for websites and web apps. It combines the reproducibly pinned [Impeccable](https://github.com/pbakaus/impeccable) toolkit with clear routing, project-aware guidance, diagnostics, and optional native quality checks.
 
 ## Why Design?
@@ -24,11 +26,17 @@ One source checkout produces three deterministic packages:
 
 Run `npm run build:targets` to materialize all three. The Agent Plugins package follows v1.0.0 and declares the skill identities `design` and `impeccable`. Discovery, presentation, and invocation syntax remain client-specific because the standard does not define distribution, permissions, hooks, native agents, commands, or client UX. See [the Agent Plugins target guide](docs/agent-plugin-target.md).
 
-## Install native targets locally
+## Install Design
 
-Design is not yet available in a public plugin store. Keep the Git checkout as the canonical source and deploy generated host copies from it. Do not clone into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
+Design supports two GitHub distribution paths for Cursor and Codex. A host can import the repository through its Git or Marketplace source, or you can install a checksummed host-specific ZIP from a [GitHub Release](https://github.com/geldmacher/design/releases/latest). The release path provides immutable versioned bytes for controlled update and rollback; the repository path follows the selected branch, tag, or commit.
 
-### Requirements and clone
+Use the [complete installation guide](docs/installation.md) for source import, archive verification, Cursor and Codex destinations, cache behavior, reload, Hook Trust, new-task activation, update, and rollback. Installation and publication are separate: the repository currently contains the distribution contracts and release harness, but this implementation does not submit a Marketplace entry, deploy a host copy, restart a host, or publish a GitHub Release.
+
+### Local maintainer deployment
+
+Keep a Git checkout as the canonical source and deploy generated host copies from it. Do not clone directly into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
+
+#### Requirements and clone
 
 Install Git, Node.js 22 or newer, and npm. The selected host must also be installed: Cursor for a Cursor deployment, or the Codex CLI with plugin support for a Codex deployment.
 
@@ -41,7 +49,7 @@ npm ci
 
 If you already have a checkout, use it instead and run `npm ci` from its repository root.
 
-### Preview and install
+#### Preview and install
 
 Choose one host or deploy both:
 
@@ -62,7 +70,7 @@ Every installed copy contains a `.local-deploy.json` receipt with its content-de
 
 After installation or an update, reload Cursor before testing its plugin surface and start a new Codex task before testing Codex discovery. Review changed hooks manually before granting trust. The deploy command does not restart either host or grant hook trust. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
 
-### Update from the origin repository
+#### Update from the origin repository
 
 First protect any local work, then fast-forward the checkout and redeploy:
 
@@ -129,3 +137,5 @@ git diff --check
 ```
 
 Impeccable is reproducibly pinned; see [upstream provenance](upstream/README.md) and the [maintainer workflow](docs/impeccable-maintenance.md). Runtime verification is documented separately for [Cursor](docs/runtime-smoke.md) and [Codex](docs/codex-runtime-smoke.md). Repository checks and isolated target simulations do not prove real client discovery, hook trust, Marketplace behavior, or publication.
+
+The source-only `$release-plugin`, `/release-plugin`, and `npm run release:plugin` surfaces provide one explicit validated GitHub Release lifecycle. They use the already declared version, may create one release commit plus lightweight tag, atomically push `main` and the tag, publish separate Cursor and Codex archives, and verify downloaded bytes. They never select or bump a version, deploy locally, restart a host, submit a Marketplace entry, overwrite a release, or repair mixed remote state. See [GitHub Release validation](docs/release-validation.md).

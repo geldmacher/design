@@ -1,7 +1,7 @@
 {
-  "name": "geldmacher-design-local",
+  "name": "geldmacher-design",
   "interface": {
-    "displayName": "Geldmacher Local"
+    "displayName": "Geldmacher Design"
   },
   "plugins": [
     {
