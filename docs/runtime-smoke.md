@@ -20,7 +20,7 @@ Before the run, record:
 2. Start a fresh conversation.
 3. Confirm `Design` is discovered as a local plugin.
 4. Confirm `/design` and `/impeccable` are visible.
-5. Run `/design status`; confirm plugin `0.6.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
+5. Run `/design status`; confirm plugin `0.7.0`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
 6. Confirm the command succeeds while cwd is the disposable project rather than the plugin root.
 7. Resolve each agent: `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer`, and `impeccable-manual-edit-applier`. Do not infer agent discovery from files alone.
 

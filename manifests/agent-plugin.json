@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "geldmacher-design",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Curated design workflows for websites and web apps, powered by Impeccable.",
   "author": {
     "name": "Dennis Geldmacher",

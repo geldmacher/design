@@ -35,7 +35,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.equal(codexManifest.name, "geldmacher-design");
     const agentPluginManifest = JSON.parse(readFileSync(join(first["agent-plugin"].path, "plugin.json")));
     assert.equal(agentPluginManifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-    assert.equal(agentPluginManifest.version, "0.6.0");
+    assert.equal(agentPluginManifest.version, "0.7.0");
     assert.equal(Object.hasOwn(agentPluginManifest, "extensions"), false);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "cursor-hooks.json")), true);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "hooks.json")), false);

@@ -92,7 +92,7 @@ export function runDesignCli(argv = process.argv.slice(2), options = {}) {
   if (command === 'status') return output(inspectProject(projectRoot, lifecycleOptions));
   if (command === 'doctor') {
     const report = diagnoseProject(projectRoot, lifecycleOptions);
-    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered in 0.6.0.' };
+    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered in 0.7.0.' };
     return output(report);
   }
   if (command === 'setup') {
