@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.0
+
 - Added source-only `$release-plugin`, `/release-plugin`, and `npm run release:plugin` Maintainer interfaces for one explicit validated GitHub Release lifecycle.
 - Added deterministic, commit-materialized Cursor and Codex release archives with checksums, provenance, exact retry binding, atomic Git refs, and GitHub metadata and byte read-back.
 - Added GitHub Marketplace source manifests and installation guidance that separates source selection, downloads, installation, cache refresh, host reload, Hook Trust, new tasks, updates, and rollback.
