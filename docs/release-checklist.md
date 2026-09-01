@@ -53,7 +53,7 @@ Until this section has fresh evidence, report these points as unverified, not fa
 
 ## Agent Plugins client gate
 
-Version 0.7.0 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that the loaded `design` skill recognizes a leading `questionnaire` intent while hooks and native subagents are reported as unavailable rather than emulated.
+Version 0.7.1 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that the loaded `design` skill recognizes a leading `questionnaire` intent while hooks and native subagents are reported as unavailable rather than emulated.
 
 Until that separately authorized gate exists, report real Agent Plugins client discovery, permissions, and activation as unverified. Do not infer them from schema validation or from Cursor/Codex behavior.
 

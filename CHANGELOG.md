@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bumped the bundled Impeccable pin from skill-v4.1.1 to skill-v4.1.2 (Fixes #1).
+- Updated the Codex Stop adapter to accept upstream `{ decision: "block", reason }` so the design gate still works after skill-v4.1.2.
+
 ## 0.7.0
 
 - Added source-only `$release-plugin`, `/release-plugin`, and `npm run release:plugin` Maintainer interfaces for one explicit validated GitHub Release lifecycle.
