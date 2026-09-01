@@ -87,7 +87,7 @@ const validateManifest = ajv.compile(pluginSchema);
 check(validateManifest(manifest), `Plugin manifest is invalid: ${ajv.errorsText(validateManifest.errors)}`);
 check(manifest.name === 'geldmacher-design', 'Unexpected plugin name.');
 check(manifest.displayName === 'Design', 'Unexpected display name.');
-check(manifest.version === '0.7.0', 'Cursor manifest version must be 0.7.0.');
+check(manifest.version === '0.7.1', 'Cursor manifest version must be 0.7.1.');
 check(packageManifest.version === manifest.version, 'Package and Cursor manifest versions differ.');
 check(manifest.license === 'MIT', 'Wrapper license must be MIT.');
 check(manifest.repository === 'https://github.com/geldmacher/design', 'Manifest repository must reference the public source repository.');
@@ -236,7 +236,7 @@ check(fs.existsSync(path.join(root, 'hooks/impeccable-codex-hook.mjs')), 'Codex 
 const moduleSchema = readJson('modules/module.schema.json');
 const validateModule = ajv.compile(moduleSchema);
 const modules = loadModules(root);
-check(modules.length === 2, `Version 0.7.0 must contain exactly design-core and impeccable modules, found ${modules.length}.`);
+check(modules.length === 2, `Version 0.7.1 must contain exactly design-core and impeccable modules, found ${modules.length}.`);
 assertUnique(modules.map((module) => module.id), 'Module ids');
 for (const module of modules) {
   check(validateModule(module), `Module ${module.id} is invalid: ${ajv.errorsText(validateModule.errors)}`);
@@ -277,7 +277,7 @@ for (const module of modules) {
   for (const field of ['skills', 'agents', 'rules', 'hooks', 'scripts']) {
     for (const relative of module.contributes[field]) check(fs.existsSync(path.join(root, relative)), `Orphan ${module.id} ${field} contribution: ${relative}`);
   }
-  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP in 0.7.0.`);
+  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP in 0.7.1.`);
 }
 const designModule = modules.find((module) => module.id === 'design-core');
 check(designModule?.contributes.scripts.includes('skills/design/scripts/review-scope.mjs'), 'Design module must own the review scope resolver.');

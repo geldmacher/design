@@ -132,7 +132,7 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
     assert.equal(existsSync(join(target, "upstream")), false);
     const cli = join(target, "skills", "design", "scripts", "design-cli.mjs");
     const status = runJson(cli, ["--host", host, "status", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
-    assert.equal(status.plugin.version, "0.7.0");
+    assert.equal(status.plugin.version, "0.7.1");
     assert.equal(status.upstream.archiveSha256, impeccableModule.source.archiveSha256);
     assert.equal(status.hook.mode, host === "cursor" ? "pre-write" : "post-write-stop");
     const preview = runJson(cli, ["--host", host, "setup", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
