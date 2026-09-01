@@ -128,6 +128,8 @@ export function normalizeRepository(value) {
   const normalized = value.trim()
     .replace(/^git@github\.com:/, "https://github.com/")
     .replace(/^ssh:\/\/git@github\.com\//, "https://github.com/")
+    // Managed auth helpers may rewrite origin to https://x-access-token:...@github.com/...
+    .replace(/^https:\/\/[^/@]+@github\.com\//i, "https://github.com/")
     .replace(/\.git$/, "")
     .replace(/\/$/, "");
   const match = normalized.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)$/i);
@@ -356,7 +358,13 @@ function ghResult(runner, args, root) {
 
 function assertGitHubReady(root, runner) {
   const auth = ghResult(runner, ["auth", "status", "--hostname", "github.com"], root);
-  const api = ghResult(runner, ["api", "user", "--hostname", "github.com", "--silent"], root);
+  // REST /user is unavailable to GitHub App installation tokens (Cursor cloud agents).
+  // GraphQL viewer works for both classic PATs and App installation tokens.
+  const api = ghResult(runner, [
+    "api", "graphql",
+    "--hostname", "github.com",
+    "-f", "query=query { viewer { login } }",
+  ], root);
   const apiMessage = `${asText(api.stderr)}\n${asText(api.stdout)}`.trim();
   if (api.status !== 0 && /connect|network|resolve|timed? out|unreachable/i.test(apiMessage)) {
     throw new Error(`GitHub is unreachable from this release environment: ${apiMessage}`);
