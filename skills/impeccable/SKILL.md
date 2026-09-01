@@ -4,7 +4,7 @@ description: Use when the user wants to design, redesign, shape, critique, audit
 license: Apache-2.0
 compatibility: Requires Node.js 22 or newer.
 metadata:
-  version: "4.1.1"
+  version: "4.1.2"
 ---
 
 ## Geldmacher Design host contract
