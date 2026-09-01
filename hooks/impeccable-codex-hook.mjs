@@ -75,8 +75,20 @@ export function evaluateCodexPluginHook({
   if (!stdout) return result();
   try {
     const payload = JSON.parse(stdout);
+    const name = eventName(event);
     const output = payload?.hookSpecificOutput;
-    if (output?.hookEventName === eventName(event) && typeof output.additionalContext === 'string') {
+    // PostToolUse (and legacy Stop) use Claude-style additionalContext.
+    if (output?.hookEventName === name && typeof output.additionalContext === 'string') {
+      return result(payload);
+    }
+    // skill-v4.1.2+: Codex Stop rejects unknown fields; findings continue the
+    // turn via a top-level blocking decision (StopCommandOutputWire).
+    if (
+      name === 'Stop'
+      && payload?.decision === 'block'
+      && typeof payload.reason === 'string'
+      && payload.reason.trim()
+    ) {
       return result(payload);
     }
   } catch {

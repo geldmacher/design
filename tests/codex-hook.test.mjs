@@ -114,8 +114,11 @@ test('Codex Stop reports deferred findings once and then deduplicates them', (t)
 
   const stopEvent = { hook_event_name: 'Stop', cwd: root, session_id: 'codex-stop-test' };
   const firstStop = evaluateCodexPluginHook({ event: stopEvent, pluginRoot });
-  assertContext(firstStop, 'Stop');
-  assert.match(firstStop.payload.hookSpecificOutput.additionalContext, /side-tab/i);
+  // Upstream skill-v4.1.2 emits Codex Stop as decision:block (not additionalContext).
+  assert.equal(firstStop.diagnostic, false);
+  assert.equal(firstStop.payload?.decision, 'block');
+  assert.match(firstStop.payload?.reason ?? '', /side-tab/i);
+  assert.doesNotMatch(firstStop.stdout, /permission|deny/);
 
   const secondStop = evaluateCodexPluginHook({ event: stopEvent, pluginRoot });
   assert.equal(secondStop.payload, null);
