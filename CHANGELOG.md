@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.9.0
+
+- Add source-only `$update-impeccable` and `/update-impeccable` entry points to select, verify, and apply the latest stable Impeccable skill release in one explicit invocation, preserve local work, and report repository validation separately from host installation.
+
 - Add source-only `$install-new-release-from-repo`, `/install-new-release-from-repo`, and `npm run install:release` entry points for installing or previewing the latest stable Design release for one selected host, preserving the open checkout and reusing verified local deployment.
 
 ## 0.8.0
