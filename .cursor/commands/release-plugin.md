@@ -1,11 +1,3 @@
 # Release plugin
 
-Operate only on the current Design plugin repository. This command accepts no action, version, receipt, or other argument. Run exactly:
-
-`npm run release:plugin`
-
-The current explicit command is the complete authority for one release lifecycle. The script uses the already declared version, validates every non-ignored tracked and untracked change, creates at most one `Release v{version}` commit, creates the lightweight version tag, atomically pushes `main` plus the tag, publishes the separate Cursor and Codex assets, and verifies the downloaded GitHub bytes.
-
-Before tracked mutation require reachable authenticated GitHub access, configured commit identity, the expected repository, synchronized `main`, safe paths, no symlinks, nested repositories or recognizable secrets, consistent versions and changelog, and a passing complete release gate. Never bump a version, deploy or install, restart a host, force-push, reset, overwrite, use `--clobber`, delete, or silently repair ambiguous state. Exact retry refs may resume only through a later explicit invocation; an exact downloaded-and-verified release is current.
-
-Report version, commit creation or resumption, tag, atomic push, archive hashes and file counts, gate result, receipt, GitHub URL, read-back verification, and every blocker.
+Follow the repository-local [Release Plugin skill](../../.agents/skills/release-plugin/SKILL.md) for this explicit invocation, including automatic SemVer selection and preparation without another approval. Run the underlying no-argument `npm run release:plugin` after preparation. The same retry, validation, atomic publication, and read-back requirements apply. Never deploy, install, force-push, overwrite assets, or use `--clobber`.

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.8.0
+
+- Select and prepare the appropriate semantic version automatically during an explicit maintainer release, reusing exact prepared or partial releases without redundant bumps.
+- Release validated local commits ahead of the freshly fetched remote through the same atomic main/tag push, preserving commit ancestry and exact retry binding.
+- Keep bundled Impeccable pinned at 4.1.2 and reproduce the guidance changes through checked sync transformations.
+- Make DESIGN.md format guidance self-contained, document reader limits and sidecar ownership, and validate token examples through the parser and detector.
+- Connect change reviews to six internal criteria domains and relevant incomplete states while preserving read-only scope and bounded detector use.
+- Assess usability and memory burden by task context instead of fixed option counts; remove methodological source lists from plugin instructions and repository documentation while preserving licenses and technical provenance.
+
 ## 0.7.1
 
 - Bumped the bundled Impeccable pin from skill-v4.1.1 to skill-v4.1.2 (Fixes #1).

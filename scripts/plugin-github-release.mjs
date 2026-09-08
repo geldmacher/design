@@ -776,17 +776,21 @@ export function completeRelease({
   source = sourceState(resolvedRoot, runner);
   const baseline = remoteBranchCommit(resolvedRoot, runner);
   let retry = readRetryState(resolvedRoot, source, runner);
-  if (source.commit !== baseline) {
-    if (!retry || retry.release_commit !== source.commit || retry.base_commit !== baseline || !source.clean || !source.changelog_ready) {
-      throw new Error("local main differs from origin/main without an exact clean release retry state");
-    }
-  } else if (retry) {
-    const commitObjectBoundBeforeMain = retry.base_commit === baseline && retry.release_commit !== baseline;
-    const releaseCommitAlreadyRemote = retry.release_commit === baseline && source.clean && source.changelog_ready;
-    if (!commitObjectBoundBeforeMain && !releaseCommitAlreadyRemote) {
-      throw new Error("release retry state does not bind synchronized main or its pending release commit");
+  const candidateParent = source.commit;
+  const descendsFromRemote = (commit) => git(resolvedRoot, ["merge-base", baseline, commit], runner) === baseline;
+  if (!descendsFromRemote(source.commit)) {
+    throw new Error("local main differs from origin/main: behind or diverged history requires explicit integration");
+  }
+  if (retry) {
+    const pendingCommit = retry.base_commit === source.commit;
+    const boundCommit = retry.release_commit === source.commit && source.clean && source.changelog_ready;
+    if ((!pendingCommit && !boundCommit) || !descendsFromRemote(boundCommit && source.commit !== baseline ? retry.base_commit : source.commit)) {
+      throw new Error("release retry state does not bind main or its pending release commit");
     }
   }
+  const pendingCandidate = !retry || retry.base_commit === source.commit;
+  const committedPaths = parseNulPaths(gitBuffer(resolvedRoot, ["diff", "--name-only", "-z", baseline, source.commit], runner), "committed release candidate");
+  assertSafeCandidatePaths(resolvedRoot, committedPaths);
 
   const existingLocalTag = localTagCommit(resolvedRoot, runner, source.tag);
   const existingRemoteTag = remoteTagInfo(resolvedRoot, runner, source.tag);
@@ -805,7 +809,7 @@ export function completeRelease({
   let commitResumed = false;
   let gate;
   try {
-    if (source.commit === baseline && !source.changelog_ready) {
+    if (pendingCandidate && !source.changelog_ready) {
       const changelogPath = join(resolvedRoot, "CHANGELOG.md");
       originalChangelog = readFileSync(changelogPath, "utf8");
       releasedChangelog = createReleaseCut(originalChangelog, source.version);
@@ -832,7 +836,7 @@ export function completeRelease({
     }
     assertSafeCandidatePaths(resolvedRoot, afterPaths);
 
-    if (source.commit === baseline && afterPaths.length > 0) {
+    if (pendingCandidate && afterPaths.length > 0) {
       const index = preserveIndex(resolvedRoot, runner);
       let advanced = false;
       try {
@@ -844,11 +848,11 @@ export function completeRelease({
         if (tree === headTree) throw new Error("validated release candidate produces the current HEAD tree; refusing an empty release commit");
         let releaseCommit;
         if (retry) {
-          if (retry.tree_sha !== tree || retry.base_commit !== baseline) throw new Error("retained release retry state differs from staged candidate tree");
+          if (retry.tree_sha !== tree || retry.base_commit !== candidateParent) throw new Error("retained release retry state differs from staged candidate tree");
           releaseCommit = retry.release_commit;
           commitResumed = true;
         } else {
-          releaseCommit = runChecked(runner, "git", ["commit-tree", tree, "-p", baseline], {
+          releaseCommit = runChecked(runner, "git", ["commit-tree", tree, "-p", candidateParent], {
             cwd: resolvedRoot,
             input: `Release ${source.tag}\n`,
           }, "release commit object creation");
@@ -857,7 +861,7 @@ export function completeRelease({
           retryBound = true;
           commitCreated = true;
         }
-        git(resolvedRoot, ["update-ref", "refs/heads/main", releaseCommit, baseline], runner);
+        git(resolvedRoot, ["update-ref", "refs/heads/main", releaseCommit, candidateParent], runner);
         advanced = true;
       } finally {
         if (!advanced) index.restore();

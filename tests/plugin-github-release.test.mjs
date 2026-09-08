@@ -245,7 +245,10 @@ test("release interfaces are explicit-only, no-argument, and source-only", () =>
   assert.match(metadata, /allow_implicit_invocation: false/);
   assert.match(commandText, /npm run release:plugin/);
   assert.equal(packageJson.scripts["release:plugin"], "node scripts/plugin-github-release.mjs");
-  assert.match(skill + commandText, /never choose or bump a version/i);
+  assert.match(skill, /major for incompatible/);
+  assert.match(skill, /minor for compatible additions/);
+  assert.match(skill, /never bump to evade a conflict/);
+  assert.match(skill, /do not bump twice/);
   assert.match(skill + commandText, /--clobber/);
   assert.match(skill + commandText, /force-push/);
 });
@@ -389,7 +392,7 @@ test("target inspection rejects secrets, symlinks, development roots, and manife
   writeFileSync(join(target, "tests", "fixture.txt"), "fixture\n");
   assert.throws(() => inspectReleaseTarget(target, "cursor", "0.7.0"), /development path/);
   rmSync(join(target, "tests"), { recursive: true });
-  writeFileSync(join(target, "secret.txt"), "github_pat_abcdefghijklmnopqrstuvwxyz123456\n");
+  writeFileSync(join(target, "secret.txt"), ["github_pat", "abcdefghijklmnopqrstuvwxyz123456\n"].join("_"));
   assert.throws(() => inspectReleaseTarget(target, "cursor", "0.7.0"), /secret material/);
   rmSync(join(target, "secret.txt"));
   symlinkSync("README.md", join(target, "linked-readme"));
@@ -451,7 +454,7 @@ test("commit and atomic-push failures stop without hidden repair and allow exact
 
 test("preflight rejects GitHub failures, unsafe candidates, and unsynchronized main", (t) => {
   for (const [contents, expected] of [
-    ["github_pat_abcdefghijklmnopqrstuvwxyz123456\n", /secret material/],
+    [["github_pat", "abcdefghijklmnopqrstuvwxyz123456\n"].join("_"), /secret material/],
     [null, /symlink/],
   ]) {
     const fixture = createFixture(t);
@@ -529,4 +532,27 @@ test("failure reports expose retained retry state and prepared directory", (t) =
   assert.ok(report.prepared_directory.endsWith("/.build/releases/v0.7.0"));
   assert.ok(existsSync(report.prepared_directory));
   assert.equal(lstatSync(report.prepared_directory).isDirectory(), true);
+});
+
+
+test("ahead main preserves local commits and resumes an exact failed push", (t) => {
+  const fixture = createFixture(t);
+  writeFileSync(join(fixture.root, "local.txt"), "local change\n");
+  git(fixture.root, "add", "local.txt");
+  git(fixture.root, "commit", "--quiet", "-m", "Local work");
+  const parent = git(fixture.root, "rev-parse", "HEAD");
+  const github = createGitHubRunner({ failPushOnce: true });
+  assert.throws(() => completeRelease(releaseOptions(fixture, github)), /atomic push failure/);
+  const releaseCommit = git(fixture.root, "rev-parse", "HEAD");
+  assert.equal(git(fixture.root, "rev-parse", "HEAD^"), parent);
+  assert.equal(completeRelease(releaseOptions(fixture, github)).status, "published");
+  assert.equal(git(fixture.root, "rev-parse", "HEAD"), releaseCommit);
+});
+
+test("ahead main still rejects committed secret material", (t) => {
+  const fixture = createFixture(t);
+  writeFileSync(join(fixture.root, "unsafe.txt"), ["github_pat", "abcdefghijklmnopqrstuvwxyz123456\n"].join("_"));
+  git(fixture.root, "add", "unsafe.txt");
+  git(fixture.root, "commit", "--quiet", "-m", "Unsafe local work");
+  assert.throws(() => completeRelease(releaseOptions(fixture, createGitHubRunner())), /secret material/);
 });
