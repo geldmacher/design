@@ -151,7 +151,36 @@ const releaseMetadata = YAML.parse(fs.readFileSync(path.join(root, '.agents/skil
 check(releaseMetadata?.policy?.allow_implicit_invocation === false, 'Release skill metadata must disable implicit invocation.');
 check(/npm run release:plugin/.test(fs.readFileSync(path.join(root, '.cursor/commands/release-plugin.md'), 'utf8')), 'Cursor release command must use the release harness.');
 
+const updateSkillPath = '.agents/skills/update-impeccable/SKILL.md';
+const updateMetadataPath = '.agents/skills/update-impeccable/agents/openai.yaml';
+const updateCommandPath = '.cursor/commands/update-impeccable.md';
+for (const updateSurface of [updateSkillPath, updateMetadataPath, updateCommandPath]) {
+  check(fs.existsSync(path.join(root, updateSurface)), `Missing update surface: ${updateSurface}`);
+}
+const updateSkill = frontmatter(updateSkillPath);
+check(updateSkill.name === 'update-impeccable', 'Unexpected update skill name.');
+check(typeof updateSkill.description === 'string' && updateSkill.description.trim().length > 0, 'Update skill description must be nonempty.');
+const updateMetadata = YAML.parse(fs.readFileSync(path.join(root, updateMetadataPath), 'utf8'));
+check(updateMetadata?.policy?.allow_implicit_invocation === false, 'Update skill must disable implicit invocation.');
+check(updateMetadata?.interface?.display_name === 'Update Impeccable', 'Unexpected update skill display name.');
+check(typeof updateMetadata?.interface?.short_description === 'string' && updateMetadata.interface.short_description.length >= 25 && updateMetadata.interface.short_description.length <= 64, 'Update skill short description must contain 25-64 characters.');
+check(updateMetadata?.interface?.default_prompt?.includes('$update-impeccable'), 'Update skill default prompt must name its invocation.');
+const updateCommand = fs.readFileSync(path.join(root, updateCommandPath), 'utf8');
+const updateCommandLinks = [...updateCommand.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)].map((match) => path.resolve(root, path.dirname(updateCommandPath), match[1]));
+check(updateCommandLinks.includes(path.resolve(root, updateSkillPath)), 'Cursor update command must link to the shared update skill.');
+
 const schemaLock = readJson('schemas/plugin.schema.lock.json');
+check(packageManifest.scripts?.['install:release'] === 'node scripts/install-release-from-repo.mjs', 'install:release must use the repository installer.');
+for (const installSurface of [
+  '.agents/skills/install-new-release-from-repo/SKILL.md',
+  '.agents/skills/install-new-release-from-repo/agents/openai.yaml',
+  '.cursor/commands/install-new-release-from-repo.md',
+  'scripts/install-release-from-repo.mjs',
+]) check(fs.existsSync(path.join(root, installSurface)), `Missing install surface: ${installSurface}`);
+const installSkill = frontmatter('.agents/skills/install-new-release-from-repo/SKILL.md');
+check(installSkill.name === 'install-new-release-from-repo', 'Unexpected install skill name.');
+const installMetadata = YAML.parse(fs.readFileSync(path.join(root, '.agents/skills/install-new-release-from-repo/agents/openai.yaml'), 'utf8'));
+check(installMetadata?.policy?.allow_implicit_invocation === false, 'Install skill must disable implicit invocation.');
 check(sha256('schemas/plugin.schema.json') === schemaLock.sha256, 'Vendored Cursor schema hash does not match its lock.');
 check(/^[0-9a-f]{40}$/.test(schemaLock.commit), 'Cursor schema lock needs an exact commit.');
 const agentPluginSchemaLock = readJson('schemas/agent-plugin/1.0.0/source.lock.json');

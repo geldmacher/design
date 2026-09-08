@@ -1,0 +1,6 @@
+interface:
+  display_name: "Install new Release from repo"
+  short_description: "Install the latest Design release for your harness"
+  default_prompt: "Use $install-new-release-from-repo to install the latest stable Design release for my current harness."
+policy:
+  allow_implicit_invocation: false

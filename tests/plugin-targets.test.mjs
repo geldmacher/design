@@ -143,6 +143,19 @@ test("deterministic target allowlists isolate the portable package and native ad
       for (const developmentRoot of [".agents", ".build", ".cursor", ".git", "node_modules", "tests", "upstream", "overlays"]) {
         assert.equal(existsSync(join(target, developmentRoot)), false, `${developmentRoot} leaked into ${target}`);
       }
+      for (const updateSurface of [
+        ".agents/skills/update-impeccable",
+        ".cursor/commands/update-impeccable.md",
+        "skills/update-impeccable",
+        "commands/update-impeccable.md",
+        "scripts/check-impeccable-upstream.mjs",
+        "scripts/prepare-impeccable-update.mjs",
+        "scripts/apply-impeccable-update.mjs",
+        "scripts/lib/impeccable-maintenance.mjs",
+        "scripts/lib/impeccable-vendor.mjs",
+      ]) {
+        assert.equal(existsSync(join(target, updateSurface)), false, `${updateSurface} leaked into ${target}`);
+      }
     }
     for (const host of ["cursor", "codex"]) {
       const target = first[host].path;
@@ -151,6 +164,9 @@ test("deterministic target allowlists isolate the portable package and native ad
       assert.match(readFileSync(join(target, "README.md"), "utf8"), /docs\/installation\.md/);
       for (const sourceOnly of [
         ".agents/skills/release-plugin",
+        ".agents/skills/install-new-release-from-repo",
+        ".cursor/commands/install-new-release-from-repo.md",
+        "scripts/install-release-from-repo.mjs",
         ".cursor/commands/release-plugin.md",
         ".cursor-plugin/marketplace.json",
         "scripts/plugin-github-release.mjs",

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Update Impeccable"
+  short_description: "Update the bundled Impeccable skill"
+  default_prompt: "Use $update-impeccable to update this Design source repository to the latest stable Impeccable skill release and run its repository gates."
+policy:
+  allow_implicit_invocation: false

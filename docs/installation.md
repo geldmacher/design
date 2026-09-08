@@ -7,6 +7,42 @@ Design has two independent GitHub distribution paths for Cursor and Codex:
 
 Neither source selection nor archive extraction proves that a host has refreshed its cache, trusted hooks, reloaded the plugin, or activated it in a new task. Marketplace submission, local deployment, host restart, and GitHub publication are separate maintainer or user actions.
 
+## Install the latest release from your harness
+
+This source-repository workflow supports Cursor and Codex on macOS and Linux. Install Git, Node.js 22 or newer, and npm first. Cursor must be available through its CLI or, on macOS, as `Cursor.app` in `/Applications` or your user's `Applications` folder. Codex requires a CLI with `plugin add --json` and `plugin list --json` support. GitHub and npm registry access are required; no GitHub CLI or token is needed for this public repository.
+
+Clone the source repository outside managed plugin directories, then open it as a project in your harness:
+
+```sh
+git clone https://github.com/geldmacher/design.git ~/src/geldmacher-design
+```
+
+For an existing checkout, protect local work before updating it to a revision containing the new skill. The command is available only in the open source repository; it is not shipped in installed plugin packages. If Codex does not discover a newly added repository skill in an existing task, start a fresh task in that repository.
+
+| Harness | Install or update | Preview only |
+| --- | --- | --- |
+| Cursor | `/install-new-release-from-repo` | `/install-new-release-from-repo preview` |
+| Codex | `$install-new-release-from-repo` | `$install-new-release-from-repo preview` |
+
+The active harness is the default destination. You can explicitly name Cursor or Codex instead. An unknown harness requires a host choice; the helper requires exactly one host and never defaults to both.
+
+The equivalent shell commands, from the source repository root, are:
+
+```sh
+npm run install:release -- --cursor-only
+npm run install:release -- --codex-only --dry-run
+```
+
+No dependency installation is needed in the open checkout to start this helper. It selects GitHub's latest published stable release, requires a matching `vMAJOR.MINOR.PATCH` tag and manifests, and prepares that exact commit in its own temporary checkout. It runs `npm ci` and the release's `deploy:prepare` checks there. The checkout must remain clean after preparation. Local branches, staged changes, and other work in your open repository are preserved.
+
+Preview downloads and builds source in temporary storage and reads installed state, but makes no changes to installed plugin files, Marketplace entries, or the Codex plugin cache. A normal install invocation authorizes the displayed installation for that host and proceeds without a second confirmation, subject to the harness's sandbox permissions. Preview and apply in that invocation use the same pinned commit and built files. A later invocation resolves the latest release again.
+
+The existing local installer owns host replacement, rollback, and Codex cache verification. Destinations remain `~/.cursor/plugins/local/geldmacher-design` and `~/.codex/plugins/geldmacher-design`; Codex uses the plugin's entry in the `personal` Marketplace. The installed version has a `+local.<host>.<digest>` suffix. It is built from released source and is not asserted to be byte-identical to the published ZIP.
+
+The final report includes the release URL, tag, commit, destinations, local versions, content hashes, and installation verification. Successful preparation workspaces are removed; the source path in deployment receipts is historical, while the commit and hashes remain reproducible evidence. An unchanged installation is a verified no-op. After changes, reload Cursor or start a new Codex task and review changed hooks. The helper never restarts a host, grants trust, enables project checks, or publishes anything. Installed/cache verification is not live activation evidence.
+
+Missing prerequisites, release lookup failures, version mismatches, build failures, and deployment errors stop the run. Once preparation has started, the error identifies a retained temporary `installation.json` and source checkout. Inspect its phase, original error, and the local installer's rollback result before explicitly retrying. A verification failure after installation may leave the new version installed; an incomplete rollback requires recovery before another attempt. The helper does not overwrite retained failure evidence or automatically retry. Use the other installation paths below on platforms outside this helper's support boundary.
+
 ## Install from the Git or Marketplace source
 
 The repository contains a Cursor Marketplace manifest at `.cursor-plugin/marketplace.json` and a Codex catalog at `.agents/plugins/marketplace.json`. Both point to this repository's plugin root; generated `.build` directories are never an import source.

@@ -12,7 +12,7 @@ That command reads the pin, verifies the annotated tag object, commit, archive S
 
 Any missing patch anchor, new upstream layout, different tag/commit, or archive checksum aborts the sync. The command never contacts the network itself.
 
-For explicit release detection and the reviewable candidate flow, see [Impeccable maintenance](../docs/impeccable-maintenance.md). Preparing a candidate writes only ignored staging content. Applying a selected candidate, committing, pushing, opening a pull request, deploying, publishing, and running hosted automation remain separate maintainer actions.
+For explicit release detection and the reviewable candidate flow, see [Impeccable maintenance](../docs/impeccable-maintenance.md). Preparing a candidate writes only ignored staging content. The source-only `$update-impeccable` or `/update-impeccable` invocation authorizes the agent to prepare, review, and apply one candidate and run repository gates without another confirmation. Manual application remains a separate maintainer decision. Committing, pushing, opening a pull request, deploying, publishing, and running hosted automation remain separately authorized actions.
 
 ## Closed transformation list
 

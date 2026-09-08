@@ -32,6 +32,12 @@ Design supports two GitHub distribution paths for Cursor and Codex. A host can i
 
 Use the [complete installation guide](docs/installation.md) for source import, archive verification, Cursor and Codex destinations, cache behavior, reload, Hook Trust, new-task activation, update, and rollback. Installation and publication are separate: the repository currently contains the distribution contracts and release harness, but this implementation does not submit a Marketplace entry, deploy a host copy, restart a host, or publish a GitHub Release.
 
+### Install the latest release from your harness
+
+On macOS or Linux, clone this repository (or update your existing source checkout), open it in Cursor or Codex, and invoke `/install-new-release-from-repo` or `$install-new-release-from-repo`. This repository-local command works before Design is installed. It installs the latest published stable release for the active harness; add `preview` to inspect the planned installation without changing host installation state.
+
+The helper builds the release's exact Git commit in an isolated temporary checkout and reuses the local installer. It preserves your open checkout and reports both the release version and the installed content-derived local version. See [requirements, examples, and failure recovery](docs/installation.md#install-the-latest-release-from-your-harness).
+
 ### Local maintainer deployment
 
 Keep a Git checkout as the canonical source and deploy generated host copies from it. Do not clone directly into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
@@ -137,5 +143,7 @@ git diff --check
 ```
 
 Impeccable is reproducibly pinned; see [upstream provenance](upstream/README.md) and the [maintainer workflow](docs/impeccable-maintenance.md). Runtime verification is documented separately for [Cursor](docs/runtime-smoke.md) and [Codex](docs/codex-runtime-smoke.md). Repository checks and isolated target simulations do not prove real client discovery, hook trust, Marketplace behavior, or publication.
+
+In this source checkout, invoke `$update-impeccable` in Codex or `/update-impeccable` in Cursor to update the bundled skill to the latest stable Impeccable release. One invocation authorizes checking, preparing, reviewing, and applying a verified candidate without another confirmation, followed by the repository gates. This source-only maintainer skill preserves unrelated local changes and stops on conflicting update paths or failed verification. It does not install the plugin into a host, commit, push, or publish. See [Impeccable maintenance](docs/impeccable-maintenance.md) for the complete flow and failure states.
 
 The source-only `$release-plugin`, `/release-plugin`, and `npm run release:plugin` surfaces provide one explicit validated GitHub Release lifecycle. The skills select and prepare the appropriate semantic version from the actual changes; the underlying script uses that consistent declared version. They may create one release commit plus lightweight tag, atomically push `main` and the tag, publish separate Cursor and Codex archives, and verify downloaded bytes. They never deploy locally, restart a host, submit a Marketplace entry, overwrite a release, or repair mixed remote state. See [GitHub Release validation](docs/release-validation.md).

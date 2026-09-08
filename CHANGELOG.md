@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add source-only `$install-new-release-from-repo`, `/install-new-release-from-repo`, and `npm run install:release` entry points for installing or previewing the latest stable Design release for one selected host, preserving the open checkout and reusing verified local deployment.
+
 ## 0.8.0
 
 - Select and prepare the appropriate semantic version automatically during an explicit maintainer release, reusing exact prepared or partial releases without redundant bumps.

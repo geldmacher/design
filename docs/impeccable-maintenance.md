@@ -4,6 +4,16 @@
 
 Normal plugin execution, target builds, `npm run release-check`, and `npm run sync:impeccable` remain offline. Runtime self-update checks are disabled. None of these paths polls GitHub, downloads content, or changes an approved pin.
 
+## Update through one explicit skill invocation
+
+From the Design source checkout, invoke `$update-impeccable` in Codex or `/update-impeccable` in Cursor. The repository-local [Update Impeccable skill](../.agents/skills/update-impeccable/SKILL.md) uses the existing check, prepare, and apply commands below. It is not shipped in the Agent Plugins, Cursor, or Codex packages and is not a Design router capability.
+
+The invocation authorizes the complete repository update without another confirmation: choose the latest stable skill release, prepare its exact candidate, review the provenance and projected changes, apply that candidate, and run `npm run release-check` plus `git diff --check`. The agent performs the candidate review within this authorization; the manual commands below retain their separate preparation and application steps. No version is hard-coded in the skill.
+
+The skill requires Node.js 22+, Git, `unzip`, and installed project dependencies. It checks the source checkout and rejects local changes within the candidate's replacement paths, including untracked or ignored files that a directory replacement could remove. Unrelated working-tree changes are preserved. Missing prerequisites, unverifiable upstream metadata, incompatible transformations, and candidate conflicts remain visible blockers; the skill never weakens the existing checks or repairs the update machinery to force an update through.
+
+An already-current pin skips application but still runs both gates. After a successful application, a failed gate means **applied, validation failed**; changes remain available for diagnosis. The apply command's rollback covers write failures, not later gate failures. The report includes the starting and final pin, selected tag, candidate when present, changed scope, and gate results. Local plugin installation, host reload, commits, pushes, issue changes, and publication are outside this invocation.
+
 ## Check for a stable release
 
 Run the read-only check explicitly:
@@ -34,7 +44,7 @@ The only durable output is an ignored `.build/impeccable-candidates/iu-<16 hex>`
 
 ## Apply an explicitly selected candidate
 
-Candidate application is a separate maintainer decision:
+For manual maintenance, candidate application is a separate maintainer decision. The explicit update skill invocation above instead authorizes the agent to review and apply its selected candidate in one run:
 
 ```bash
 npm run apply:impeccable-update -- --candidate iu-0123456789abcdef
