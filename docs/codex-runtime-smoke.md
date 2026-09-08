@@ -31,7 +31,7 @@ npm run deploy:local -- --codex-only
 The helper deploys the built Codex target, updates only the `geldmacher-design` entry in the `personal` Marketplace, and activates `geldmacher-design@personal`. It does not install the repository root as a Marketplace.
 
 1. Confirm `geldmacher-design@personal` is installed and enabled.
-2. Confirm its installed version is the content-addressed `0.7.0+local.codex.<digest>` reported by the preview, not the plain product version.
+2. Confirm its installed version is the content-addressed `0.7.1+local.codex.<digest>` reported by the preview, not the plain product version.
 3. Start a fresh task in the disposable project.
 4. Explicitly invoke `$design status`; confirm the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and Codex-specific project diagnostics.
 5. Explicitly invoke `$impeccable`; confirm it resolves through the installed skill rather than a project-local copy.

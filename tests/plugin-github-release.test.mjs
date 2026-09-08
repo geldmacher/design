@@ -253,6 +253,10 @@ test("release interfaces are explicit-only, no-argument, and source-only", () =>
 test("repository normalization and changelog cutting never choose a version", () => {
   assert.equal(normalizeRepository("git@github.com:geldmacher/design.git"), "geldmacher/design");
   assert.equal(normalizeRepository("https://github.com/geldmacher/design/"), "geldmacher/design");
+  assert.equal(
+    normalizeRepository("https://x-access-token:example@github.com/geldmacher/design.git"),
+    "geldmacher/design",
+  );
   assert.throws(() => normalizeRepository("https://example.test/geldmacher/design"), /GitHub repository/);
   const source = "# Changelog\n\n## Unreleased\n\n- New.\n\n## 0.6.0\n\n- Old.\n";
   const cut = createReleaseCut(source, "0.7.0");
