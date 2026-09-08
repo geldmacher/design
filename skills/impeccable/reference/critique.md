@@ -47,9 +47,9 @@ Read relevant source files and visually inspect the live page when browser autom
 Evaluate:
 - **Design specificity**: Is the composition, interaction, and visual language grounded in this product, or could an unrelated product use it unchanged? Make this judgment before seeing detector output.
 - **Holistic design**: hierarchy, IA, emotional fit, discoverability, composition, typography, color, accessibility, states, copy, and edge cases.
-- **Cognitive load**: consult the [Cognitive Load Assessment](#cognitive-load-assessment) section below; report checklist failures and decision points with >4 visible options.
+- **Cognitive load**: consult the [Cognitive Load Assessment](#cognitive-load-assessment) section below; report evidence of avoidable remembering, unclear grouping, or difficult comparison in the user's task.
 - **Emotional journey**: peak-end rule, emotional valleys, reassurance at high-stakes moments.
-- **Nielsen heuristics**: consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below; score all 10 heuristics 0-4, marking any heuristic the mode-applicability rule allows as `n/a` instead of forcing a number.
+- **Usability criteria**: consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below; score all 10 heuristics 0-4, marking any heuristic the mode-applicability rule allows as `n/a` instead of forcing a number.
 
 Return: design-specificity verdict, heuristic scores, cognitive load, emotional journey, 2-3 strengths, 3-5 priority issues, persona red flags, minor observations, and provocative questions.
 
@@ -97,7 +97,7 @@ The report's first line MUST declare how the assessments were run, so a degraded
 #### Design Health Score
 > *Consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below.*
 
-Present the Nielsen's 10 heuristics scores as a table:
+Present the ten usability criteria scores as a table:
 
 | # | Heuristic | Score | Key Issue |
 |---|-----------|-------|-----------|
@@ -276,7 +276,7 @@ After presenting the summary, tell the user:
 
 ## Reference Material
 
-The sections below were previously separate reference files (`cognitive-load.md`, `heuristics-scoring.md`, `personas.md`). They live inline now so the critique flow has all its deep context in one place.
+Use the criteria below to assess cognitive effort, usability, and representative user situations. Each finding needs evidence from the reviewed task or interface.
 
 ### Cognitive Load Assessment
 
@@ -321,40 +321,36 @@ Mental effort spent building understanding. This is *good* cognitive load; it le
 Evaluate the interface against these 8 items:
 
 - [ ] **Single focus**: Can the user complete their primary task without distraction from competing elements?
-- [ ] **Chunking**: Is information presented in digestible groups (≤4 items per group)?
+- [ ] **Chunking**: Are related items grouped meaningfully for this task and audience?
 - [ ] **Grouping**: Are related items visually grouped together (proximity, borders, shared background)?
 - [ ] **Visual hierarchy**: Is it immediately clear what's most important on the screen?
 - [ ] **One thing at a time**: Can the user focus on a single decision before moving to the next?
-- [ ] **Minimal choices**: Are decisions simplified (≤4 visible options at any decision point)?
+- [ ] **Minimal choices**: Are options distinguishable and easy to compare without hiding useful choices?
 - [ ] **Working memory**: Does the user need to remember information from a previous screen to act on the current one?
 - [ ] **Progressive disclosure**: Is complexity revealed only when the user needs it?
 
-**Scoring**: Count the failed items. 0–1 failures = low cognitive load (good). 2–3 = moderate (address soon). 4+ = high cognitive load (critical fix needed).
+**Assessment**: For each relevant item, record the task, observed burden, and available evidence. Determine severity from the consequence and recoverability of that burden, not the number of checklist failures. These checks guide judgment; they do not measure mental capacity.
 
 ---
 
-#### The Working Memory Rule
+#### Remembering and comparing
 
-**Humans can hold ≤4 items in working memory at once** (Miller's Law revised by Cowan, 2001).
+Distinguish information a person must remember from choices that remain visible and recognizable. Judge the task's complexity, familiarity, interruptions, comparison needs, and the user's experience. There is no universal maximum number of visible menu items, sibling links, or actions.
 
-At any decision point, count the number of distinct options, actions, or pieces of information a user must simultaneously consider:
-- **≤4 items**: Within working memory limits, manageable
-- **5–7 items**: Pushing the boundary; consider grouping or progressive disclosure
-- **8+ items**: Overloaded; users will skip, misclick, or abandon
+Keep needed context visible or easy to retrieve. Group by meaning, label choices distinctly, preserve useful comparison views, and disclose advanced detail when it helps the current task. Do not bury frequent actions or force extra navigation just to reduce a count.
 
-**Practical applications**:
-- Action buttons: 1 primary, 1–2 secondary, group the rest in a menu
-- Navigation menus: ≤5 top-level items (group the rest under clear categories)
-- Long-form articles: one reading path; gather related links into a single block at the end instead of scattering them mid-flow
-- Documentation sidebars: ≤4 sibling choices visible per level before grouping kicks in
-- Portfolio and gallery indexes: one decision per screen (which piece to open), not filter, sort, and tag controls all at once
+Two calibration cases:
+- An index with twelve clearly labeled, grouped links is not a finding merely because twelve links are visible. Inspect whether users can find the needed destination.
+- A flow with only two choices can still impose substantial burden if users must remember amounts, restrictions, or earlier answers from another screen. Identify that missing context and its consequence.
+
+Treat likely confusion as a hypothesis until the interface, task evidence, or observed behavior supports it. Do not predict abandonment or mistakes from option count alone.
 
 ---
 
 #### Common Cognitive Load Violations
 
 ##### 1. The Wall of Options
-**Problem**: Presenting 10+ choices at once with no hierarchy.
+**Problem**: Presenting poorly distinguished choices with no hierarchy or meaningful grouping, making the relevant action hard to find.
 **Fix**: Group into categories, highlight recommended, use progressive disclosure.
 
 ##### 2. The Memory Bridge
@@ -389,9 +385,9 @@ At any decision point, count the number of distinct options, actions, or pieces 
 
 ### Heuristics Scoring Guide
 
-Score each of Nielsen's 10 Usability Heuristics on a 0–4 scale. Be honest: a 4 means genuinely excellent, not "good enough."
+Score each of the ten usability criteria below on a 0–4 scale. Be honest: a 4 means genuinely excellent, not "good enough."
 
-#### Nielsen's 10 Heuristics
+#### Ten Usability Criteria
 
 ##### 1. Visibility of System Status
 

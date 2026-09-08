@@ -28,6 +28,8 @@ export const transformations = Object.freeze([
   "disable-runtime-self-update",
   "redirect-standalone-installer",
   "recognize-plugin-hook",
+  "inline-design-document-format",
+  "evidence-based-usability-guidance",
 ]);
 
 export const agentNames = Object.freeze([
@@ -109,6 +111,89 @@ function portableMarkdown(text) {
 export function transformSkillFile(relativePath, original, version) {
   let text = original;
   const operations = [];
+  if (relativePath === "reference/document.md") {
+    text = mustReplace(
+      text,
+      "DESIGN.md follows the [official DESIGN.md format spec](https://raw.githubusercontent.com/google-labs-code/design.md/main/docs/spec.md):",
+      "Use the DESIGN.md format defined below:",
+      "self-contained DESIGN.md format",
+    );
+    const replacements = [
+      ["Use the canonical headings below so the file remains portable across DESIGN.md-aware tools.", "Use the canonical headings below so the bundled readers can identify each section. This is the plugin's supported authoring format; other tools may accept a different subset."],
+      ["The YAML frontmatter is the machine-readable layer. It's what Stitch's linter validates and what the live panel renders tiles from. Keep it tight; every entry should correspond to a token the project actually uses.", "The YAML frontmatter is the machine-readable layer consumed by the bundled parser, design-system panel, and detector. Keep it tight; every entry should correspond to a token the project actually uses."],
+      ['  primary: "#b8422e"', '  primary: "#b8422e"\n  primary-deep: "#8b3020"'],
+      ["  body:\n    # ...", '  body:\n    fontFamily: "Georgia, serif"\n    fontSize: "1rem"\n    fontWeight: 400\n    lineHeight: 1.5'],
+      ["Rules that matter:", [
+        "### Supported values and reader limits",
+        "",
+        "Frontmatter is optional. When present, open and close it with `---` on its own line, before the document body. Use two-space indentation, scalar values, and nested mappings. Quote CSS strings, token references, and strings containing punctuation. The bundled readers are limited YAML readers: do not author arrays, anchors, aliases, tags, multiline scalars, or duplicate keys. They are not validators for arbitrary YAML and may ignore unsupported content. Keep one canonical section of each kind; merge existing repeated sections only with the user's approval.",
+        "",
+        "| Field | Authoring contract |",
+        "|---|---|",
+        "| `name`, `description` | Project title and optional short description, as strings. A seed may contain only these fields. |",
+        "| `colors` | Named primitive CSS color strings; keep the project's authoritative color space. |",
+        "| `typography` | Named role mappings. `fontFamily`, `fontSize`, `letterSpacing`, `fontFeature`, and `fontVariation` are strings; `fontWeight` is numeric; `lineHeight` is a number or CSS string. Include only established properties. |",
+        "| `rounded`, `spacing` | Named CSS length strings; spacing may also contain unitless numeric counts or ratios. |",
+        "| `components` | Named variant mappings with the properties listed below. Values are CSS strings or references to existing primitive tokens; `typography` may reference a complete typography role. |",
+        "",
+        "Preserve valid project CSS expressions such as `clamp(2.5rem, 7vw, 4.5rem)`, `normal`, and multi-value padding. The parser retains these values; each consumer uses only the fields it supports. The detector understands colors, fonts, radii, and font-size evidence, not the complete document. A fully fluid type scale does not establish a discrete font-size allowlist. The panel shows colors, typography, radii, and sidecar component snippets; it is not a complete CSS or token-reference renderer. Neither consumer certifies external format compatibility.",
+        "",
+        "Every `{path.to.token}` must resolve to an existing field in the same frontmatter. Author primitive values directly, without aliases or reference cycles. Preserve unknown existing sections and fields when refreshing a document, but do not claim the bundled readers interpret them. Do not invent values merely to populate the schema.",
+        "",
+        "Rules that matter:",
+      ].join("\n")],
+      ["Components may reference primitives; primitives may not reference each other.", "Components may reference primitives or a complete typography role; primitives contain literal values."],
+      ["Don't rename to Material defaults.", "Do not rename established tokens to generic role defaults."],
+      ["Group into Primary / Secondary / Tertiary / Neutral (the Material-derived roles Stitch uses).", "Describe the actual semantic roles, such as primary, secondary, tertiary, or neutral."],
+      ["Map observed sizes and weights to the Material hierarchy (display / headline / title / body / label).", "Describe observed sizes and weights by their actual roles, such as display, headline, title, body, or label, preserving established names."],
+      ["This is the machine-readable layer: what the live panel and Stitch's linter consume.", "This is the machine-readable layer used by the bundled consumers described above."],
+      ["If a variant needs a property Stitch's 8-prop set doesn't cover", "If a variant needs a property outside the eight component properties listed above"],
+      ["carries **what Stitch's schema can't hold**", "carries **extensions outside the frontmatter token groups**"],
+      ["Components still carry full HTML/CSS because Stitch's 8-prop set can't hold them.", "Components still carry self-contained HTML/CSS for the panel; frontmatter references alone do not render snippets."],
+      ['"primary":        { "role": "primary",  "displayName": "Editorial Magenta", "canonical": "oklch(60% 0.25 350)", "tonalRamp": ["...", "...", "..."] },', '"primary": { "role": "primary", "displayName": "Primary accent" },'],
+      ['"cool-paper": { "role": "neutral",  "displayName": "Cool Paper",    "canonical": "oklch(96% 0.005 230)", "tonalRamp": ["...", "...", "..."] }', '"neutral-bg": { "role": "neutral", "displayName": "Neutral background" }'],
+      [".ds-btn-primary { background: #191c1d; color: #fff; padding: 16px 48px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; border: none; border-radius: 0; transition: background 0.2s, transform 0.2s; } .ds-btn-primary:hover { background: oklch(60% 0.25 350); transform: translateY(-2px); }", ".ds-btn-primary { background: #b8422e; color: #faf7f2; padding: 16px 48px; font-family: Georgia, serif; border: none; border-radius: 4px; } .ds-btn-primary:hover { background: #8b3020; } .ds-btn-primary:focus-visible { outline: 2px solid #b8422e; outline-offset: 3px; }"],
+      ["- **Match the spec.** Use its eight canonical sections in order", "- **Follow the bundled format.** Use the eight canonical sections in order"],
+      ["Stitch's own outputs use them heavily (\"The No-Line Rule\", \"The Ghost Border Fallback\"). Aim for 1-3 per section.", "Include a named rule only when it captures an established, reusable constraint; do not invent rules to fill a quota."],
+      ["Primary / Secondary / Tertiary / Neutral is the spec ordering.", "Use the role names that fit the product; do not invent missing roles or impose a foreign palette."],
+      ["Don't invent frontmatter token groups outside Stitch's schema (no `motion:`, `breakpoints:`, `shadows:` at the top level). Stitch's Zod schema only accepts `colors`, `typography`, `rounded`, `spacing`, `components`. Anything else belongs in the sidecar's `extensions`.", "Keep authored primitive token groups to `colors`, `typography`, `rounded`, `spacing`, and `components`. Motion, breakpoints, and shadows belong in the documented sidecar `extensions`, not new top-level token groups. Preserve unfamiliar existing content without promising that the plugin consumes it."],
+    ];
+    for (const [before, after] of replacements) text = mustReplace(text, before, after, `document guidance: ${before}`);
+    operations.push("inline-design-document-format");
+  }
+  if (relativePath === "reference/critique.md") {
+    const replacements = [
+      ["**Nielsen heuristics**", "**Usability criteria**"],
+      ["report checklist failures and decision points with >4 visible options.", "report evidence of avoidable remembering, unclear grouping, or difficult comparison in the user's task."],
+      ["Presenting 10+ choices at once with no hierarchy.", "Presenting poorly distinguished choices with no hierarchy or meaningful grouping, making the relevant action hard to find."],
+      ["Present the Nielsen's 10 heuristics scores as a table:", "Present the ten usability criteria scores as a table:"],
+      ["Score each of Nielsen's 10 Usability Heuristics on a 0–4 scale.", "Score each of the ten usability criteria below on a 0–4 scale."],
+      ["#### Nielsen's 10 Heuristics", "#### Ten Usability Criteria"],
+      ["The sections below were previously separate reference files (`cognitive-load.md`, `heuristics-scoring.md`, `personas.md`). They live inline now so the critique flow has all its deep context in one place.", "Use the criteria below to assess cognitive effort, usability, and representative user situations. Each finding needs evidence from the reviewed task or interface."],
+      ["Is information presented in digestible groups (≤4 items per group)?", "Are related items grouped meaningfully for this task and audience?"],
+      ["Are decisions simplified (≤4 visible options at any decision point)?", "Are options distinguishable and easy to compare without hiding useful choices?"],
+      ["**Scoring**: Count the failed items. 0–1 failures = low cognitive load (good). 2–3 = moderate (address soon). 4+ = high cognitive load (critical fix needed).", "**Assessment**: For each relevant item, record the task, observed burden, and available evidence. Determine severity from the consequence and recoverability of that burden, not the number of checklist failures. These checks guide judgment; they do not measure mental capacity."],
+    ];
+    for (const [before, after] of replacements) text = mustReplace(text, before, after, `critique guidance: ${before}`);
+    text = replaceSection(text, "#### The Working Memory Rule", "#### Common Cognitive Load Violations", [
+      "#### Remembering and comparing",
+      "",
+      "Distinguish information a person must remember from choices that remain visible and recognizable. Judge the task's complexity, familiarity, interruptions, comparison needs, and the user's experience. There is no universal maximum number of visible menu items, sibling links, or actions.",
+      "",
+      "Keep needed context visible or easy to retrieve. Group by meaning, label choices distinctly, preserve useful comparison views, and disclose advanced detail when it helps the current task. Do not bury frequent actions or force extra navigation just to reduce a count.",
+      "",
+      "Two calibration cases:",
+      "- An index with twelve clearly labeled, grouped links is not a finding merely because twelve links are visible. Inspect whether users can find the needed destination.",
+      "- A flow with only two choices can still impose substantial burden if users must remember amounts, restrictions, or earlier answers from another screen. Identify that missing context and its consequence.",
+      "",
+      "Treat likely confusion as a hypothesis until the interface, task evidence, or observed behavior supports it. Do not predict abandonment or mistakes from option count alone.",
+      "",
+      "---",
+      "",
+      "",
+    ].join("\n"), "task-based memory assessment");
+    operations.push("evidence-based-usability-guidance");
+  }
   if (relativePath.endsWith(".md")) {
     if (relativePath === "SKILL.md") {
       text = mustReplace(

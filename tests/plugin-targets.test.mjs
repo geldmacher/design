@@ -60,6 +60,13 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(agentPluginDesignSkill, /change-interface-review/);
     assert.match(agentPluginDesignSkill, /stakeholder-questionnaire/);
     for (const host of ["agent-plugin", "cursor", "codex"]) {
+      assert.deepEqual(existsSync(join(first[host].path, "docs")) ? readdirSync(join(first[host].path, "docs")) : [], host === "agent-plugin" ? [] : ["installation.md"]);
+      const instructions = [join(first[host].path, "skills"), join(first[host].path, "agents")]
+        .filter(existsSync).flatMap(resourceFiles).filter((path) => path.endsWith(".md"))
+        .map((path) => readFileSync(path, "utf8")).join("\n");
+      assert.doesNotMatch(instructions, /google-labs-code\/design\.md|https:\/\/github\.com\/pbakaus\/impeccable|## Module sources|Nielsen|Miller|Cowan|Stitch/);
+      assert.match(readFileSync(join(first[host].path, "THIRD_PARTY_NOTICES.md"), "utf8"), /https:\/\/github\.com\/pbakaus\/impeccable/);
+      assert.deepEqual(readFileSync(join(first[host].path, "licenses", "impeccable-apache-2.0.txt")), readFileSync(join(repositoryRoot, "upstream", "LICENSE")));
       assert.equal(existsSync(join(first[host].path, "skills", "design", "references", "change-review.md")), true);
       assert.equal(existsSync(join(first[host].path, "skills", "design", "references", "questionnaire.md")), true);
       assert.equal(existsSync(join(first[host].path, "skills", "design", "scripts", "review-scope.mjs")), true);

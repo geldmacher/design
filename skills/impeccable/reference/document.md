@@ -1,10 +1,10 @@
 Generate a `DESIGN.md` file at the project root that captures the current visual design system, so AI agents generating new screens stay on-brand.
 
-DESIGN.md follows the [official DESIGN.md format spec](https://raw.githubusercontent.com/google-labs-code/design.md/main/docs/spec.md): optional YAML frontmatter carrying machine-readable design tokens, followed by up to eight markdown sections in a fixed order. **Tokens are normative; prose provides context for how to apply them.** Sections may be omitted when not relevant, but those present stay in the specified order. Use the canonical headings below so the file remains portable across DESIGN.md-aware tools.
+Use the DESIGN.md format defined below: optional YAML frontmatter carrying machine-readable design tokens, followed by up to eight markdown sections in a fixed order. **Tokens are normative; prose provides context for how to apply them.** Sections may be omitted when not relevant, but those present stay in the specified order. Use the canonical headings below so the bundled readers can identify each section. This is the plugin's supported authoring format; other tools may accept a different subset.
 
 ## The frontmatter: token schema
 
-The YAML frontmatter is the machine-readable layer. It's what Stitch's linter validates and what the live panel renders tiles from. Keep it tight; every entry should correspond to a token the project actually uses.
+The YAML frontmatter is the machine-readable layer consumed by the bundled parser, design-system panel, and detector. Keep it tight; every entry should correspond to a token the project actually uses.
 
 ```yaml
 ---
@@ -12,6 +12,7 @@ name: <project title>
 description: <one-line tagline>
 colors:
   primary: "#b8422e"
+  primary-deep: "#8b3020"
   neutral-bg: "#faf7f2"
   # ...one entry per extracted color; key = descriptive slug
 typography:
@@ -22,7 +23,10 @@ typography:
     lineHeight: 1
     letterSpacing: "normal"
   body:
-    # ...
+    fontFamily: "Georgia, serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.5
 rounded:
   sm: "4px"
   md: "8px"
@@ -40,12 +44,28 @@ components:
 ---
 ```
 
+### Supported values and reader limits
+
+Frontmatter is optional. When present, open and close it with `---` on its own line, before the document body. Use two-space indentation, scalar values, and nested mappings. Quote CSS strings, token references, and strings containing punctuation. The bundled readers are limited YAML readers: do not author arrays, anchors, aliases, tags, multiline scalars, or duplicate keys. They are not validators for arbitrary YAML and may ignore unsupported content. Keep one canonical section of each kind; merge existing repeated sections only with the user's approval.
+
+| Field | Authoring contract |
+|---|---|
+| `name`, `description` | Project title and optional short description, as strings. A seed may contain only these fields. |
+| `colors` | Named primitive CSS color strings; keep the project's authoritative color space. |
+| `typography` | Named role mappings. `fontFamily`, `fontSize`, `letterSpacing`, `fontFeature`, and `fontVariation` are strings; `fontWeight` is numeric; `lineHeight` is a number or CSS string. Include only established properties. |
+| `rounded`, `spacing` | Named CSS length strings; spacing may also contain unitless numeric counts or ratios. |
+| `components` | Named variant mappings with the properties listed below. Values are CSS strings or references to existing primitive tokens; `typography` may reference a complete typography role. |
+
+Preserve valid project CSS expressions such as `clamp(2.5rem, 7vw, 4.5rem)`, `normal`, and multi-value padding. The parser retains these values; each consumer uses only the fields it supports. The detector understands colors, fonts, radii, and font-size evidence, not the complete document. A fully fluid type scale does not establish a discrete font-size allowlist. The panel shows colors, typography, radii, and sidecar component snippets; it is not a complete CSS or token-reference renderer. Neither consumer certifies external format compatibility.
+
+Every `{path.to.token}` must resolve to an existing field in the same frontmatter. Author primitive values directly, without aliases or reference cycles. Preserve unknown existing sections and fields when refreshing a document, but do not claim the bundled readers interpret them. Do not invent values merely to populate the schema.
+
 Rules that matter:
 
-- **Token refs** use `{path.to.token}` (e.g. `{colors.primary}`, `{rounded.md}`). Components may reference primitives; primitives may not reference each other.
+- **Token refs** use `{path.to.token}` (e.g. `{colors.primary}`, `{rounded.md}`). Components may reference primitives or a complete typography role; primitives contain literal values.
 - **Colors accept any valid CSS color string.** Hex is the recommended default for portability, but preserve an incumbent `rgb()`, `hsl()`, `oklch()`, wide-gamut, or mixed-color value when it is the project's normative source. Never split the source of truth without explicit reason.
 - **Component sub-tokens** are limited to 8 props: `backgroundColor`, `textColor`, `typography`, `rounded`, `padding`, `size`, `height`, `width`. Shadows, motion, focus rings, backdrop-filter: none of those fit. Carry them in the sidecar (Step 4b).
-- **Scale keys are open-ended.** Use whatever names the project already uses (`oxblood-deep`, `surface-container-low`). Don't rename to Material defaults.
+- **Scale keys are open-ended.** Use whatever names the project already uses (`oxblood-deep`, `surface-container-low`). Do not rename established tokens to generic role defaults.
 - **Variants are naming convention, not schema.** `button-primary` / `button-primary-hover` / `button-primary-active` as sibling keys.
 
 ## The markdown body: eight sections (canonical order)
@@ -95,8 +115,8 @@ Search the codebase in priority order:
 
 Build a structured draft from the discovered tokens. For each token class:
 
-- **Colors**: Group into Primary / Secondary / Tertiary / Neutral (the Material-derived roles Stitch uses). If the project only has one accent, express it as Primary + Neutral; omit Secondary and Tertiary rather than inventing them.
-- **Typography**: Map observed sizes and weights to the Material hierarchy (display / headline / title / body / label). Note font-family stacks and the scale ratio.
+- **Colors**: Describe the actual semantic roles, such as primary, secondary, tertiary, or neutral. If the project only has one accent, express it as Primary + Neutral; omit Secondary and Tertiary rather than inventing them.
+- **Typography**: Describe observed sizes and weights by their actual roles, such as display, headline, title, body, or label, preserving established names. Note font-family stacks and the scale ratio.
 - **Elevation**: Catalogue the shadow vocabulary. If the project is flat and uses tonal layering instead, that's a valid answer; state it explicitly.
 - **Components**: For each common component (button, card, input, chip, list item, tooltip, nav), extract shape (radius), color assignment, hover/focus treatment, internal padding.
 - **Layout + spacing**: Extract grid, container, breakpoint, rhythm, and density behavior into Layout.
@@ -104,12 +124,12 @@ Build a structured draft from the discovered tokens. For each token class:
 
 ### Step 2b: Stage the frontmatter
 
-From the auto-extracted tokens, draft the YAML frontmatter now (you'll write it at the top of DESIGN.md in Step 4). This is the machine-readable layer: what the live panel and Stitch's linter consume.
+From the auto-extracted tokens, draft the YAML frontmatter now (you'll write it at the top of DESIGN.md in Step 4). This is the machine-readable layer used by the bundled consumers described above.
 
 - **Colors**: one entry per extracted color. Key = descriptive slug (`oxblood-deep`, `editorial-magenta`, not `blue-800`). Value = whichever format the project treats as canonical (OKLCH or hex; see the frontmatter rules above). Don't split the source of truth: one format in the frontmatter, don't redefine the same token in prose with a different value.
 - **Typography**: one entry per role (`display`, `headline`, `title`, `body`, `label`). Typography is an object; include only the props that are real for the project (`fontFamily`, `fontSize`, `fontWeight`, `lineHeight`, `letterSpacing`, `fontFeature`, `fontVariation`).
 - **Rounded / Spacing**: whatever scale steps the project actually uses, keyed by whatever scale name the project uses (`sm` / `md` / `lg`, or `surface-sm`, or numeric steps).
-- **Components**: one entry per variant (`button-primary`, `button-primary-hover`, `button-ghost`). Reference primitives via `{colors.X}`, `{rounded.Y}`. If a variant needs a property Stitch's 8-prop set doesn't cover (shadow, focus ring, backdrop-filter), carry the full snippet in the sidecar instead.
+- **Components**: one entry per variant (`button-primary`, `button-primary-hover`, `button-ghost`). Reference primitives via `{colors.X}`, `{rounded.Y}`. If a variant needs a property outside the eight component properties listed above (shadow, focus ring, backdrop-filter), carry the full snippet in the sidecar instead.
 
 Skip anything the project doesn't have. Empty scale keys or fabricated tokens pollute the spec.
 
@@ -250,7 +270,7 @@ Concrete visual guardrails grounded in the incumbent implementation or the user'
 
 ### Step 4b: Write .impeccable/design.json sidecar (extensions only)
 
-The frontmatter owns token primitives (colors, typography, rounded, spacing, components). The sidecar at `.impeccable/design.json` carries **what Stitch's schema can't hold**: tonal ramps per color, shadow/elevation tokens, motion tokens, breakpoints, full component HTML/CSS snippets (the panel renders these into a shadow DOM), and narrative (north star, rules, do's/don'ts). It extends the frontmatter, it doesn't duplicate it.
+The frontmatter owns token primitives (colors, typography, rounded, spacing, components). The sidecar at `.impeccable/design.json` carries **extensions outside the frontmatter token groups**: tonal ramps per color, shadow/elevation tokens, motion tokens, breakpoints, full component HTML/CSS snippets (the panel renders these into a shadow DOM), and narrative (north star, rules, do's/don'ts). It extends the frontmatter, it doesn't duplicate it.
 
 Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user only asks to refresh the sidecar (e.g., from the live panel's stale-hint), preserve `DESIGN.md` and write only `.impeccable/design.json`.
 
@@ -263,8 +283,8 @@ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user onl
   "title": "Design System: [Project Title]",
   "extensions": {
     "colorMeta": {
-      "primary":        { "role": "primary",  "displayName": "Editorial Magenta", "canonical": "oklch(60% 0.25 350)", "tonalRamp": ["...", "...", "..."] },
-      "cool-paper": { "role": "neutral",  "displayName": "Cool Paper",    "canonical": "oklch(96% 0.005 230)", "tonalRamp": ["...", "...", "..."] }
+      "primary": { "role": "primary", "displayName": "Primary accent" },
+      "neutral-bg": { "role": "neutral", "displayName": "Neutral background" }
     },
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Hero headlines only." }
@@ -286,7 +306,7 @@ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user onl
       "refersTo": "button-primary",
       "description": "One-line what and when.",
       "html": "<button class=\"ds-btn-primary\">SAVE CHANGES</button>",
-      "css": ".ds-btn-primary { background: #191c1d; color: #fff; padding: 16px 48px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; border: none; border-radius: 0; transition: background 0.2s, transform 0.2s; } .ds-btn-primary:hover { background: oklch(60% 0.25 350); transform: translateY(-2px); }"
+      "css": ".ds-btn-primary { background: #b8422e; color: #faf7f2; padding: 16px 48px; font-family: Georgia, serif; border: none; border-radius: 4px; } .ds-btn-primary:hover { background: #8b3020; } .ds-btn-primary:focus-visible { outline: 2px solid #b8422e; outline-offset: 3px; }"
     }
   ],
   "narrative": {
@@ -300,7 +320,7 @@ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user onl
 }
 ```
 
-**What changed from schemaVersion 1.** The old sidecar carried token primitive arrays (`tokens.colors[]`, `tokens.typography[]`, etc.). Those values now live in the frontmatter. The sidecar only carries metadata that can't live in the frontmatter (tonal ramps, canonical OKLCH when the hex is an approximation, display names, role hints), keyed by the frontmatter token name (`colorMeta.<token-name>`, `typographyMeta.<token-name>`). Components still carry full HTML/CSS because Stitch's 8-prop set can't hold them.
+**What changed from schemaVersion 1.** The old sidecar carried token primitive arrays (`tokens.colors[]`, `tokens.typography[]`, etc.). Those values now live in the frontmatter. The sidecar only carries metadata that can't live in the frontmatter (tonal ramps, canonical OKLCH when the hex is an approximation, display names, role hints), keyed by the frontmatter token name (`colorMeta.<token-name>`, `typographyMeta.<token-name>`). Components still carry self-contained HTML/CSS for the panel; frontmatter references alone do not render snippets.
 
 #### Component translation rules
 
@@ -393,15 +413,15 @@ Your own write is the freshest source; no reload needed.
 
 - **Frontmatter first, prose second.** Tokens go in the YAML frontmatter; prose contextualizes them. Don't redefine a token value in two places; the frontmatter is normative.
 - **Carry only durable product constraints.** A binding logo, identity asset, accessibility need, or brand commitment from PRODUCT.md may constrain DESIGN.md. Surface strategy stays in its surface brief.
-- **Match the spec.** Use its eight canonical sections in order and omit any that are irrelevant. Put motion guidance with the world or component it affects rather than creating a token group the schema does not support.
+- **Follow the bundled format.** Use the eight canonical sections in order and omit any that are irrelevant. Put motion guidance with the world or component it affects rather than creating a token group the schema does not support.
 - **Descriptive > technical**: "Gently curved edges (8px radius)" > "rounded-lg". Include the technical value in parens, lead with the description.
 - **Functional > decorative**: for each token, explain WHERE and WHY it's used, not just WHAT it is.
 - **Exact values in parens**: hex codes, px/rem values, font weights; always the number in parens alongside the description.
-- **Use Named Rules**: `**The [Name] Rule.** [short doctrine]`. These are memorable, citable, and much stickier for AI consumers than bullet lists. Stitch's own outputs use them heavily ("The No-Line Rule", "The Ghost Border Fallback"). Aim for 1-3 per section.
+- **Use Named Rules**: `**The [Name] Rule.** [short doctrine]`. These are memorable, citable, and much stickier for AI consumers than bullet lists. Include a named rule only when it captures an established, reusable constraint; do not invent rules to fill a quota.
 - **Be decisive where evidence is decisive.** Use hard language for actual invariants and softer language for provisional guidance.
 - **Use concrete audit tests only when they are grounded in the observed system or a confirmed user decision.** A one-sentence test beats a paragraph of principle.
 - **Reference PRODUCT.md selectively.** Product truth explains why the world fits; it does not supply page composition or a visual don't-list by default.
-- **Group colors by role**, not by hex-order or hue-order. Primary / Secondary / Tertiary / Neutral is the spec ordering.
+- **Group colors by role**, not by hex-order or hue-order. Use the role names that fit the product; do not invent missing roles or impose a foreign palette.
 
 ## Pitfalls
 
@@ -413,4 +433,4 @@ Your own write is the freshest source; no reload needed.
 - Don't replace canonical sections with near-synonyms. Put layout and responsive behavior in `Layout`; put motion with the affected world or component.
 - Don't rename sections even slightly. "Colors" not "Color Palette & Roles". "Typography" not "Typography Rules". Tooling parsing depends on exact headers.
 - Don't duplicate token values between frontmatter and prose. If a color is in `colors.primary` as hex, the prose can name it and describe its role but should not reassert a different hex. The frontmatter is normative.
-- Don't invent frontmatter token groups outside Stitch's schema (no `motion:`, `breakpoints:`, `shadows:` at the top level). Stitch's Zod schema only accepts `colors`, `typography`, `rounded`, `spacing`, `components`. Anything else belongs in the sidecar's `extensions`.
+- Keep authored primitive token groups to `colors`, `typography`, `rounded`, `spacing`, and `components`. Motion, breakpoints, and shadows belong in the documented sidecar `extensions`, not new top-level token groups. Preserve unfamiliar existing content without promising that the plugin consumes it.

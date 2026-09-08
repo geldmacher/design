@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
+  cpSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -28,10 +29,40 @@ import {
   createCandidateFromInputs,
   hashPath,
   materializeGitSource,
+  transformSkillFile,
   releaseArchiveExclusions,
   validateArchiveEntryName,
   verifyArchiveMatchesSource,
 } from "../scripts/lib/impeccable-vendor.mjs";
+
+test("guidance transformations reproduce locked files and reject upstream anchor drift", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "design-guidance-transform-"));
+  const lock = JSON.parse(readFileSync(new URL("../upstream/impeccable.lock.json", import.meta.url), "utf8"));
+  const version = readPin().version;
+  const paths = ["reference/document.md", "reference/critique.md"];
+  try {
+    mkdirSync(join(workspace, "skills/impeccable/reference"), { recursive: true });
+    for (const path of paths) cpSync(new URL(`../skills/impeccable/${path}`, import.meta.url), join(workspace, "skills/impeccable", path));
+    execFileSync("git", ["apply", "--reverse", ...paths.map((path) => `--include=skills/impeccable/${path}`), "-"], {
+      cwd: workspace,
+      input: readFileSync(new URL("../upstream/patches/impeccable-plugin.patch", import.meta.url)),
+    });
+    for (const path of paths) {
+      const original = readFileSync(join(workspace, "skills/impeccable", path), "utf8");
+      const entry = lock.import.files.find((file) => file.destination === `skills/impeccable/${path}`);
+      assert.equal(sha256Bytes(original), entry.sourceSha256);
+      const first = transformSkillFile(path, original, version);
+      assert.equal(first.text, readFileSync(new URL(`../skills/impeccable/${path}`, import.meta.url), "utf8"));
+      assert.deepEqual(first.operations, entry.transformations);
+      assert.deepEqual(transformSkillFile(path, original, version), first);
+      const anchor = path.endsWith("document.md") ? "Rules that matter:" : "#### The Working Memory Rule";
+      assert.ok(original.includes(anchor));
+      assert.throws(() => transformSkillFile(path, original.replace(anchor, "Changed upstream section"), version), /Upstream structure drift/);
+    }
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
 
 const fixedTime = "2026-08-12T10:00:00.000Z";
 

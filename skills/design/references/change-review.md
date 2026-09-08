@@ -57,6 +57,8 @@ Run each returned `patchCommands` entry to inspect both added and removed lines.
 
 3. Read the pull-request title and body from `intent` when present. Otherwise read the in-scope commit subjects. Judge the interface against that stated intent without expanding into process or scope-creep commentary.
 
+   Derive the required states from that intent, the affected controls, and comparable existing paths. Check relevant hover, focus, active, selected, disabled, loading, error, empty, narrow-width, and translated states, including ones the change omitted. A new asynchronous control needs its applicable pending and failure behavior; an intentional static label does not. Check the project's existing translation catalog when changed user-facing text belongs in it. Cite the concrete task or product convention that makes a missing state necessary; do not demand every state for every component.
+
 4. Inspect the changed implementation and its affected surfaces. Expand one consumer hop for ordinary components and two for design tokens, theme values, and shared primitives. Prefer route/layout entry points, then reach, then package proximity. Inspect at most five consumers and state how many were not expanded.
 
 5. Inspect removed lines for lost accessible names, semantic elements, labels, focus treatment, keyboard reachability, reduced-motion handling, logical layout properties, language direction, wrapping behavior, color tokens, and user-facing information. A removed signal is a lead; report a regression only when the change has no equivalent replacement.
@@ -75,12 +77,16 @@ Do not invoke `critique-storage.mjs`, write `.impeccable/critique/`, or load the
 
 Apply Impeccable's product mode, visual principles, and project-specific world while reviewing these domains in order:
 
-1. Accessibility and interaction: semantics, names, keyboard, focus, zoom, motion, states.
-2. Layout and responsiveness: hierarchy, grouping, overflow, breakpoints, directionality.
-3. Copy and information architecture: labels, recovery, empty/error content, stated intent.
-4. Typography: hierarchy, measure, wrapping, font behavior, localization pressure.
-5. Color and theming: semantic tokens, rendered contrast, dark/light behavior.
-6. Visual polish and motion: coherence, product specificity, icons, surfaces, purposeful motion.
+Read the listed sections of every bundled reference before judging its domain. They supply criteria only: ignore their command routing, scripts, editing steps, agent orchestration, persistence, and report formats. Do not spawn additional agents or enter those workflows. This review remains read-only, uses at most one detector run through Gather evidence, and owns the report. If a listed reference is unavailable, mark that domain `Not reviewed` and name the missing file; do not recreate its rules from memory.
+
+| Domain | Required bundled criteria | Review focus |
+|---|---|---|
+| Accessibility and interaction | [Audit](../../impeccable/reference/audit.md#1-accessibility-a11y): Accessibility; [Animate](../../impeccable/reference/animate.md#accessibility-and-control): Accessibility and control | Semantics, names, keyboard, focus, zoom, motion, states |
+| Layout and responsiveness | [Layout](../../impeccable/reference/layout.md#two-isolated-assessments): Layout assessment, Apply, Verify | Hierarchy, grouping, overflow, breakpoints, directionality |
+| Copy and information architecture | [Clarify](../../impeccable/reference/clarify.md#audit-the-language): Audit the language, Rewrite by function, Voice/accessibility/localization, Verify | Labels, recovery, empty/error content, stated intent |
+| Typography | [Typeset](../../impeccable/reference/typeset.md#two-isolated-assessments): Typographic assessment, Apply, Verify | Hierarchy, measure, wrapping, font behavior, localization pressure |
+| Color and theming | [Colorize](../../impeccable/reference/colorize.md#audit-before-choosing): Audit before choosing, Apply at system scale, Contrast and perception, Verify | Semantic tokens, rendered contrast, dark/light behavior |
+| Visual polish and motion | [Polish](../../impeccable/reference/polish.md#4-polish-the-whole-path): Polish the whole path; [Animate](../../impeccable/reference/animate.md#find-the-job): Find the job, Timing and easing, Accessibility and control, Verify | Coherence, product specificity, icons, surfaces, purposeful motion |
 
 Review interface quality only. If the evidence suggests a correctness, security, or general test problem, name the boundary once and direct it to the appropriate project review; do not include it in the interface verdict.
 
@@ -94,6 +100,8 @@ Use these severities:
 - `P3`: isolated polish with limited user impact; full mode only.
 
 Consolidate one root cause into one finding. Prioritize severity, then affected reach, then fix leverage. Do not pad the report to its cap.
+
+Confirmed inaccessible controls, lost keyboard focus or access, unusable zoom/reflow, required contrast failures, color-only meaning, ignored motion preferences, and unsafe destructive interactions are at least P1 when caused by this change; use P0 when they block the task or meet its severity definition. Evaluate actual requirements and equivalent alternatives before escalating. List confirmed P0/P1 findings first. If they exceed the detailed finding cap, include every remaining P0/P1 in a compact critical-overflow list with severity, status, exact location, evidence, and impact. All count toward the verdict; the cap limits detail, never disclosure of critical problems.
 
 ## Rendered verification
 
@@ -118,7 +126,7 @@ Write these sections in order:
 7. **Interface verdict**: exactly one of `Block`, `Needs changes`, or `Clear in reviewed scope`. P0 means `Block`; any remaining P1-P3 Introduced/Regression finding means `Needs changes`; otherwise use `Clear in reviewed scope`. This is an interface verdict, not merge, correctness, test, or security approval.
 8. **Recommended Design actions**: only actions that address reported findings, using the current host's Design entry point.
 
-Quick mode reports at most five Introduced/Regression findings and omits P3. Full mode reports at most 15. Pre-existing findings sit outside both caps and the verdict.
+Quick mode reports at most five detailed Introduced/Regression findings and omits P3. Full mode reports at most 15 detailed findings. The critical-overflow list above is the only exception to those caps. State how many lower-severity findings were omitted; they still affect the verdict when confirmed. Pre-existing findings sit outside both caps and the verdict.
 
 ## Handoff to Impeccable
 

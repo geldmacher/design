@@ -24,5 +24,7 @@ For explicit release detection and the reviewable candidate flow, see [Impeccabl
 6. Disable the runtime upstream update poll and redirect update/installer guidance to the plugin maintainer flow.
 7. Disable project-local pinned shortcut generation.
 8. Teach Impeccable context, doctor, pin, and staleness scripts to recognize native plugin hooks and the standard target's deliberate absence of hooks.
+9. Define the supported DESIGN.md authoring format, reader limits, token references, and sidecar responsibilities directly in the document guidance.
+10. Keep usability criteria self-contained and assess memory burden through task evidence instead of fixed option-count thresholds.
 
 The complete generated patch and every before/after file hash are release artifacts, not narrative claims.

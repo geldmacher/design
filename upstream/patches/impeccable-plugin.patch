@@ -42,7 +42,7 @@ index 6956bf6..d501462 100644
  **Hooks:** `/impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project (auto-runs the detector after UI file edits and surfaces findings). Load [reference/hooks.md](reference/hooks.md) when the user invokes it with any argument.
  
 diff --git a/skills/impeccable/reference/critique.md b/skills/impeccable/reference/critique.md
-index 5f50267..12215af 100644
+index 5f50267..502385f 100644
 --- a/skills/impeccable/reference/critique.md
 +++ b/skills/impeccable/reference/critique.md
 @@ -23,7 +23,7 @@ Resolve one stable target, run two independent assessments, synthesize a design
@@ -54,6 +54,18 @@ index 5f50267..12215af 100644
     ```
     Every later command also accepts the resolved target directly and derives the same slug internally; never hand-write a slug. If this exits non-zero, skip persistence and trend for this run, but continue the critique.
  3. **Read `.impeccable/critique/ignore.md`** if it exists. Drop matching findings silently; it is the only prior-run input critique consumes.
+@@ -47,9 +47,9 @@ Read relevant source files and visually inspect the live page when browser autom
+ Evaluate:
+ - **Design specificity**: Is the composition, interaction, and visual language grounded in this product, or could an unrelated product use it unchanged? Make this judgment before seeing detector output.
+ - **Holistic design**: hierarchy, IA, emotional fit, discoverability, composition, typography, color, accessibility, states, copy, and edge cases.
+-- **Cognitive load**: consult the [Cognitive Load Assessment](#cognitive-load-assessment) section below; report checklist failures and decision points with >4 visible options.
++- **Cognitive load**: consult the [Cognitive Load Assessment](#cognitive-load-assessment) section below; report evidence of avoidable remembering, unclear grouping, or difficult comparison in the user's task.
+ - **Emotional journey**: peak-end rule, emotional valleys, reassurance at high-stakes moments.
+-- **Nielsen heuristics**: consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below; score all 10 heuristics 0-4, marking any heuristic the mode-applicability rule allows as `n/a` instead of forcing a number.
++- **Usability criteria**: consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below; score all 10 heuristics 0-4, marking any heuristic the mode-applicability rule allows as `n/a` instead of forcing a number.
+ 
+ Return: design-specificity verdict, heuristic scores, cognitive load, emotional journey, 2-3 strengths, 3-5 priority issues, persona red flags, minor observations, and provocative questions.
+ 
 @@ -59,7 +59,7 @@ Run the bundled detector and browser visualization evidence. Assessment B is man
  
  CLI scan:
@@ -72,6 +84,15 @@ index 5f50267..12215af 100644
  5. For multi-view targets, inject on 3-5 representative pages.
  
  Return: CLI findings JSON/counts, browser console findings if applicable, false positives, and skipped/failed browser steps with concrete reasons.
+@@ -97,7 +97,7 @@ The report's first line MUST declare how the assessments were run, so a degraded
+ #### Design Health Score
+ > *Consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below.*
+ 
+-Present the Nielsen's 10 heuristics scores as a table:
++Present the ten usability criteria scores as a table:
+ 
+ | # | Heuristic | Score | Key Issue |
+ |---|-----------|-------|-----------|
 @@ -195,7 +195,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
  2. **Pass the structured metadata** through `IMPECCABLE_CRITIQUE_META` (JSON), then run the write command:
     ```bash
@@ -89,6 +110,80 @@ index 5f50267..12215af 100644
 +   node "<IMPECCABLE_SKILL_ROOT>/scripts/critique-storage.mjs" trend "<resolved target>" 5
     ```
     This returns a JSON array of the last 5 frontmatter entries (including the one you just wrote).
+ 
+@@ -276,7 +276,7 @@ After presenting the summary, tell the user:
+ 
+ ## Reference Material
+ 
+-The sections below were previously separate reference files (`cognitive-load.md`, `heuristics-scoring.md`, `personas.md`). They live inline now so the critique flow has all its deep context in one place.
++Use the criteria below to assess cognitive effort, usability, and representative user situations. Each finding needs evidence from the reviewed task or interface.
+ 
+ ### Cognitive Load Assessment
+ 
+@@ -321,40 +321,36 @@ Mental effort spent building understanding. This is *good* cognitive load; it le
+ Evaluate the interface against these 8 items:
+ 
+ - [ ] **Single focus**: Can the user complete their primary task without distraction from competing elements?
+-- [ ] **Chunking**: Is information presented in digestible groups (≤4 items per group)?
++- [ ] **Chunking**: Are related items grouped meaningfully for this task and audience?
+ - [ ] **Grouping**: Are related items visually grouped together (proximity, borders, shared background)?
+ - [ ] **Visual hierarchy**: Is it immediately clear what's most important on the screen?
+ - [ ] **One thing at a time**: Can the user focus on a single decision before moving to the next?
+-- [ ] **Minimal choices**: Are decisions simplified (≤4 visible options at any decision point)?
++- [ ] **Minimal choices**: Are options distinguishable and easy to compare without hiding useful choices?
+ - [ ] **Working memory**: Does the user need to remember information from a previous screen to act on the current one?
+ - [ ] **Progressive disclosure**: Is complexity revealed only when the user needs it?
+ 
+-**Scoring**: Count the failed items. 0–1 failures = low cognitive load (good). 2–3 = moderate (address soon). 4+ = high cognitive load (critical fix needed).
++**Assessment**: For each relevant item, record the task, observed burden, and available evidence. Determine severity from the consequence and recoverability of that burden, not the number of checklist failures. These checks guide judgment; they do not measure mental capacity.
+ 
+ ---
+ 
+-#### The Working Memory Rule
++#### Remembering and comparing
+ 
+-**Humans can hold ≤4 items in working memory at once** (Miller's Law revised by Cowan, 2001).
++Distinguish information a person must remember from choices that remain visible and recognizable. Judge the task's complexity, familiarity, interruptions, comparison needs, and the user's experience. There is no universal maximum number of visible menu items, sibling links, or actions.
+ 
+-At any decision point, count the number of distinct options, actions, or pieces of information a user must simultaneously consider:
+-- **≤4 items**: Within working memory limits, manageable
+-- **5–7 items**: Pushing the boundary; consider grouping or progressive disclosure
+-- **8+ items**: Overloaded; users will skip, misclick, or abandon
++Keep needed context visible or easy to retrieve. Group by meaning, label choices distinctly, preserve useful comparison views, and disclose advanced detail when it helps the current task. Do not bury frequent actions or force extra navigation just to reduce a count.
+ 
+-**Practical applications**:
+-- Action buttons: 1 primary, 1–2 secondary, group the rest in a menu
+-- Navigation menus: ≤5 top-level items (group the rest under clear categories)
+-- Long-form articles: one reading path; gather related links into a single block at the end instead of scattering them mid-flow
+-- Documentation sidebars: ≤4 sibling choices visible per level before grouping kicks in
+-- Portfolio and gallery indexes: one decision per screen (which piece to open), not filter, sort, and tag controls all at once
++Two calibration cases:
++- An index with twelve clearly labeled, grouped links is not a finding merely because twelve links are visible. Inspect whether users can find the needed destination.
++- A flow with only two choices can still impose substantial burden if users must remember amounts, restrictions, or earlier answers from another screen. Identify that missing context and its consequence.
++
++Treat likely confusion as a hypothesis until the interface, task evidence, or observed behavior supports it. Do not predict abandonment or mistakes from option count alone.
+ 
+ ---
+ 
+ #### Common Cognitive Load Violations
+ 
+ ##### 1. The Wall of Options
+-**Problem**: Presenting 10+ choices at once with no hierarchy.
++**Problem**: Presenting poorly distinguished choices with no hierarchy or meaningful grouping, making the relevant action hard to find.
+ **Fix**: Group into categories, highlight recommended, use progressive disclosure.
+ 
+ ##### 2. The Memory Bridge
+@@ -389,9 +385,9 @@ At any decision point, count the number of distinct options, actions, or pieces
+ 
+ ### Heuristics Scoring Guide
+ 
+-Score each of Nielsen's 10 Usability Heuristics on a 0–4 scale. Be honest: a 4 means genuinely excellent, not "good enough."
++Score each of the ten usability criteria below on a 0–4 scale. Be honest: a 4 means genuinely excellent, not "good enough."
+ 
+-#### Nielsen's 10 Heuristics
++#### Ten Usability Criteria
+ 
+ ##### 1. Visibility of System Status
  
 diff --git a/skills/impeccable/reference/degraded/asset-producer.md b/skills/impeccable/reference/degraded/asset-producer.md
 index 42d42bc..11091f5 100644
@@ -133,6 +228,163 @@ index 7c3bae8..1d53f70 100644
  - **`mention`** needs the user to know but not to decide anything now. State each one in a sentence with its offered fix.
  - **`route`** needs a specific command. Name the command and the gap it would close. Run it only if the user asks in this turn; `init` and `document` are conversations, not repairs you perform unattended.
  
+diff --git a/skills/impeccable/reference/document.md b/skills/impeccable/reference/document.md
+index 9da0bc7..9765acb 100644
+--- a/skills/impeccable/reference/document.md
++++ b/skills/impeccable/reference/document.md
+@@ -1,10 +1,10 @@
+ Generate a `DESIGN.md` file at the project root that captures the current visual design system, so AI agents generating new screens stay on-brand.
+ 
+-DESIGN.md follows the [official DESIGN.md format spec](https://raw.githubusercontent.com/google-labs-code/design.md/main/docs/spec.md): optional YAML frontmatter carrying machine-readable design tokens, followed by up to eight markdown sections in a fixed order. **Tokens are normative; prose provides context for how to apply them.** Sections may be omitted when not relevant, but those present stay in the specified order. Use the canonical headings below so the file remains portable across DESIGN.md-aware tools.
++Use the DESIGN.md format defined below: optional YAML frontmatter carrying machine-readable design tokens, followed by up to eight markdown sections in a fixed order. **Tokens are normative; prose provides context for how to apply them.** Sections may be omitted when not relevant, but those present stay in the specified order. Use the canonical headings below so the bundled readers can identify each section. This is the plugin's supported authoring format; other tools may accept a different subset.
+ 
+ ## The frontmatter: token schema
+ 
+-The YAML frontmatter is the machine-readable layer. It's what Stitch's linter validates and what the live panel renders tiles from. Keep it tight; every entry should correspond to a token the project actually uses.
++The YAML frontmatter is the machine-readable layer consumed by the bundled parser, design-system panel, and detector. Keep it tight; every entry should correspond to a token the project actually uses.
+ 
+ ```yaml
+ ---
+@@ -12,6 +12,7 @@ name: <project title>
+ description: <one-line tagline>
+ colors:
+   primary: "#b8422e"
++  primary-deep: "#8b3020"
+   neutral-bg: "#faf7f2"
+   # ...one entry per extracted color; key = descriptive slug
+ typography:
+@@ -22,7 +23,10 @@ typography:
+     lineHeight: 1
+     letterSpacing: "normal"
+   body:
+-    # ...
++    fontFamily: "Georgia, serif"
++    fontSize: "1rem"
++    fontWeight: 400
++    lineHeight: 1.5
+ rounded:
+   sm: "4px"
+   md: "8px"
+@@ -40,12 +44,28 @@ components:
+ ---
+ ```
+ 
++### Supported values and reader limits
++
++Frontmatter is optional. When present, open and close it with `---` on its own line, before the document body. Use two-space indentation, scalar values, and nested mappings. Quote CSS strings, token references, and strings containing punctuation. The bundled readers are limited YAML readers: do not author arrays, anchors, aliases, tags, multiline scalars, or duplicate keys. They are not validators for arbitrary YAML and may ignore unsupported content. Keep one canonical section of each kind; merge existing repeated sections only with the user's approval.
++
++| Field | Authoring contract |
++|---|---|
++| `name`, `description` | Project title and optional short description, as strings. A seed may contain only these fields. |
++| `colors` | Named primitive CSS color strings; keep the project's authoritative color space. |
++| `typography` | Named role mappings. `fontFamily`, `fontSize`, `letterSpacing`, `fontFeature`, and `fontVariation` are strings; `fontWeight` is numeric; `lineHeight` is a number or CSS string. Include only established properties. |
++| `rounded`, `spacing` | Named CSS length strings; spacing may also contain unitless numeric counts or ratios. |
++| `components` | Named variant mappings with the properties listed below. Values are CSS strings or references to existing primitive tokens; `typography` may reference a complete typography role. |
++
++Preserve valid project CSS expressions such as `clamp(2.5rem, 7vw, 4.5rem)`, `normal`, and multi-value padding. The parser retains these values; each consumer uses only the fields it supports. The detector understands colors, fonts, radii, and font-size evidence, not the complete document. A fully fluid type scale does not establish a discrete font-size allowlist. The panel shows colors, typography, radii, and sidecar component snippets; it is not a complete CSS or token-reference renderer. Neither consumer certifies external format compatibility.
++
++Every `{path.to.token}` must resolve to an existing field in the same frontmatter. Author primitive values directly, without aliases or reference cycles. Preserve unknown existing sections and fields when refreshing a document, but do not claim the bundled readers interpret them. Do not invent values merely to populate the schema.
++
+ Rules that matter:
+ 
+-- **Token refs** use `{path.to.token}` (e.g. `{colors.primary}`, `{rounded.md}`). Components may reference primitives; primitives may not reference each other.
++- **Token refs** use `{path.to.token}` (e.g. `{colors.primary}`, `{rounded.md}`). Components may reference primitives or a complete typography role; primitives contain literal values.
+ - **Colors accept any valid CSS color string.** Hex is the recommended default for portability, but preserve an incumbent `rgb()`, `hsl()`, `oklch()`, wide-gamut, or mixed-color value when it is the project's normative source. Never split the source of truth without explicit reason.
+ - **Component sub-tokens** are limited to 8 props: `backgroundColor`, `textColor`, `typography`, `rounded`, `padding`, `size`, `height`, `width`. Shadows, motion, focus rings, backdrop-filter: none of those fit. Carry them in the sidecar (Step 4b).
+-- **Scale keys are open-ended.** Use whatever names the project already uses (`oxblood-deep`, `surface-container-low`). Don't rename to Material defaults.
++- **Scale keys are open-ended.** Use whatever names the project already uses (`oxblood-deep`, `surface-container-low`). Do not rename established tokens to generic role defaults.
+ - **Variants are naming convention, not schema.** `button-primary` / `button-primary-hover` / `button-primary-active` as sibling keys.
+ 
+ ## The markdown body: eight sections (canonical order)
+@@ -95,8 +115,8 @@ Search the codebase in priority order:
+ 
+ Build a structured draft from the discovered tokens. For each token class:
+ 
+-- **Colors**: Group into Primary / Secondary / Tertiary / Neutral (the Material-derived roles Stitch uses). If the project only has one accent, express it as Primary + Neutral; omit Secondary and Tertiary rather than inventing them.
+-- **Typography**: Map observed sizes and weights to the Material hierarchy (display / headline / title / body / label). Note font-family stacks and the scale ratio.
++- **Colors**: Describe the actual semantic roles, such as primary, secondary, tertiary, or neutral. If the project only has one accent, express it as Primary + Neutral; omit Secondary and Tertiary rather than inventing them.
++- **Typography**: Describe observed sizes and weights by their actual roles, such as display, headline, title, body, or label, preserving established names. Note font-family stacks and the scale ratio.
+ - **Elevation**: Catalogue the shadow vocabulary. If the project is flat and uses tonal layering instead, that's a valid answer; state it explicitly.
+ - **Components**: For each common component (button, card, input, chip, list item, tooltip, nav), extract shape (radius), color assignment, hover/focus treatment, internal padding.
+ - **Layout + spacing**: Extract grid, container, breakpoint, rhythm, and density behavior into Layout.
+@@ -104,12 +124,12 @@ Build a structured draft from the discovered tokens. For each token class:
+ 
+ ### Step 2b: Stage the frontmatter
+ 
+-From the auto-extracted tokens, draft the YAML frontmatter now (you'll write it at the top of DESIGN.md in Step 4). This is the machine-readable layer: what the live panel and Stitch's linter consume.
++From the auto-extracted tokens, draft the YAML frontmatter now (you'll write it at the top of DESIGN.md in Step 4). This is the machine-readable layer used by the bundled consumers described above.
+ 
+ - **Colors**: one entry per extracted color. Key = descriptive slug (`oxblood-deep`, `editorial-magenta`, not `blue-800`). Value = whichever format the project treats as canonical (OKLCH or hex; see the frontmatter rules above). Don't split the source of truth: one format in the frontmatter, don't redefine the same token in prose with a different value.
+ - **Typography**: one entry per role (`display`, `headline`, `title`, `body`, `label`). Typography is an object; include only the props that are real for the project (`fontFamily`, `fontSize`, `fontWeight`, `lineHeight`, `letterSpacing`, `fontFeature`, `fontVariation`).
+ - **Rounded / Spacing**: whatever scale steps the project actually uses, keyed by whatever scale name the project uses (`sm` / `md` / `lg`, or `surface-sm`, or numeric steps).
+-- **Components**: one entry per variant (`button-primary`, `button-primary-hover`, `button-ghost`). Reference primitives via `{colors.X}`, `{rounded.Y}`. If a variant needs a property Stitch's 8-prop set doesn't cover (shadow, focus ring, backdrop-filter), carry the full snippet in the sidecar instead.
++- **Components**: one entry per variant (`button-primary`, `button-primary-hover`, `button-ghost`). Reference primitives via `{colors.X}`, `{rounded.Y}`. If a variant needs a property outside the eight component properties listed above (shadow, focus ring, backdrop-filter), carry the full snippet in the sidecar instead.
+ 
+ Skip anything the project doesn't have. Empty scale keys or fabricated tokens pollute the spec.
+ 
+@@ -250,7 +270,7 @@ Concrete visual guardrails grounded in the incumbent implementation or the user'
+ 
+ ### Step 4b: Write .impeccable/design.json sidecar (extensions only)
+ 
+-The frontmatter owns token primitives (colors, typography, rounded, spacing, components). The sidecar at `.impeccable/design.json` carries **what Stitch's schema can't hold**: tonal ramps per color, shadow/elevation tokens, motion tokens, breakpoints, full component HTML/CSS snippets (the panel renders these into a shadow DOM), and narrative (north star, rules, do's/don'ts). It extends the frontmatter, it doesn't duplicate it.
++The frontmatter owns token primitives (colors, typography, rounded, spacing, components). The sidecar at `.impeccable/design.json` carries **extensions outside the frontmatter token groups**: tonal ramps per color, shadow/elevation tokens, motion tokens, breakpoints, full component HTML/CSS snippets (the panel renders these into a shadow DOM), and narrative (north star, rules, do's/don'ts). It extends the frontmatter, it doesn't duplicate it.
+ 
+ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user only asks to refresh the sidecar (e.g., from the live panel's stale-hint), preserve `DESIGN.md` and write only `.impeccable/design.json`.
+ 
+@@ -263,8 +283,8 @@ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user onl
+   "title": "Design System: [Project Title]",
+   "extensions": {
+     "colorMeta": {
+-      "primary":        { "role": "primary",  "displayName": "Editorial Magenta", "canonical": "oklch(60% 0.25 350)", "tonalRamp": ["...", "...", "..."] },
+-      "cool-paper": { "role": "neutral",  "displayName": "Cool Paper",    "canonical": "oklch(96% 0.005 230)", "tonalRamp": ["...", "...", "..."] }
++      "primary": { "role": "primary", "displayName": "Primary accent" },
++      "neutral-bg": { "role": "neutral", "displayName": "Neutral background" }
+     },
+     "typographyMeta": {
+       "display": { "displayName": "Display", "purpose": "Hero headlines only." }
+@@ -286,7 +306,7 @@ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user onl
+       "refersTo": "button-primary",
+       "description": "One-line what and when.",
+       "html": "<button class=\"ds-btn-primary\">SAVE CHANGES</button>",
+-      "css": ".ds-btn-primary { background: #191c1d; color: #fff; padding: 16px 48px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; border: none; border-radius: 0; transition: background 0.2s, transform 0.2s; } .ds-btn-primary:hover { background: oklch(60% 0.25 350); transform: translateY(-2px); }"
++      "css": ".ds-btn-primary { background: #b8422e; color: #faf7f2; padding: 16px 48px; font-family: Georgia, serif; border: none; border-radius: 4px; } .ds-btn-primary:hover { background: #8b3020; } .ds-btn-primary:focus-visible { outline: 2px solid #b8422e; outline-offset: 3px; }"
+     }
+   ],
+   "narrative": {
+@@ -300,7 +320,7 @@ Regenerate the sidecar whenever you regenerate root `DESIGN.md`. If the user onl
+ }
+ ```
+ 
+-**What changed from schemaVersion 1.** The old sidecar carried token primitive arrays (`tokens.colors[]`, `tokens.typography[]`, etc.). Those values now live in the frontmatter. The sidecar only carries metadata that can't live in the frontmatter (tonal ramps, canonical OKLCH when the hex is an approximation, display names, role hints), keyed by the frontmatter token name (`colorMeta.<token-name>`, `typographyMeta.<token-name>`). Components still carry full HTML/CSS because Stitch's 8-prop set can't hold them.
++**What changed from schemaVersion 1.** The old sidecar carried token primitive arrays (`tokens.colors[]`, `tokens.typography[]`, etc.). Those values now live in the frontmatter. The sidecar only carries metadata that can't live in the frontmatter (tonal ramps, canonical OKLCH when the hex is an approximation, display names, role hints), keyed by the frontmatter token name (`colorMeta.<token-name>`, `typographyMeta.<token-name>`). Components still carry self-contained HTML/CSS for the panel; frontmatter references alone do not render snippets.
+ 
+ #### Component translation rules
+ 
+@@ -393,15 +413,15 @@ Your own write is the freshest source; no reload needed.
+ 
+ - **Frontmatter first, prose second.** Tokens go in the YAML frontmatter; prose contextualizes them. Don't redefine a token value in two places; the frontmatter is normative.
+ - **Carry only durable product constraints.** A binding logo, identity asset, accessibility need, or brand commitment from PRODUCT.md may constrain DESIGN.md. Surface strategy stays in its surface brief.
+-- **Match the spec.** Use its eight canonical sections in order and omit any that are irrelevant. Put motion guidance with the world or component it affects rather than creating a token group the schema does not support.
++- **Follow the bundled format.** Use the eight canonical sections in order and omit any that are irrelevant. Put motion guidance with the world or component it affects rather than creating a token group the schema does not support.
+ - **Descriptive > technical**: "Gently curved edges (8px radius)" > "rounded-lg". Include the technical value in parens, lead with the description.
+ - **Functional > decorative**: for each token, explain WHERE and WHY it's used, not just WHAT it is.
+ - **Exact values in parens**: hex codes, px/rem values, font weights; always the number in parens alongside the description.
+-- **Use Named Rules**: `**The [Name] Rule.** [short doctrine]`. These are memorable, citable, and much stickier for AI consumers than bullet lists. Stitch's own outputs use them heavily ("The No-Line Rule", "The Ghost Border Fallback"). Aim for 1-3 per section.
++- **Use Named Rules**: `**The [Name] Rule.** [short doctrine]`. These are memorable, citable, and much stickier for AI consumers than bullet lists. Include a named rule only when it captures an established, reusable constraint; do not invent rules to fill a quota.
+ - **Be decisive where evidence is decisive.** Use hard language for actual invariants and softer language for provisional guidance.
+ - **Use concrete audit tests only when they are grounded in the observed system or a confirmed user decision.** A one-sentence test beats a paragraph of principle.
+ - **Reference PRODUCT.md selectively.** Product truth explains why the world fits; it does not supply page composition or a visual don't-list by default.
+-- **Group colors by role**, not by hex-order or hue-order. Primary / Secondary / Tertiary / Neutral is the spec ordering.
++- **Group colors by role**, not by hex-order or hue-order. Use the role names that fit the product; do not invent missing roles or impose a foreign palette.
+ 
+ ## Pitfalls
+ 
+@@ -413,4 +433,4 @@ Your own write is the freshest source; no reload needed.
+ - Don't replace canonical sections with near-synonyms. Put layout and responsive behavior in `Layout`; put motion with the affected world or component.
+ - Don't rename sections even slightly. "Colors" not "Color Palette & Roles". "Typography" not "Typography Rules". Tooling parsing depends on exact headers.
+ - Don't duplicate token values between frontmatter and prose. If a color is in `colors.primary` as hex, the prose can name it and describe its role but should not reassert a different hex. The frontmatter is normative.
+-- Don't invent frontmatter token groups outside Stitch's schema (no `motion:`, `breakpoints:`, `shadows:` at the top level). Stitch's Zod schema only accepts `colors`, `typography`, `rounded`, `spacing`, `components`. Anything else belongs in the sidecar's `extensions`.
++- Keep authored primitive token groups to `colors`, `typography`, `rounded`, `spacing`, and `components`. Motion, breakpoints, and shadows belong in the documented sidecar `extensions`, not new top-level token groups. Preserve unfamiliar existing content without promising that the plugin consumes it.
 diff --git a/skills/impeccable/reference/hooks.md b/skills/impeccable/reference/hooks.md
 index ea788f7..f5ba017 100644
 --- a/skills/impeccable/reference/hooks.md

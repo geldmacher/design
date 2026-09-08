@@ -22,10 +22,6 @@ export function renderCapabilityIndex(modules) {
   for (const capability of flattenCapabilities(modules).sort((a, b) => b.specificity - a.specificity || a.module.localeCompare(b.module))) {
     lines.push(`| ${capability.module} | ${capability.moduleVersion} | ${capability.id} - ${capability.title} | ${capability.skill} | ${capability.specificity} | ${capability.fallback ? 'yes' : 'no'} | ${(capability.triggers || []).join(', ')} | ${(capability.scope || []).join(', ')} | ${(capability.combinableWith || []).join(', ') || '-'} |`);
   }
-  lines.push('', '## Module sources', '');
-  for (const module of modules) {
-    lines.push(`- \`${module.id}@${module.version}\` - ${module.license} - ${module.source.type} - ${module.source.url}`);
-  }
   lines.push('');
   return lines.join('\n');
 }

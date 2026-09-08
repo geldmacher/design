@@ -118,7 +118,7 @@ Design chooses the most specific bundled capability for the request and falls ba
 
 `design questionnaire` prepares a focused questionnaire for one recipient or homogeneous audience. It reuses facts already present in the request and canonical project context, asks only for missing decision-critical information, and previews the complete Markdown before any write. A file is created only after the preview is followed by an exact `.md` destination; an existing destination requires a separate overwrite confirmation. The operation sends nothing, imports no answers, and does not change Design context or configuration.
 
-`design review` is a read-only, change-scoped interface review. It defaults to `quick`, resolves working, staged, branch, pull-request, ref, and exact Git-range targets without switching the active checkout, and keeps its findings in the current task. A separately approved `/design polish ...` or `$design polish ...` follow-up routes those findings to bundled Impeccable. The scope and reporting method was independently implemented with inspiration from [`jakubkrehel/skills` at `c25a8437`](https://github.com/jakubkrehel/skills/tree/c25a8437afc6fecf277158f7c6e2f9aa45f4993d); no files from that repository are packaged and it is not a runtime dependency.
+`design review` is a read-only, change-scoped interface review. It defaults to `quick`, resolves working, staged, branch, pull-request, ref, and exact Git-range targets without switching the active checkout, and keeps its findings in the current task. A separately approved `/design polish ...` or `$design polish ...` follow-up routes those findings to bundled Impeccable.
 
 ## Controlled by default
 

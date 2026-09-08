@@ -28,10 +28,12 @@
       "replace-project-hook-installation-with-plugin-hook",
       "disable-runtime-self-update",
       "redirect-standalone-installer",
-      "recognize-plugin-hook"
+      "recognize-plugin-hook",
+      "inline-design-document-format",
+      "evidence-based-usability-guidance"
     ],
     "patch": "upstream/patches/impeccable-plugin.patch",
-    "patchSha256": "cf2328412a90024d15a448b2e5ff34d024e1a9a0862d23b93a4a1c57e1fd271d",
+    "patchSha256": "389ef5e514f74a3fca811a108c231f17a1d9b89f67cc13ad8a22389b8cec2d9d",
     "files": [
       {
         "source": ".cursor/agents/impeccable-asset-producer.md",
@@ -144,8 +146,9 @@
         "source": ".cursor/skills/impeccable/reference/critique.md",
         "destination": "skills/impeccable/reference/critique.md",
         "sourceSha256": "a21df9083d922935f4a559164c7df9fb0ee9ba2a5a7391490bbb5389e86c16d1",
-        "vendoredSha256": "18f332d86db7b304c9990a541be66c8aca52417806d619bec31ca00cec7376d4",
+        "vendoredSha256": "02243406cba84f8769112c6e4935197246557926c8249ac2611693a58d22c7c3",
         "transformations": [
+          "evidence-based-usability-guidance",
           "portable-dual-host-script-paths"
         ]
       },
@@ -207,8 +210,10 @@
         "source": ".cursor/skills/impeccable/reference/document.md",
         "destination": "skills/impeccable/reference/document.md",
         "sourceSha256": "7848f40e224cf520bd8554943c9816a1ff8c97b1db57af0844e3b1ebb223d91f",
-        "vendoredSha256": "7848f40e224cf520bd8554943c9816a1ff8c97b1db57af0844e3b1ebb223d91f",
-        "transformations": []
+        "vendoredSha256": "40d5a1e0ce95a0f8a32bc8793855b7a146f9bf49ee52694a551acb0890b701a0",
+        "transformations": [
+          "inline-design-document-format"
+        ]
       },
       {
         "source": ".cursor/skills/impeccable/reference/extract.md",

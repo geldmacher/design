@@ -1,8 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModules, routeRequest } from '../src/registry.mjs';
+import { renderCapabilityIndex } from '../scripts/build-capability-index.mjs';
 
 const modules = loadModules();
+
+test('capability instructions retain routing without module source attribution', () => {
+  const rendered = renderCapabilityIndex(modules);
+  assert.doesNotMatch(rendered, /Module sources|https?:\/\/|urn:geldmacher:design/);
+  assert.match(rendered, /general-web-design/);
+  const changedSources = modules.map((module) => ({ ...module, source: { type: 'vendored', url: 'https://source.example.test' } }));
+  assert.equal(renderCapabilityIndex(changedSources), rendered);
+});
 
 test('general website and web-app work routes to Impeccable', () => {
   const website = routeRequest('/design Improve this website navigation', modules);

@@ -317,6 +317,8 @@ const allowedTransformations = new Set([
   'disable-runtime-self-update',
   'redirect-standalone-installer',
   'recognize-plugin-hook',
+  'inline-design-document-format',
+  'evidence-based-usability-guidance',
 ]);
 check(lock.import.transformations.every((id) => allowedTransformations.has(id)), 'Lock contains an unapproved transformation.');
 assertUnique(lock.import.files.map((file) => file.destination), 'Upstream inventory destinations');

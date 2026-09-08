@@ -9,6 +9,26 @@ const designSkill = readFileSync(join(root, 'skills', 'design', 'SKILL.md'), 'ut
 const review = readFileSync(join(root, 'skills', 'design', 'references', 'change-review.md'), 'utf8');
 const moduleDocument = JSON.parse(readFileSync(join(root, 'modules', 'design-core.json'), 'utf8'));
 
+test('review binds every domain to bundled criteria without entering their workflows', () => {
+  const references = [...review.matchAll(/\]\((\.\.\/\.\.\/impeccable\/reference\/[^)]+)\)/g)];
+  assert.equal(references.length, 8);
+  for (const [, target] of references) {
+    const [file, anchor] = target.split('#');
+    const body = readFileSync(join(root, 'skills/design/references', file), 'utf8');
+    const anchors = [...body.matchAll(/^#{1,6} (.+)$/gm)].map((match) => match[1].toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s/g, '-'));
+    assert.ok(anchors.includes(anchor), target);
+  }
+  assert.match(review, /ignore their command routing, scripts, editing steps, agent orchestration, persistence, and report formats/);
+  assert.match(review, /Do not spawn additional agents/);
+  assert.match(review, /at most one detector run/);
+  assert.match(review, /mark that domain `Not reviewed`/);
+  assert.match(review, /including ones the change omitted/);
+  assert.match(review, /project's existing translation catalog/);
+  assert.match(review, /report a regression only when the change has no equivalent replacement/);
+  assert.match(review, /include every remaining P0\/P1 in a compact critical-overflow list/);
+  assert.match(review, /All count toward the verdict/);
+});
+
 test('change review is a narrow first-party capability over the Impeccable fallback', () => {
   const capability = moduleDocument.capabilities.find((entry) => entry.id === 'change-interface-review');
   assert.deepEqual(capability, {
