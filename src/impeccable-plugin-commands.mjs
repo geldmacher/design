@@ -140,6 +140,8 @@ function protectProjectContext(stdout, cwd) {
 }
 
 export function projectEngineOutput({ command, stdout, host, cwd }) {
+  // Windows engine/console captures may use CRLF; projection anchors are LF-authored.
+  stdout = stdout.replace(/\r\n/g, '\n');
   if (command === 'context') {
     if (stdout.startsWith('TARGET_SELECTION_REQUIRED:\n')) {
       const parts = stdout.trim().split('\n\n');

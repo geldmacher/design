@@ -35,7 +35,7 @@
       "evidence-based-usability-guidance"
     ],
     "patch": "upstream/patches/impeccable-plugin.patch",
-    "patchSha256": "88a4fafaafdd372fd667e4041d318f2869c53281a694be081a0f9563a2dda275",
+    "patchSha256": "9cd4cad609aaa125f9a4a621d5489266d8ff64472b321a7e6aff028e93426bf6",
     "files": [
       {
         "source": ".cursor/agents/impeccable-asset-producer.md",
@@ -439,7 +439,7 @@
         "source": ".cursor/skills/impeccable/scripts/impeccable.cmd",
         "destination": "skills/impeccable/scripts/impeccable.cmd",
         "sourceSha256": "759bab1d8adc071fdde2efcf6e2157aa4026f3c2b4f3c342a8070bf328011616",
-        "vendoredSha256": "d556d15bbea19727e1273b47e5e1f31f04af7818c3e01626b5672c2bd4afb39f",
+        "vendoredSha256": "073975e9a2bd302bad9a06310c3a71c8353ac128a8dc11969c0a289ae5ccd2c8",
         "transformations": [
           "native-engine-launcher"
         ]

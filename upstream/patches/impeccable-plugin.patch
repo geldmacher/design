@@ -1012,7 +1012,7 @@ diff --git a/skills/impeccable/scripts/impeccable.cmd b/skills/impeccable/script
 index 7ebe419..0be0a0d 100644
 --- a/skills/impeccable/scripts/impeccable.cmd
 +++ b/skills/impeccable/scripts/impeccable.cmd
-@@ -1,214 +1,5 @@
+@@ -1,214 +1,6 @@
  @echo off
 -setlocal
 -rem Impeccable launcher (Windows). Runs bin\windows-<arch>\impeccable.exe next
@@ -1228,8 +1228,9 @@ index 7ebe419..0be0a0d 100644
 -echo Download impeccable-windows-%arch%.exe from https://github.com/pbakaus/impeccable/releases (tag engine-v%version%) and save it as %cached%, or set IMPECCABLE_BIN to a preinstalled engine binary. Docs: https://impeccable.style 1>&2
 -exit /b 127
 +setlocal EnableExtensions
-+for %%I in ("%~dp0..\..\..") do set "PLUGIN_ROOT=%%~fI"
-+node "%PLUGIN_ROOT%\src\impeccable-launcher.mjs" %*
++rem Do not set PLUGIN_ROOT here; that env var selects the Codex host in resolveHost.
++for %%I in ("%~dp0..\..\..") do set "DESIGN_LAUNCHER_ROOT=%%~fI"
++node "%DESIGN_LAUNCHER_ROOT%\src\impeccable-launcher.mjs" %*
 +exit /b %errorlevel%
 diff --git a/agents/impeccable-asset-producer.md b/agents/impeccable-asset-producer.md
 index 005c61c..d1080f5 100644

@@ -1,5 +1,6 @@
 @echo off
 setlocal EnableExtensions
-for %%I in ("%~dp0..\..\..") do set "PLUGIN_ROOT=%%~fI"
-node "%PLUGIN_ROOT%\src\impeccable-launcher.mjs" %*
+rem Do not set PLUGIN_ROOT here; that env var selects the Codex host in resolveHost.
+for %%I in ("%~dp0..\..\..") do set "DESIGN_LAUNCHER_ROOT=%%~fI"
+node "%DESIGN_LAUNCHER_ROOT%\src\impeccable-launcher.mjs" %*
 exit /b %errorlevel%

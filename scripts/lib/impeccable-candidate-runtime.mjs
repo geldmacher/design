@@ -45,7 +45,7 @@ export function verifyCandidateRuntime(root, projection, destinations) {
       };
       const launcher = join(target, 'skills/impeccable/scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
       if (run(launcher, ['engine-probe']).trim() !== `impeccable-engine ${runtime.engineVersion}`) throw new Error('Engine handshake differs from the skill pin.');
-      const context = run(launcher, ['context']);
+      const context = run(launcher, ['context']).replace(/\r\n/g, '\n');
       if (!context.includes('RESOLVED_CONTEXT:') || !context.includes(`PLUGIN_HOOK_STATE: ${host}:`)) throw new Error('Candidate plugin context contract missing.');
       const doctor = JSON.parse(run(launcher, ['doctor']));
       if (!Array.isArray(doctor.findings) || doctor.pluginHook?.host !== host) throw new Error('Candidate plugin doctor contract missing.');
