@@ -36,7 +36,10 @@ export function verifyCandidateRuntime(root, projection, destinations) {
         const nativeScript = !file.endsWith('.mjs');
         const executable = nativeScript ? (process.platform === 'win32' ? 'cmd.exe' : file) : process.execPath;
         const argv = nativeScript ? (process.platform === 'win32' ? ['/d', '/s', '/c', `"${[file, ...args].map(value => `"${value}"`).join(' ')}"`] : args) : [file, ...args];
-        const result = spawnSync(executable, argv, { cwd: project, env, input, encoding: 'utf8', timeout: 10000, shell: false });
+        const result = spawnSync(executable, argv, {
+          cwd: project, env, input, encoding: 'utf8', timeout: 10000, shell: false,
+          windowsVerbatimArguments: process.platform === 'win32' && nativeScript,
+        });
         if (result.error || result.status !== 0) throw new Error(`Candidate ${host} entrypoint failed (${args.join(' ')}): ${result.error?.message || result.stderr || result.status}`);
         return result.stdout;
       };
