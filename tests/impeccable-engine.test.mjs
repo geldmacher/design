@@ -156,10 +156,12 @@ test('thin launcher and generated commands work from a plugin path containing sp
   }
   const launcher = path.join(copy, 'skills/impeccable/scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
   const env = impeccableRuntimeEnvironment('codex', copy);
+  // On Windows, quote each argv token inside /s /c so paths with spaces do not
+  // collapse into a UNC-looking fragment ("The network path was not found").
   const result = process.platform === 'win32'
-    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${launcher}" engine-probe"`], { cwd, env, encoding: 'utf8', shell: false })
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, 'engine-probe'].map((value) => `"${value}"`).join(' ')}"`], { cwd, env, encoding: 'utf8', shell: false })
     : spawnSync(launcher, ['engine-probe'], { cwd, env, encoding: 'utf8', shell: false });
-  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(result.stdout.trim(), `impeccable-engine ${pin.engine.version}`);
   const context = runBundledImpeccable({ pluginRoot: copy, cwd, host: 'codex', command: 'context' });
   assert.equal(context.status, 0, context.error);

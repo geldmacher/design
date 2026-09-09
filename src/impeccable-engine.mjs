@@ -57,6 +57,10 @@ export function resolveEngine(root, { platform = process.platform, arch = proces
   if (bytes.length !== asset.size || createHash('sha256').update(bytes).digest('hex') !== asset.sha256) {
     throw new Error(`Bundled engine hash or size mismatch: ${key}`);
   }
-  if (platform !== 'win32' && !(fs.statSync(file).mode & 0o111)) throw new Error(`Bundled engine is not executable: ${key}`);
+  // Unix execute bits are authoritative on POSIX hosts only. Windows checkouts often
+  // drop +x on foreign engine binaries, and win32 itself does not use mode 0111.
+  if (process.platform !== 'win32' && key !== 'windows-x64' && !(fs.statSync(file).mode & 0o111)) {
+    throw new Error(`Bundled engine is not executable: ${key}`);
+  }
   return { file, relativeScript: relative, engineVersion: pin.engine.version, platform: key, pluginRoot: fs.realpathSync(root) };
 }

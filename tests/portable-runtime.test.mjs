@@ -206,7 +206,7 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   for (const [file, body] of Object.entries(projectTexts)) writeFileSync(join(project, file), body);
   const launcher = join(portable, 'skills', 'impeccable', 'scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
   const preserved = process.platform === 'win32'
-    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${launcher}" context"`], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false })
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, 'context'].map((value) => `"${value}"`).join(' ')}"`], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false })
     : spawnSync(launcher, ['context'], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false });
   assert.equal(preserved.status, 0, preserved.stderr);
   for (const [file, body] of Object.entries(projectTexts)) {

@@ -595,6 +595,11 @@ function assertSourceRoot(sourceRoot) {
   return resolved;
 }
 
+function readProjectedText(file) {
+  // Windows checkouts may materialize CRLF; projection anchors are authored as LF.
+  return readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+}
+
 function projectSelfContainedReferences(destination) {
   const transformations = [
   {
@@ -615,7 +620,7 @@ function projectSelfContainedReferences(destination) {
 ];
   for (const item of transformations) {
     const file = join(destination, 'skills/impeccable', item.path);
-    writeFileSync(file, replaceRequired(readFileSync(file, 'utf8'), item.search, item.replacement, `self-contained ${item.path}`));
+    writeFileSync(file, replaceRequired(readProjectedText(file), item.search, item.replacement, `self-contained ${item.path}`));
   }
 }
 
