@@ -211,8 +211,10 @@ function narrowModules(destination, host) {
 }
 
 function replaceRequired(source, search, replacement, label) {
-  if (source.split(search).length !== 2) throw new Error(`portable skill projection anchor must occur exactly once: ${label}`);
-  return source.replace(search, replacement);
+  // Projection anchors are authored with LF; normalize Windows CRLF checkouts first.
+  const normalized = source.replace(/\r\n/g, "\n");
+  if (normalized.split(search).length !== 2) throw new Error(`portable skill projection anchor must occur exactly once: ${label}`);
+  return normalized.replace(search, replacement);
 }
 
 const portableImpeccableTransforms = [
@@ -431,9 +433,8 @@ function adaptAgentPluginSkills(destination) {
     "portable live panel operation notation"));
 
   const hostPath = join(destination, "src", "host.mjs");
-  const host = readFileSync(hostPath, "utf8");
   writeFileSync(hostPath, replaceRequired(
-    host,
+    readProjectedText(hostPath),
     "  return skill;\n}",
     "  return `the loaded ${skill} skill's`;\n}",
     "portable lifecycle operation notation",
