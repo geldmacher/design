@@ -36,13 +36,16 @@ export function verifyCandidateRuntime(root, projection, destinations) {
         const nativeScript = !file.endsWith('.mjs');
         const executable = nativeScript ? (process.platform === 'win32' ? 'cmd.exe' : file) : process.execPath;
         const argv = nativeScript ? (process.platform === 'win32' ? ['/d', '/s', '/c', `"${[file, ...args].map(value => `"${value}"`).join(' ')}"`] : args) : [file, ...args];
-        const result = spawnSync(executable, argv, { cwd: project, env, input, encoding: 'utf8', timeout: 10000, shell: false });
+        const result = spawnSync(executable, argv, {
+          cwd: project, env, input, encoding: 'utf8', timeout: 10000, shell: false,
+          windowsVerbatimArguments: process.platform === 'win32' && nativeScript,
+        });
         if (result.error || result.status !== 0) throw new Error(`Candidate ${host} entrypoint failed (${args.join(' ')}): ${result.error?.message || result.stderr || result.status}`);
         return result.stdout;
       };
       const launcher = join(target, 'skills/impeccable/scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
       if (run(launcher, ['engine-probe']).trim() !== `impeccable-engine ${runtime.engineVersion}`) throw new Error('Engine handshake differs from the skill pin.');
-      const context = run(launcher, ['context']);
+      const context = run(launcher, ['context']).replace(/\r\n/g, '\n');
       if (!context.includes('RESOLVED_CONTEXT:') || !context.includes(`PLUGIN_HOOK_STATE: ${host}:`)) throw new Error('Candidate plugin context contract missing.');
       const doctor = JSON.parse(run(launcher, ['doctor']));
       if (!Array.isArray(doctor.findings) || doctor.pluginHook?.host !== host) throw new Error('Candidate plugin doctor contract missing.');

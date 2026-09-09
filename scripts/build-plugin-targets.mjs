@@ -211,8 +211,10 @@ function narrowModules(destination, host) {
 }
 
 function replaceRequired(source, search, replacement, label) {
-  if (source.split(search).length !== 2) throw new Error(`portable skill projection anchor must occur exactly once: ${label}`);
-  return source.replace(search, replacement);
+  // Projection anchors are authored with LF; normalize Windows CRLF checkouts first.
+  const normalized = source.replace(/\r\n/g, "\n");
+  if (normalized.split(search).length !== 2) throw new Error(`portable skill projection anchor must occur exactly once: ${label}`);
+  return normalized.replace(search, replacement);
 }
 
 const portableImpeccableTransforms = [
@@ -343,7 +345,7 @@ function adaptAgentPluginSkills(destination) {
   for (const skillName of ["design", "impeccable"]) rmSync(join(skillsRoot, skillName, "agents"), { recursive: true, force: true });
 
   const designPath = join(skillsRoot, "design", "SKILL.md");
-  let design = readFileSync(designPath, "utf8");
+  let design = readProjectedText(designPath);
   design = replaceRequired(
     design,
     "description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
@@ -379,7 +381,8 @@ function adaptAgentPluginSkills(destination) {
   writeFileSync(designPath, design);
 
   const impeccablePath = join(skillsRoot, "impeccable", "SKILL.md");
-  let impeccable = readFileSync(impeccablePath, "utf8");
+  // SKILL.md anchors below are LF-authored; normalize CRLF from Windows checkouts.
+  let impeccable = readProjectedText(impeccablePath);
   const start = "## Geldmacher Design host contract\n\n";
   const end = "\n\nThis skill gives you the tools and permission to create design";
   const startIndex = impeccable.indexOf(start);
@@ -430,9 +433,8 @@ function adaptAgentPluginSkills(destination) {
     "portable live panel operation notation"));
 
   const hostPath = join(destination, "src", "host.mjs");
-  const host = readFileSync(hostPath, "utf8");
   writeFileSync(hostPath, replaceRequired(
-    host,
+    readProjectedText(hostPath),
     "  return skill;\n}",
     "  return `the loaded ${skill} skill's`;\n}",
     "portable lifecycle operation notation",
@@ -595,6 +597,11 @@ function assertSourceRoot(sourceRoot) {
   return resolved;
 }
 
+function readProjectedText(file) {
+  // Windows checkouts may materialize CRLF; projection anchors are authored as LF.
+  return readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+}
+
 function projectSelfContainedReferences(destination) {
   const transformations = [
   {
@@ -615,7 +622,7 @@ function projectSelfContainedReferences(destination) {
 ];
   for (const item of transformations) {
     const file = join(destination, 'skills/impeccable', item.path);
-    writeFileSync(file, replaceRequired(readFileSync(file, 'utf8'), item.search, item.replacement, `self-contained ${item.path}`));
+    writeFileSync(file, replaceRequired(readProjectedText(file), item.search, item.replacement, `self-contained ${item.path}`));
   }
 }
 

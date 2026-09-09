@@ -156,10 +156,16 @@ test('thin launcher and generated commands work from a plugin path containing sp
   }
   const launcher = path.join(copy, 'skills/impeccable/scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
   const env = impeccableRuntimeEnvironment('codex', copy);
+  // On Windows, pass a /s /c line with every token quoted and disable Node's
+  // extra argv escaping (windowsVerbatimArguments). Without that, cmd.exe
+  // rewrites paths with spaces into a UNC-looking fragment and fails with
+  // "The network path was not found."
   const result = process.platform === 'win32'
-    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${launcher}" engine-probe"`], { cwd, env, encoding: 'utf8', shell: false })
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, 'engine-probe'].map((value) => `"${value}"`).join(' ')}"`], {
+      cwd, env, encoding: 'utf8', shell: false, windowsVerbatimArguments: true,
+    })
     : spawnSync(launcher, ['engine-probe'], { cwd, env, encoding: 'utf8', shell: false });
-  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(result.stdout.trim(), `impeccable-engine ${pin.engine.version}`);
   const context = runBundledImpeccable({ pluginRoot: copy, cwd, host: 'codex', command: 'context' });
   assert.equal(context.status, 0, context.error);

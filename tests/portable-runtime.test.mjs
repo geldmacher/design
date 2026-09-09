@@ -206,7 +206,9 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   for (const [file, body] of Object.entries(projectTexts)) writeFileSync(join(project, file), body);
   const launcher = join(portable, 'skills', 'impeccable', 'scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
   const preserved = process.platform === 'win32'
-    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${launcher}" context"`], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false })
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, 'context'].map((value) => `"${value}"`).join(' ')}"`], {
+      cwd: project, env: portableEnv, encoding: 'utf8', shell: false, windowsVerbatimArguments: true,
+    })
     : spawnSync(launcher, ['context'], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false });
   assert.equal(preserved.status, 0, preserved.stderr);
   for (const [file, body] of Object.entries(projectTexts)) {
@@ -234,7 +236,9 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
       const child = join(monorepo, 'apps', app);
       for (const [cwd, args] of [[child, ['context']], [monorepo, ['context', '--target', `apps/${app}`]]]) {
         const result = process.platform === 'win32'
-          ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, ...args].map(value => `"${value}"`).join(' ')}"`], { cwd, env, encoding: 'utf8', shell: false })
+          ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, ...args].map(value => `"${value}"`).join(' ')}"`], {
+            cwd, env, encoding: 'utf8', shell: false, windowsVerbatimArguments: true,
+          })
           : spawnSync(launcher, args, { cwd, env, encoding: 'utf8', shell: false });
         assert.equal(result.status, 0, `${host} ${cwd}: ${result.stderr}`);
         for (const [file, body] of Object.entries(app === 'one' ? projectTexts : inherited)) {
