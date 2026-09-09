@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.10.0
+
+- Update bundled Impeccable to 4.3.1 with native engine 0.1.5, pinned binaries for five platforms, and shared host-aware launchers.
+- Refine context loading, workflow routing, design guidance, and portable role handling while preserving explicit invocation and host-specific authority.
+- Add isolated engine and journey verification to the release gate.
+- Refresh the Design logo assets, plugin presentation, and installation and usage documentation.
+
 ## 0.9.0
 
 - Add source-only `$update-impeccable` and `/update-impeccable` entry points to select, verify, and apply the latest stable Impeccable skill release in one explicit invocation, preserve local work, and report repository validation separately from host installation.
