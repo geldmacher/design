@@ -297,6 +297,7 @@ export function runDetectorScan({
     nodePath,
   });
 
+  if (child.runtime?.engineVersion) Object.assign(base.detector, { engineVersion: child.runtime.engineVersion, platform: child.runtime.platform });
   if (!child.started || ![0, 2].includes(child.status)) return runtimeFailure(base, child);
 
   let rawFindings;

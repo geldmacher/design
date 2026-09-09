@@ -1,55 +1,26 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { resolveHost } from './host.mjs';
+import { resolvePluginHost } from './host.mjs';
+import { interceptPluginCommand, projectEngineOutput } from './impeccable-plugin-commands.mjs';
+import { resolveEngine } from './impeccable-engine.mjs';
 
-const SCRIPT_PATHS = Object.freeze({
-  detect: 'skills/impeccable/scripts/detect.mjs',
-  'cursor-hook': 'skills/impeccable/scripts/hook-before-edit.mjs',
-  'codex-hook': 'skills/impeccable/scripts/hook.mjs',
-});
-
-function inside(base, candidate) {
-  const item = path.relative(path.resolve(base), path.resolve(candidate));
-  return item === '' || (item !== '..' && !item.startsWith(`..${path.sep}`) && !path.isAbsolute(item));
-}
-
-function rejectSymlinkSegments(root, candidate) {
-  let current = root;
-  for (const segment of path.relative(root, candidate).split(path.sep).filter(Boolean)) {
-    current = path.join(current, segment);
-    const stat = fs.lstatSync(current);
-    if (stat.isSymbolicLink()) throw new Error(`Bundled runtime path crosses a symlink: ${current}`);
-  }
-}
-
-export function resolveBundledImpeccableScript(pluginRoot, scriptId) {
-  const relativeScript = SCRIPT_PATHS[scriptId];
-  if (!relativeScript) throw new Error(`Unknown bundled Impeccable script: ${scriptId}`);
-  if (typeof pluginRoot !== 'string' || !pluginRoot.trim()) throw new Error('Plugin root is required.');
-
-  const requestedRoot = path.resolve(pluginRoot);
-  const rootStat = fs.lstatSync(requestedRoot);
-  if (!rootStat.isDirectory()) throw new Error(`Plugin root is not a directory: ${requestedRoot}`);
-  const physicalRoot = fs.realpathSync(requestedRoot);
-  const candidate = path.resolve(physicalRoot, relativeScript);
-  if (!inside(physicalRoot, candidate)) throw new Error(`Bundled runtime path escapes the plugin root: ${relativeScript}`);
-  rejectSymlinkSegments(physicalRoot, candidate);
-  const candidateStat = fs.lstatSync(candidate);
-  if (!candidateStat.isFile()) throw new Error(`Bundled runtime is not a regular file: ${relativeScript}`);
-  const physicalCandidate = fs.realpathSync(candidate);
-  if (!inside(physicalRoot, physicalCandidate)) throw new Error(`Bundled runtime resolves outside the plugin root: ${relativeScript}`);
-  return { pluginRoot: physicalRoot, scriptPath: physicalCandidate, relativeScript };
-}
+const ENGINE_COMMANDS = Object.freeze({ detect: 'detect', 'cursor-hook': 'hook-before-edit', 'codex-hook': 'hook' });
 
 export function impeccableRuntimeEnvironment(host, pluginRoot, env = process.env, extraEnv = {}) {
-  const resolvedHost = resolveHost(host, env);
+  const resolvedHost = resolvePluginHost(host, pluginRoot, env);
+  const launcher = path.join(pluginRoot, 'skills/impeccable/scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
+  const selfCommand = process.platform === 'win32' ? `"${launcher}"` : `'${launcher.replaceAll("'", "'\\''")}'`;
   const next = {
     ...env,
     ...extraEnv,
     IMPECCABLE_HOST: resolvedHost,
     GELDMACHER_DESIGN_PLUGIN_ROOT: pluginRoot,
     IMPECCABLE_NO_UPDATE_CHECK: '1',
+    IMPECCABLE_PROVIDER_ID: resolvedHost,
+    IMPECCABLE_SKILL_DIR: path.join(pluginRoot, 'skills/impeccable'),
+    IMPECCABLE_SELF: selfCommand,
   };
   if (resolvedHost === 'cursor') {
     next.CURSOR_PLUGIN_ROOT = pluginRoot;
@@ -61,11 +32,16 @@ export function impeccableRuntimeEnvironment(host, pluginRoot, env = process.env
     delete next.CURSOR_PLUGIN_ROOT;
     delete next.PLUGIN_ROOT;
   }
+  delete next.IMPECCABLE_CACHE_ROOT;
+  delete next.IMPECCABLE_HOOK_DISABLED;
+  delete next.IMPECCABLE_BIN;
+  delete next.IMPECCABLE_LAUNCHER_PROBE;
   return next;
 }
 
 export function runBundledImpeccable({
   scriptId,
+  command,
   host,
   pluginRoot,
   cwd,
@@ -77,19 +53,27 @@ export function runBundledImpeccable({
   extraEnv = {},
   spawn = spawnSync,
 } = {}) {
+  let noticeCache;
   try {
     if (!nodePath) throw new Error('Node runtime is unavailable.');
-    const runtime = resolveBundledImpeccableScript(pluginRoot, scriptId);
-    const resolvedHost = resolveHost(host, env);
-    const child = spawn(nodePath, [runtime.scriptPath, ...args], {
-      cwd: path.resolve(cwd || process.cwd()),
+    const runtime = resolveEngine(pluginRoot);
+    const verb = command || ENGINE_COMMANDS[scriptId];
+    if (!verb) throw new Error(`Unknown engine command: ${scriptId}`);
+    const resolvedHost = resolvePluginHost(host, pluginRoot, env);
+    if (verb === 'context') noticeCache = fs.mkdtempSync(path.join(os.tmpdir(), 'design-context-'));
+    const engineArgs = verb === 'doctor' && !args.includes('--json') ? [...args, '--json'] : args;
+    const execute = (runCwd) => spawn(runtime.file, [verb, ...engineArgs], {
+      cwd: runCwd,
       input,
       encoding: 'utf8',
       timeout,
       maxBuffer: 8 * 1024 * 1024,
       shell: false,
-      env: impeccableRuntimeEnvironment(resolvedHost, runtime.pluginRoot, env, extraEnv),
+      env: { ...impeccableRuntimeEnvironment(resolvedHost, runtime.pluginRoot, env, extraEnv), ...(noticeCache ? { IMPECCABLE_STALENESS_CACHE: path.join(noticeCache, 'staleness.json') } : {}) },
     });
+    const projectCwd = path.resolve(cwd || process.cwd());
+    const child = interceptPluginCommand({ command: verb, args, host: resolvedHost, cwd: projectCwd, run: execute }) || execute(projectCwd);
+    if (!child.error && child.status === 0 && !args.includes('--help') && !args.includes('-h')) child.stdout = projectEngineOutput({ command: verb, stdout: child.stdout || '', host: resolvedHost, cwd: projectCwd });
     return {
       started: !child.error && Number.isInteger(child.status),
       status: Number.isInteger(child.status) ? child.status : null,
@@ -100,6 +84,8 @@ export function runBundledImpeccable({
       timedOut: child.error?.code === 'ETIMEDOUT',
       runtime: {
         scriptId,
+        engineVersion: runtime.engineVersion,
+        platform: runtime.platform,
         relativeScript: runtime.relativeScript,
         pluginRoot: runtime.pluginRoot,
       },
@@ -115,5 +101,7 @@ export function runBundledImpeccable({
       timedOut: false,
       runtime: null,
     };
+  } finally {
+    if (noticeCache) fs.rmSync(noticeCache, { recursive: true, force: true });
   }
 }

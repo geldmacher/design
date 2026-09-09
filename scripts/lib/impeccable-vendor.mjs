@@ -1,3 +1,6 @@
+import { verifyCandidateRuntime } from "./impeccable-candidate-runtime.mjs";
+import { prepareEngine } from "./impeccable-engine-import.mjs";
+import { enginePlatforms, engineRelativePath, resolveEngine } from "../../src/impeccable-engine.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -19,6 +22,8 @@ import { renderCapabilityIndex } from "../build-capability-index.mjs";
 import { canonicalJson, compareVersions, parseSkillTag, pluginRoot, readPin, sha256Bytes, sha256File, validatePin } from "./impeccable-maintenance.mjs";
 
 export const transformations = Object.freeze([
+  "native-engine-launcher",
+  "plugin-project-maintenance",
   "agent-skills-frontmatter",
   "portable-dual-host-script-paths",
   "dual-host-provider-routing",
@@ -111,6 +116,9 @@ function portableMarkdown(text) {
 export function transformSkillFile(relativePath, original, version) {
   let text = original;
   const operations = [];
+  if (["scripts/impeccable", "scripts/impeccable.cmd"].includes(relativePath)) {
+    return { text: readFileSync(join(pluginRoot, "overlays/skills/impeccable", relativePath), "utf8"), operations: ["native-engine-launcher"] };
+  }
   if (relativePath === "reference/document.md") {
     text = mustReplace(
       text,
@@ -194,6 +202,58 @@ export function transformSkillFile(relativePath, original, version) {
     ].join("\n"), "task-based memory assessment");
     operations.push("evidence-based-usability-guidance");
   }
+  if (compareVersions(version, "4.2.2") >= 0 && ["reference/hooks.md", "reference/doctor.md"].includes(relativePath)) {
+    const replacements = relativePath === "reference/hooks.md" ? [
+  [
+    "This command toggles the hook **per project** by editing `.impeccable/config.json` (the unified Impeccable config; hook runtime settings live under its `hook` key, and shared detector ignores live under `detector`). Per-developer overrides, including the install consent decision (`hook.consent`) the CLI records, live in the gitignored `.impeccable/config.local.json`. Set `hook.enabled: false` to turn the hook off, `hook.quiet: true` to silence the clean/pending acks, or `hook.auditLog` to a file path for an NDJSON log. The legacy `IMPECCABLE_HOOK_DISABLED`, `IMPECCABLE_HOOK_QUIET`, and `IMPECCABLE_HOOK_LOG` env vars are still honored and override these config values when set.",
+    "This command toggles plugin hooks per project through `.impeccable/config.json`. `.impeccable/config.local.json` overrides shared values. Hook administration never writes host manifests or records standalone installation consent. `hook.enabled` must be explicitly true; malformed configuration produces a visible diagnostic and skips enforcement."
+  ],
+  [
+    "Supported harnesses: Claude Code (`.claude/settings.local.json` in the project, which is gitignored so the hook stays machine-local; a hook you move into the shared `settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
+    "Geldmacher Design provides Cursor pre-write and Codex post-write/Stop adapters registered by the plugin. Project-local Impeccable installations and hook manifests are conflicts to diagnose. Agent Plugins v1 has no native hook integration."
+  ],
+  [
+    "| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed. |",
+    "| `on` | Enable the already registered plugin adapter in canonical configuration; leave host manifests unchanged. |"
+  ],
+  [
+    "| `reset` | Delete the project config, dedup cache, and Cursor pending queue, and remove the hook's entries from every provider manifest `on` installs, the committed Copilot file included (a team-shared `settings.json` that `on` never writes is never touched). |",
+    "| `reset` | Remove hook settings, detector ignores, dedup cache and pending queue within `.impeccable/`; preserve other settings and every host manifest. |"
+  ],
+  [
+    "- If `.impeccable/config.json` or `.impeccable/config.local.json` is unreadable or malformed, the hook ignores that file and uses the remaining valid config/defaults. `impeccable hooks status` will show malformed files as ignored.",
+    "- Malformed shared or local configuration produces a visible diagnostic and skips enforcement. Repair requires a deliberate edit; valid defaults never hide the failure."
+  ],
+  [
+    "- If the user asks to \"disable the hook\" globally, lead with `/impeccable hooks off` (persistent for this project; writes `hook.enabled: false` to config). The legacy `IMPECCABLE_HOOK_DISABLED=1` env var also works as a one-shot override that follows the shell.",
+    "- Use `/impeccable hooks off` to disable plugin hooks for this project. The plugin uses canonical configuration and does not honor the standalone IMPECCABLE_HOOK_DISABLED override."
+  ]
+] : [
+  [
+    "Report and repair drift between this project's Impeccable artifacts and what the installed version reads: PRODUCT.md, DESIGN.md and its `.impeccable/design.json` sidecar, `.impeccable/config.json`, persisted surface briefs, and the design hook.",
+    "Report drift in this project's canonical Impeccable context and propose bounded repairs. The plugin doctor is read-only; project migrations require explicit user authorization before edits."
+  ],
+  [
+    "- **Tool version.** The installed skill is older than the published one. `impeccable context` reports that at boot as `UPDATE_AVAILABLE` and `npx impeccable update` fixes it. Not this command's job.",
+    "- **Tool version.** The plugin bundles a pinned skill and engine. Runtime update checks and self-update are disabled. Updating the bundle is a separate Design maintainer task."
+  ],
+  [
+    "- **Schema drift.** An artifact was written by an older Impeccable: fields nothing reads, fields now expected, files in retired locations. Mechanical, and this command repairs most of it.",
+    "- **Schema drift.** Report fields and files from older versions, then describe proposed changes. Do not migrate project context automatically."
+  ],
+  [
+    "- **`auto`** carries no decision. Run `.cursor/skills/impeccable/scripts/impeccable doctor --fix` once to apply these, then report what it moved in one line. Do not ask permission first, and do not ask about them afterward.",
+    "- **`auto`** labels a proposed mechanical migration, not authorization. Explain the affected files and exact change, then obtain explicit user authorization before editing. Plugin doctor does not accept `--fix`."
+  ],
+  [
+    "`impeccable context` reports the cheap subset of these findings at session start, throttled to once a week per project. Set `\"stalenessCheck\": false` in `.impeccable/config.json` to silence that, or `IMPECCABLE_NO_STALENESS_CHECK=1` for one session. This command still works with the check disabled, and that is the combination to suggest for a user who wants the report only when they ask for it.",
+    "`impeccable context` reports the cheap subset at session start. Its notice cache is isolated per invocation and removed afterward; report findings once per task. Set `\"stalenessCheck\": false` in `.impeccable/config.json` or `IMPECCABLE_NO_STALENESS_CHECK=1` to disable that check. Explicit doctor remains available."
+  ]
+];
+    for (const [before, after] of replacements) text = mustReplace(text, before, after, `plugin maintenance contract: ${before}`);
+    text = text.replaceAll("npx impeccable detect", ".cursor/skills/impeccable/scripts/impeccable detect").replaceAll("npx impeccable ignores", ".cursor/skills/impeccable/scripts/impeccable ignores");
+    operations.push("plugin-project-maintenance");
+  }
   if (relativePath.endsWith(".md")) {
     if (relativePath === "SKILL.md") {
       text = mustReplace(
@@ -203,6 +263,10 @@ export function transformSkillFile(relativePath, original, version) {
         "Agent Skills frontmatter",
       );
       operations.push("agent-skills-frontmatter");
+      text = mustReplace(text,
+        "The launcher runs a self-contained binary that ships next to it or is downloaded once on first run; no Node or other runtime is required.",
+        "The plugin launcher requires Node.js 22 or newer and runs only the verified platform engine bundled in this plugin. Missing binaries are diagnosed; runtime downloads and external binary overrides are disabled.",
+        "native engine launcher contract");
       text = mustReplace(
         text,
         "This skill gives you the tools and permission to create design",
@@ -252,91 +316,6 @@ export function transformSkillFile(relativePath, original, version) {
     text = portable;
   }
 
-  if (relativePath === "scripts/hook-admin.mjs") {
-    text = mustReplace(text, "import { IMPECCABLE_COMMAND } from './lib/provider.mjs';", "import { IMPECCABLE_COMMAND, IMPECCABLE_PROVIDER_ID } from './lib/provider.mjs';", "hook admin provider identity");
-    text = text.replaceAll(".cursor/skills/impeccable", "<IMPECCABLE_SKILL_ROOT>");
-    text = mustReplace(text, "const STATUS_MESSAGE = 'Checking UI changes';", "const STATUS_MESSAGE = 'Checking UI changes';\nconst PLUGIN_MANAGED_HOOK = true;", "hook admin plugin constant");
-    text = mustReplace(text, "  const cfg = readConfig(cwd);\n  const envKill = process.env.IMPECCABLE_HOOK_DISABLED;", "  const cfg = readConfig(cwd);\n  const explicitEnabled = hookSection(local.raw)?.enabled ?? hookSection(shared.raw)?.enabled ?? false;\n  const envKill = process.env.IMPECCABLE_HOOK_DISABLED;", "hook admin strict status");
-    text = mustReplace(text, "`  state:        ${cfg.enabled ? 'enabled' : 'disabled'}`", "`  state:        ${explicitEnabled ? 'enabled' : 'disabled'}`", "hook admin state line");
-    text = mustReplace(text, "  const repaired = repairHookManifests(cwd);", "  const repaired = PLUGIN_MANAGED_HOOK\n    ? { written: [], already: ['geldmacher-design plugin'], backups: [] }\n    : repairHookManifests(cwd);", "hook admin manifest bypass");
-    text = mustReplace(text, "  try {\n    let out = '';", [
-      "  try {",
-      "    if (IMPECCABLE_PROVIDER_ID === 'agent-plugin') {",
-      "      if (action === 'status') {",
-      "        process.stdout.write('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.\\n');",
-      "        return;",
-      "      }",
-      "      throw new Error('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.');",
-      "    }",
-      "    let out = '';",
-    ].join("\n"), "standard target hook refusal");
-    operations.push("replace-project-hook-installation-with-plugin-hook", "agent-plugin-provider-routing");
-  }
-
-  if (relativePath === "scripts/context.mjs") {
-    text = mustReplace(text, "const FETCH_TIMEOUT_MS = 1200;", "const FETCH_TIMEOUT_MS = 1200;\nconst PLUGIN_MANAGED_UPDATES = true;\nconst PLUGIN_MANAGED_HOOK = true;", "context plugin guards");
-    text = text.replaceAll("npx impeccable update", "the Design doctor command");
-    text = mustReplace(text, "  const activeRoot = path.resolve(ctx.projectRoot || process.cwd());\n  if (!hookEnabledAt(activeRoot)) return 'none';", "  if (IMPECCABLE_PROVIDER_ID === 'agent-plugin') return 'none';\n  const activeRoot = path.resolve(ctx.projectRoot || process.cwd());\n  if (!hookEnabledAt(activeRoot)) return 'none';", "standard target hook absence");
-    operations.push("agent-plugin-provider-routing");
-    text = mustReplace(text, "async function computeUpdateDirective(now = Date.now()) {\n  try {", "async function computeUpdateDirective(now = Date.now()) {\n  try {\n    if (PLUGIN_MANAGED_UPDATES) return null;", "context update short circuit");
-    text = mustReplace(text, "  let enabled = true;\n  for (const name of", "  let enabled = PLUGIN_MANAGED_HOOK ? false : true;\n  for (const name of", "strict plugin hook default");
-    text = mustReplace(text, "  if (!hookEnabledAt(activeRoot)) return 'none';\n  const manifests = HOOK_MANIFESTS_BY_PROVIDER[IMPECCABLE_PROVIDER_ID] || [];", "  if (!hookEnabledAt(activeRoot)) return 'none';\n  if (PLUGIN_MANAGED_HOOK) return STOP_REVIEW_PROVIDERS.has(IMPECCABLE_PROVIDER_ID) ? 'stop' : 'per-edit';\n  const manifests = HOOK_MANIFESTS_BY_PROVIDER[IMPECCABLE_PROVIDER_ID] || [];", "plugin managed automatic hook mode");
-    operations.push("disable-runtime-self-update", "recognize-plugin-hook");
-  }
-
-  if (relativePath === "scripts/lib/provider.mjs") {
-    text = [
-      'import fs from "node:fs";',
-      'import path from "node:path";',
-      'import { fileURLToPath } from "node:url";',
-      "",
-      'const AGENT_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";',
-      "",
-      "function isAgentPluginPackage() {",
-      '  const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");',
-      '  const manifestPath = path.join(pluginRoot, "plugin.json");',
-      "  if (!fs.existsSync(manifestPath)) return false;",
-      "  try {",
-      '    return JSON.parse(fs.readFileSync(manifestPath, "utf8")).$schema === AGENT_PLUGIN_SCHEMA;',
-      "  } catch {",
-      "    return false;",
-      "  }",
-      "}",
-      "",
-      "// Geldmacher Design resolves one explicit multi-target provider at runtime.",
-      "export function resolveImpeccableProvider(env = process.env) {",
-      '  const explicit = String(env.IMPECCABLE_HOST || "").trim().toLowerCase();',
-      '  if (explicit && !["agent-plugin", "cursor", "codex"].includes(explicit)) {',
-      "    throw new Error(`Unsupported IMPECCABLE_HOST: ${explicit}. Expected agent-plugin, cursor, or codex.`);",
-      "  }",
-      "  if (explicit) return explicit;",
-      '  if (env.CURSOR_PLUGIN_ROOT) return "cursor";',
-      '  if (env.PLUGIN_ROOT) return "codex";',
-      '  if (isAgentPluginPackage()) return "agent-plugin";',
-      '  throw new Error("Impeccable host is unknown. Set IMPECCABLE_HOST to agent-plugin, cursor, or codex.");',
-      "}",
-      "",
-      "export const IMPECCABLE_PROVIDER_ID = resolveImpeccableProvider();",
-      'export const IMPECCABLE_COMMAND_PREFIX = IMPECCABLE_PROVIDER_ID === "cursor"',
-      '  ? "/"',
-      '  : IMPECCABLE_PROVIDER_ID === "codex"',
-      '    ? "$"',
-      '    : "";',
-      "export const IMPECCABLE_COMMAND = `${IMPECCABLE_COMMAND_PREFIX}impeccable`;",
-      "",
-    ].join("\n");
-    operations.push("dual-host-provider-routing", "agent-plugin-provider-routing");
-  }
-
-  if (relativePath === "scripts/lib/staleness-deep.mjs") {
-    text = mustReplace(text, "export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];", "export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];\n  if (['cursor', 'codex'].includes(providerId)) return findings;", "doctor plugin hook recognition");
-    operations.push("recognize-plugin-hook");
-  }
-
-  if (relativePath === "scripts/pin.mjs") {
-    text = "#!/usr/bin/env node\n/** Geldmacher Design owns skill packaging; project-local shortcut installation is intentionally disabled. */\nprocess.stdout.write('Geldmacher Design bundles Impeccable. Standalone shortcut installation is disabled; use the host-native Design or Impeccable invocation. Maintainers update the bundle through npm run sync:impeccable.\\n');\n";
-    operations.push("redirect-standalone-installer");
-  }
   return { text, operations };
 }
 
@@ -596,7 +575,7 @@ function repositoryPatch(root, projection, workspace) {
     if (existsSync(current)) copyPath(current, join(before, destination));
     copyPath(projected, join(after, destination));
   }
-  const diff = spawnSync("git", ["diff", "--no-index", "--binary", "--", "before", "after"], { cwd: workspace, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const diff = spawnSync("git", ["diff", "--no-index", "--binary", "--", "before", "after"], { cwd: workspace, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
   if (![0, 1].includes(diff.status) || diff.error) throw diff.error || new Error(diff.stderr || "Unable to generate candidate repository patch.");
   return String(diff.stdout || "")
     .replaceAll("a/before/", "a/")
@@ -605,7 +584,7 @@ function repositoryPatch(root, projection, workspace) {
     .replaceAll("b/after", "b");
 }
 
-export function createCandidateFromInputs({ root = pluginRoot, source, gitSource = source, requireHead = true, archive, pin: pinInput, createdAt = new Date().toISOString(), exec = execFileSync }) {
+export function createCandidateFromInputs({ root = pluginRoot, source, gitSource = source, requireHead = true, archive, pin: pinInput, engineDirectory, createdAt = new Date().toISOString(), exec = execFileSync }) {
   const pin = validatePin(pinInput);
   const approved = readPin(root);
   if (compareVersions(pin.version, approved.version) <= 0) throw new Error(`Candidate ${pin.tag} must be newer than approved pin ${approved.tag}.`);
@@ -621,6 +600,24 @@ export function createCandidateFromInputs({ root = pluginRoot, source, gitSource
     const vendor = buildVendorProjection({ source, gitSource, requireHead, pin, workspace: vendorWorkspace });
     const projection = join(workspace, "projection");
     projectionOutputs(root, projection, pin, vendor);
+    if (pin.schemaVersion === 2) {
+      if (!engineDirectory) throw new Error("Engine inputs are required for a native candidate.");
+      for (const platform of enginePlatforms) {
+        const relative = engineRelativePath(platform);
+        copyPath(join(engineDirectory, relative), join(projection, relative));
+        const [os, arch] = platform.split("-");
+        resolveEngine(projection, { platform: os === "windows" ? "win32" : os, arch });
+      }
+      for (const platform of enginePlatforms) {
+        const asset = pin.engine.assets[platform];
+        vendor.lock.import.files.push({ source: asset.url, destination: engineRelativePath(platform), sourceSha256: asset.sha256, vendoredSha256: asset.sha256, transformations: [] });
+      }
+      vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
+      writeJson(join(projection, "upstream/impeccable.lock.json"), vendor.lock);
+      const declaredVersion = readFileSync(join(projection, "skills/impeccable/scripts/VERSION"), "utf8").trim();
+      assertEqual(declaredVersion, pin.engine.version, "Skill engine VERSION");
+      verifyCandidateRuntime(root, projection, candidateDestinations);
+    }
     const baseline = Object.fromEntries(candidateDestinations.map((destination) => [destination, hashPath(join(root, destination))]));
     const outputs = Object.fromEntries(candidateDestinations.map((destination) => [destination, {
       type: statSync(join(projection, destination)).isDirectory() ? "directory" : "file",
@@ -680,7 +677,11 @@ export function applyCandidate({ root = pluginRoot, candidateId, failAfter = Num
     if (hashPath(join(projection, destination)) !== manifest.identity.outputs[destination].sha256) throw new Error(`Candidate projection drift: ${destination}`);
   }
   if (sha256File(join(directory, "repository.patch")) !== manifest.identity.repositoryPatchSha256) throw new Error("Candidate repository patch drifted.");
+  for (const destination of candidateDestinations) {
+    if (hashPath(join(directory, "before", destination)) !== manifest.identity.baseline[destination]) throw new Error(`Candidate backup drift: ${destination}`);
+  }
 
+  if (readPin(projection).schemaVersion === 2) verifyCandidateRuntime(root, projection, candidateDestinations);
   const transaction = mkdtempSync(join(directory, ".apply-"));
   const backup = join(transaction, "backup");
   const staged = join(transaction, "staged");
@@ -725,13 +726,23 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
   const workspace = mkdtempSync(join(tmpdir(), "geldmacher-design-sync-"));
   try {
     const vendor = buildVendorProjection({ source, pin, workspace });
+    if (pin.schemaVersion === 2) {
+      for (const platform of enginePlatforms) {
+        const [os, arch] = platform.split("-");
+        const engine = resolveEngine(root, { platform: os === "windows" ? "win32" : os, arch });
+        copyPath(engine.file, join(vendor.transformedDir, engineRelativePath(platform).slice("skills/impeccable/".length)));
+        const asset = pin.engine.assets[platform];
+        vendor.lock.import.files.push({ source: asset.url, destination: engineRelativePath(platform), sourceSha256: asset.sha256, vendoredSha256: asset.sha256, transformations: [] });
+      }
+      vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
+    }
     if (!apply) return { mode: "verified", pin, files: vendor.inventory.length, transformed: vendor.changed.length };
     const skillTarget = join(root, "skills", "impeccable");
     const agentsTarget = join(root, "agents");
     if ((existsSync(skillTarget) || existsSync(agentsTarget)) && !replace) throw new Error("Vendored targets already exist. Re-run with --replace after reviewing the generated upstream change.");
     if (replace) {
       rmSync(skillTarget, { recursive: true, force: true });
-      rmSync(agentsTarget, { recursive: true, force: true });
+      for (const name of agentNames) rmSync(join(agentsTarget, name), { force: true });
     }
     cpSync(vendor.transformedDir, skillTarget, { recursive: true });
     cpSync(vendor.transformedAgentsDir, agentsTarget, { recursive: true });
@@ -776,10 +787,12 @@ export function materializeGitSource(repository, commit, destination) {
   }
 }
 
-export async function prepareCandidate({ root = pluginRoot, tag, fetchImpl = globalThis.fetch, token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "" } = {}) {
+export async function prepareCandidate({ root = pluginRoot, tag, fromWorkingTree = false, fetchImpl = globalThis.fetch, token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "" } = {}) {
   const parsed = parseSkillTag(tag);
   if (!parsed) throw new Error("--to must be a stable Impeccable skill tag.");
   const approved = readPin(root);
+  const conflicts = commandOutput(execFileSync, "git", ["-C", root, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignored", "--", ...candidateDestinations]);
+  if (String(conflicts).trim() && !fromWorkingTree) throw new Error(`Local changes conflict with the update inventory: ${String(conflicts).split("\0").filter(Boolean).join("; ")}. Review local work and use --from-working-tree to prepare against its current bytes.`);
   if (compareVersions(parsed.version, approved.version) <= 0) throw new Error(`Target ${tag} must be newer than approved pin ${approved.tag}.`);
   if (typeof fetchImpl !== "function") throw new Error("Global fetch is unavailable.");
   const headers = { Accept: "application/vnd.github+json", "User-Agent": "geldmacher-design-impeccable-maintainer/1", "X-GitHub-Api-Version": "2022-11-28" };
@@ -808,15 +821,21 @@ export async function prepareCandidate({ root = pluginRoot, tag, fetchImpl = glo
     if (!archiveResponse?.ok) throw new Error(`Release archive download failed with status ${archiveResponse?.status || "unknown"}.`);
     const archive = join(networkWorkspace, approved.archive.name);
     writeFileSync(archive, Buffer.from(await archiveResponse.arrayBuffer()));
+    const engineDirectory = join(networkWorkspace, "engine");
+    const versionFile = join(source, ".cursor/skills/impeccable/scripts/VERSION");
+    if (!existsSync(versionFile)) throw new Error("Upstream native engine VERSION is missing.");
+    const engine = await prepareEngine({ version: readFileSync(versionFile, "utf8").trim(), repository, directory: engineDirectory, fetchImpl, headers });
     const pin = validatePin({
       ...approved,
+      schemaVersion: 2,
+      engine,
       version: parsed.version,
       tag,
       tagObject,
       commit,
       archive: { name: approved.archive.name, url: asset.browser_download_url, sha256: sha256File(archive) },
     });
-    return createCandidateFromInputs({ root, source, gitSource: repository, requireHead: false, archive, pin });
+    return createCandidateFromInputs({ root, source, gitSource: repository, requireHead: false, archive, pin, engineDirectory });
   } finally {
     rmSync(networkWorkspace, { recursive: true, force: true });
   }

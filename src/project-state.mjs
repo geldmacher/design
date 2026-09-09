@@ -6,6 +6,7 @@ import { loadModules } from './registry.mjs';
 
 const DEFAULT_PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const IMPECCABLE_MARKERS = [
+  'skills/impeccable/scripts/impeccable',
   'skills/impeccable/scripts/hook-before-edit.mjs',
   'skills/impeccable/scripts/hook.mjs',
 ];

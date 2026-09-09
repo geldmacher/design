@@ -28,3 +28,11 @@ For explicit release detection and the reviewable candidate flow, see [Impeccabl
 10. Keep usability criteria self-contained and assess memory burden through task evidence instead of fixed option-count thresholds.
 
 The complete generated patch and every before/after file hash are release artifacts, not narrative claims.
+
+## Native engine import
+
+Skill 4.2.2 uses engine 0.1.3. The schema-2 pin binds the independent engine release tag object, commit and release ID and five verified release assets. The five unmodified binaries live under `skills/impeccable/scripts/bin/` and belong to the existing transactional inventory. Their license is the bundled upstream Apache-2.0 license; exact artifact origins and hashes remain in the pin and lock.
+
+The `native-engine-launcher` transformation replaces the two upstream launchers with the documented first-party overlays. The old Node runtime transformations have been removed. The shared Node integration owns provider identity, local binary selection, plugin-only administration and output contracts. Packaging projects the changed reviewer/plate instructions into inline portable roles and removes the three upstream fixture-reference sentences from loaded live guidance; the technical examples remain documented in the source references. All packages copy the exact pin to `licenses/impeccable-pin.json` and include all five binaries.
+
+Use the [maintenance workflow](../docs/impeccable-maintenance.md) and [engine verifier](../.agents/skills/verify-impeccable-engine/SKILL.md). An engine asset or command that cannot be verified blocks preparation. A failed post-apply gate leaves an applied candidate visible for correction.

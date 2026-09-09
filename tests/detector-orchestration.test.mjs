@@ -1,3 +1,4 @@
+import { resolveEngine, engineRelativePath } from '../src/impeccable-engine.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -8,7 +9,6 @@ import test from 'node:test';
 import { runDetectorScan } from '../src/detector-scan.mjs';
 import {
   impeccableRuntimeEnvironment,
-  resolveBundledImpeccableScript,
   runBundledImpeccable,
 } from '../src/impeccable-runtime.mjs';
 
@@ -43,9 +43,9 @@ function findingFixture() {
 }
 
 test('runtime facade resolves only physical bundled scripts and sets one explicit host', (t) => {
-  const resolved = resolveBundledImpeccableScript(pluginRoot, 'detect');
-  assert.equal(resolved.relativeScript, 'skills/impeccable/scripts/detect.mjs');
-  assert.ok(resolved.scriptPath.startsWith(`${fs.realpathSync(pluginRoot)}${path.sep}`));
+  const resolved = resolveEngine(pluginRoot);
+  assert.equal(resolved.relativeScript, engineRelativePath(resolved.platform));
+  assert.ok(resolved.file.startsWith(`${fs.realpathSync(pluginRoot)}${path.sep}`));
 
   const codexEnv = impeccableRuntimeEnvironment('codex', pluginRoot, {
     CURSOR_PLUGIN_ROOT: '/stale-cursor',
@@ -70,7 +70,8 @@ test('runtime facade resolves only physical bundled scripts and sets one explici
     },
   });
   assert.equal(child.started, true);
-  assert.equal(observed.command, process.execPath);
+  assert.equal(observed.command, resolved.file);
+  assert.equal(observed.args[0], "detect");
   assert.equal(observed.options.shell, false);
   assert.equal(observed.options.timeout, 1234);
   assert.equal(observed.options.env.IMPECCABLE_HOST, 'agent-plugin');
@@ -81,10 +82,10 @@ test('runtime facade resolves only physical bundled scripts and sets one explici
   const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'geldmacher-design-runtime-outside-'));
   t.after(() => fs.rmSync(outside, { recursive: true, force: true }));
   fs.mkdirSync(path.join(outside, 'impeccable', 'scripts'), { recursive: true });
-  write(outside, 'impeccable/scripts/detect.mjs', '');
+  write(fakeRoot, 'upstream/impeccable.pin.json', JSON.stringify(impeccablePin));
   fs.mkdirSync(path.join(fakeRoot, 'skills'), { recursive: true });
   fs.symlinkSync(path.join(outside, 'impeccable'), path.join(fakeRoot, 'skills', 'impeccable'));
-  assert.throws(() => resolveBundledImpeccableScript(fakeRoot, 'detect'), /crosses a symlink/);
+  assert.throws(() => resolveEngine(fakeRoot), /crosses a symlink/);
 });
 
 test('design detect reports no findings, primary findings, advisory-only findings, and exact provenance', (t) => {

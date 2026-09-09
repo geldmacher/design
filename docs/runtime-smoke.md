@@ -81,3 +81,11 @@ In disposable copies only:
 4. A missing/broken detector path or unavailable Node runtime must be reported as infrastructure failure and must not deny the edit.
 
 Store receipts in `.tests/` only. A successful run may support a future minimum Cursor version; it does not publish the plugin.
+
+## Native engine evidence
+
+Before a fresh editor trial, run `npm run verify:impeccable-engine` from the source checkout and retain the printed evidence directory. Verify that the separately installed package includes the schema-2 pin and the matching platform binary. Installation alignment does not prove activation.
+
+In the fresh task, invoke the host's explicit Design detect command against both the clean and known-finding fixtures above. Record `engineVersion` and `platform` from the detector provenance, then perform the hook steps above. Run context through `"<IMPECCABLE_SKILL_ROOT>/scripts/impeccable" context` after resolving the actual installed skill directory (use `impeccable.cmd` on Windows). Context and doctor must show configuration honestly and must not install host manifests or query for an engine update. Keep errors visible; a missing, unsupported or modified binary cannot produce a successful detector result. No engine fallback or download is permitted.
+
+Record installed package identity, fresh task identity, explicit invocation, adapter output and cleanup. Repository tests alone do not close these editor checks.

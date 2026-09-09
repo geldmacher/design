@@ -1,7 +1,7 @@
 interface:
   display_name: "Design"
-  short_description: "Curated design, questionnaire, detector, and review router"
-  brand_color: "#7C3AED"
-  default_prompt: "Use $design questionnaire [topic] to prepare a preview-first stakeholder questionnaire."
+  short_description: "Plan, build, review, and refine web interfaces"
+  brand_color: "#FF5C35"
+  default_prompt: "Use $design to critique this page and prioritize the three most useful improvements."
 policy:
   allow_implicit_invocation: false

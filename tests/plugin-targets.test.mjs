@@ -1,3 +1,4 @@
+import { enginePlatforms, resolveEngine, engineRelativePath } from '../src/impeccable-engine.mjs';
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -65,6 +66,12 @@ test("deterministic target allowlists isolate the portable package and native ad
         .filter(existsSync).flatMap(resourceFiles).filter((path) => path.endsWith(".md"))
         .map((path) => readFileSync(path, "utf8")).join("\n");
       assert.doesNotMatch(instructions, /google-labs-code\/design\.md|https:\/\/github\.com\/pbakaus\/impeccable|## Module sources|Nielsen|Miller|Cowan|Stitch/);
+      const hooksGuide = readFileSync(join(first[host].path, 'skills/impeccable/reference/hooks.md'), 'utf8');
+      const doctorGuide = readFileSync(join(first[host].path, 'skills/impeccable/reference/doctor.md'), 'utf8');
+      assert.doesNotMatch(hooksGuide, /npx impeccable|remove the hook's entries from every provider manifest/);
+      assert.match(hooksGuide, /preserve other settings and every host manifest/);
+      assert.doesNotMatch(doctorGuide, /doctor --fix|Do not ask permission first|UPDATE_AVAILABLE/);
+      assert.match(doctorGuide, /explicit user authorization before editing/);
       assert.match(readFileSync(join(first[host].path, "THIRD_PARTY_NOTICES.md"), "utf8"), /https:\/\/github\.com\/pbakaus\/impeccable/);
       assert.deepEqual(readFileSync(join(first[host].path, "licenses", "impeccable-apache-2.0.txt")), readFileSync(join(repositoryRoot, "upstream", "LICENSE")));
       assert.equal(existsSync(join(first[host].path, "skills", "design", "references", "change-review.md")), true);
@@ -103,34 +110,32 @@ test("deterministic target allowlists isolate the portable package and native ad
       assert.match(portableResources, new RegExp(`degraded/${degradedRole.replace(".", "\\.")}`));
     }
     const portableRouting = readFileSync(join(first["agent-plugin"].path, "skills", "impeccable", "reference", "routing.md"), "utf8");
-    assert.doesNotMatch(portableRouting, /\/impeccable|\$impeccable/);
+    assert.doesNotMatch(portableRouting, /(?<![\w./:>-])[/\$]impeccable(?= |`|$)/);
     const sourceImpeccableRoot = join(repositoryRoot, "skills", "impeccable");
     const portableImpeccableRoot = join(first["agent-plugin"].path, "skills", "impeccable");
-    const transformedPortableScripts = new Set([
-      "scripts/context.mjs",
-      "scripts/lib/provider.mjs",
-      "scripts/live-browser.js",
-      "scripts/live/instructions.mjs",
-    ]);
-    for (const sourcePath of resourceFiles(sourceImpeccableRoot).filter((path) => /\.(?:mjs|js)$/.test(path))) {
-      const relativePath = relative(sourceImpeccableRoot, sourcePath).split(sep).join("/");
-      if (transformedPortableScripts.has(relativePath)) continue;
-      assert.deepEqual(
-        readFileSync(join(portableImpeccableRoot, relativePath)),
-        readFileSync(sourcePath),
-        `portable projection unexpectedly changed runtime resource ${relativePath}`,
-      );
+    const documentationFinish = readFileSync(join(portableImpeccableRoot, 'reference/new-work.md'), 'utf8');
+    assert.match(documentationFinish, /After the last correction, load \[degraded\/documenter\.md\]/);
+    assert.match(documentationFinish, /token-bearing DESIGN\.md \*\*and\*\* `\.impeccable\/design\.json`/);
+    assert.match(documentationFinish, /Ordinary extensions compare the finished build against the incumbent system, preserve its files/);
+    assert.match(documentationFinish, /report pre-existing drift without repairing it unasked/);
+    assert.match(documentationFinish, /Recheck after later edits/);
+
+    for (const host of ['agent-plugin', 'cursor', 'codex']) {
+      const target = first[host].path;
+      assert.deepEqual(JSON.parse(readFileSync(join(target, 'licenses/impeccable-pin.json'))), impeccablePin);
+      for (const platform of enginePlatforms) {
+        const [os, arch] = platform.split('-');
+        assert.equal(resolveEngine(target, { platform: os === 'windows' ? 'win32' : os, arch }).engineVersion, impeccablePin.engine.version);
+        assert.deepEqual(readFileSync(join(target, engineRelativePath(platform))), readFileSync(join(repositoryRoot, engineRelativePath(platform))));
+      }
+      for (const retired of ['context.mjs', 'detect.mjs', 'hook.mjs', 'hook-admin.mjs']) assert.equal(existsSync(join(target, 'skills/impeccable/scripts', retired)), false);
+      assert.equal(existsSync(join(target, '.agents/skills/verify-impeccable-engine')), false);
     }
-    const portableConceptSeed = readFileSync(join(portableImpeccableRoot, "scripts", "concept-seed.mjs"), "utf8");
-    assert.match(portableConceptSeed, /https:\/\/impeccable\.style\/api/);
-    assert.match(portableConceptSeed, /https:\/\/impeccable\.style\/worlds\/cards/);
-    const portableContext = readFileSync(join(portableImpeccableRoot, "scripts", "context.mjs"), "utf8");
-    assert.match(portableContext, /https:\/\/impeccable\.style/);
-    assert.match(portableContext, /\.github\/hooks\/impeccable\.json/);
-    assert.match(portableContext, /skills\/impeccable\/scripts\/hook\.mjs/);
-    const portableLiveBrowser = readFileSync(join(portableImpeccableRoot, "scripts", "live-browser.js"), "utf8");
-    assert.match(portableLiveBrowser, /operation:'\s*\? 'operation:'/);
-    assert.match(portableLiveBrowser, /\/src\/lib\/impeccable\/__runtime\.js/);
+    const panelText = readFileSync(join(portableImpeccableRoot, 'scripts/live-browser.js'), 'utf8');
+    const commandDefinition = panelText.match(/const IMPECCABLE_COMMAND = [^;]+;/)[0];
+    const panelCommand = new Function('window', `${commandDefinition} return IMPECCABLE_COMMAND;`);
+    assert.equal(panelCommand({ __IMPECCABLE_COMMAND_PREFIX__: '/' }), 'operation:');
+    assert.equal(panelCommand({ __IMPECCABLE_COMMAND_PREFIX__: '$' }), 'operation:');
     const portableNotices = readFileSync(join(first["agent-plugin"].path, "THIRD_PARTY_NOTICES.md"), "utf8");
     assert.doesNotMatch(portableNotices, /`upstream\//);
     assert.match(portableNotices, /`licenses\/impeccable-apache-2\.0\.txt`/);

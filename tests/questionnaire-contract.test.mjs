@@ -57,11 +57,9 @@ test('questionnaire reference preserves canonical context, no-reask, and one-aud
   assert.doesNotMatch(questionnaire, /\/(?:design|impeccable)\b|\$(?:design|impeccable)\b/);
 });
 
-test('Codex metadata demonstrates the leading questionnaire intent', () => {
-  assert.equal(
-    openaiMetadata.interface.default_prompt,
-    'Use $design questionnaire [topic] to prepare a preview-first stakeholder questionnaire.',
-  );
+test('Codex starter metadata keeps Design explicitly invoked', () => {
+  assert.match(openaiMetadata.interface.default_prompt, /^Use \$design\b/);
+  assert.equal(openaiMetadata.policy.allow_implicit_invocation, false);
 });
 
 test('questionnaire reference enforces bounded authoring and preview-before-write', () => {

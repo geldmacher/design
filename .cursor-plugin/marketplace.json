@@ -5,13 +5,13 @@
     "email": "geldmacher.dennis@outlook.de"
   },
   "metadata": {
-    "description": "GitHub Marketplace source for the Design Cursor plugin by Geldmacher."
+    "description": "Design by Geldmacher \u2014 a design partner for websites and web apps in Cursor."
   },
   "plugins": [
     {
       "name": "geldmacher-design",
       "source": ".",
-      "description": "Focused design workflows, project-aware guidance, diagnostics, and optional native UI checks for Cursor."
+      "description": "Plan, build, review, and refine websites and web apps around your product and visual language."
     }
   ]
 }

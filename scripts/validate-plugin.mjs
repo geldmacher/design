@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { enginePlatforms, resolveEngine, engineRelativePath } from '../src/impeccable-engine.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -337,6 +338,8 @@ check(lock.upstream.license.destination === 'upstream/LICENSE', 'Unexpected Impe
 check(sha256(lock.upstream.license.destination) === lock.upstream.license.sha256, 'Impeccable license hash does not match lock.');
 check(sha256(lock.import.patch) === lock.import.patchSha256, 'Transformation patch hash does not match lock.');
 const allowedTransformations = new Set([
+  'native-engine-launcher',
+  'plugin-project-maintenance',
   'agent-skills-frontmatter',
   'portable-dual-host-script-paths',
   'dual-host-provider-routing',
@@ -378,17 +381,15 @@ check(!runtimeText.includes('.cursor/skills/impeccable'), 'Project-local Impecca
 check(!runtimeText.includes('${CURSOR_PLUGIN_ROOT}/skills/impeccable'), 'Cursor-only plugin skill path remains in shared runtime content.');
 check(!runtimeText.includes('npx impeccable update'), 'Upstream runtime self-update remains in runtime content.');
 check(runtimeText.includes('<IMPECCABLE_SKILL_ROOT>/scripts/'), 'Dual-host skill paths were not applied.');
-const contextScript = fs.readFileSync(path.join(root, 'skills/impeccable/scripts/context.mjs'), 'utf8');
-check(contextScript.includes('PLUGIN_MANAGED_UPDATES = true'), 'Impeccable update poll is not plugin-guarded.');
-check(contextScript.includes('PLUGIN_MANAGED_HOOK = true'), 'Impeccable hook discovery is not plugin-guarded.');
-const adminScript = fs.readFileSync(path.join(root, 'skills/impeccable/scripts/hook-admin.mjs'), 'utf8');
-check(adminScript.includes('PLUGIN_MANAGED_HOOK = true'), 'Impeccable hook admin is not plugin-managed.');
-const providerScript = fs.readFileSync(path.join(root, 'skills/impeccable/scripts/lib/provider.mjs'), 'utf8');
-check(providerScript.includes('resolveImpeccableProvider'), 'Impeccable provider is not dual-host aware.');
-check(providerScript.includes('env.IMPECCABLE_HOST'), 'Impeccable provider does not honor the explicit host override.');
-check(providerScript.includes('env.CURSOR_PLUGIN_ROOT') && providerScript.includes('env.PLUGIN_ROOT'), 'Impeccable provider is missing a documented adapter fallback.');
-check(providerScript.includes('AGENT_PLUGIN_SCHEMA') && providerScript.includes('agent-plugin'), 'Impeccable provider is missing canonical Agent Plugins detection.');
-check(providerScript.includes('host is unknown'), 'Impeccable provider silently defaults an unknown host.');
+for (const platform of enginePlatforms) {
+  const [os, arch] = platform.split('-');
+  const runtime = resolveEngine(root, { platform: os === 'windows' ? 'win32' : os, arch });
+  check(runtime.engineVersion === pin.engine.version, `Engine version differs: ${platform}`);
+  check(lock.import.files.some((item) => item.destination === engineRelativePath(platform)), `Engine missing from lock: ${platform}`);
+}
+for (const launcher of ['impeccable', 'impeccable.cmd']) {
+  check(sha256(`skills/impeccable/scripts/${launcher}`) === sha256(`overlays/skills/impeccable/scripts/${launcher}`), `Launcher overlay drift: ${launcher}`);
+}
 const hostScript = fs.readFileSync(path.join(root, 'src/host.mjs'), 'utf8');
 check(hostScript.includes('env.IMPECCABLE_HOST'), 'Shared host resolution does not honor IMPECCABLE_HOST.');
 check(hostScript.includes('Plugin host is unknown'), 'Shared host resolution silently defaults an unknown host.');

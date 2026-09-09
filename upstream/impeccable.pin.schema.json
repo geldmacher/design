@@ -1,27 +1,282 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "urn:geldmacher:schemas:impeccable-pin:1",
+  "$id": "urn:geldmacher:schemas:impeccable-pin:2",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "schemaVersion", "name", "version", "repository", "tag", "tagObject", "commit", "archive"],
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "name",
+    "version",
+    "repository",
+    "tag",
+    "tagObject",
+    "commit",
+    "archive"
+  ],
   "properties": {
-    "$schema": { "const": "./impeccable.pin.schema.json" },
-    "schemaVersion": { "const": 1 },
-    "name": { "const": "Impeccable" },
-    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
-    "repository": { "const": "https://github.com/pbakaus/impeccable" },
-    "tag": { "type": "string", "pattern": "^skill-v[0-9]+\\.[0-9]+\\.[0-9]+$" },
-    "tagObject": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "$schema": {
+      "const": "./impeccable.pin.schema.json"
+    },
+    "schemaVersion": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "name": {
+      "const": "Impeccable"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "repository": {
+      "const": "https://github.com/pbakaus/impeccable"
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^skill-v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "tagObject": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
     "archive": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "url", "sha256"],
+      "required": [
+        "name",
+        "url",
+        "sha256"
+      ],
       "properties": {
-        "name": { "const": "universal.zip" },
-        "url": { "type": "string", "format": "uri" },
-        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "name": {
+          "const": "universal.zip"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "tag",
+        "tagObject",
+        "commit",
+        "releaseId",
+        "assets"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^engine-v\\d+\\.\\d+\\.\\d+$"
+        },
+        "tagObject": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "releaseId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "assets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "darwin-arm64",
+            "darwin-x64",
+            "linux-arm64",
+            "linux-x64",
+            "windows-x64"
+          ],
+          "properties": {
+            "darwin-arm64": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "url",
+                "sha256",
+                "size"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "darwin-x64": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "url",
+                "sha256",
+                "size"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "linux-arm64": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "url",
+                "sha256",
+                "size"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "linux-x64": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "url",
+                "sha256",
+                "size"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "windows-x64": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "url",
+                "sha256",
+                "size"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "engine"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "engine"
+          ]
+        }
+      }
+    }
+  ]
 }

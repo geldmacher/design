@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-design",
   "version": "0.9.0",
-  "description": "Curated design workflows for websites and web apps, powered by Impeccable.",
+  "description": "Plan, build, review, and refine websites and web apps around your product and visual language.",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"
@@ -21,8 +21,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Design",
-    "shortDescription": "Curated website and web-app design workflows",
-    "longDescription": "Plan, build, critique, and refine website and web-app interfaces with a controlled Impeccable workflow.",
+    "shortDescription": "Your design partner for websites and web apps",
+    "longDescription": "Plan, build, review, and refine interfaces around your product and visual language. Start with a focused critique, polish an existing flow, or review the interface impact of a code change. You choose when Design runs and whether to enable optional UI checks.",
     "developerName": "Geldmacher",
     "category": "Developer Tools",
     "capabilities": [
@@ -31,8 +31,8 @@
     ],
     "websiteURL": "https://github.com/geldmacher/design",
     "defaultPrompt": [
-      "Use $design to improve this interface.",
-      "Use $impeccable to critique this frontend."
+      "Use $design to critique this page and prioritize the three most useful improvements.",
+      "Use $design to polish this checkout flow without changing its information architecture."
     ],
     "logo": "./assets/logo.svg"
   }

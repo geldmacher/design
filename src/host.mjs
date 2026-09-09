@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 export const HOST_IDS = Object.freeze(['agent-plugin', 'cursor', 'codex']);
 
 export function resolveHost(explicit, env = process.env) {
@@ -25,4 +28,15 @@ export function hostInvocation(host, skill) {
   if (resolved === 'cursor') return `/${skill}`;
   if (resolved === 'codex') return `$${skill}`;
   return skill;
+}
+
+// The canonical portable manifest is explicit package identity, not a guessed host.
+export function resolvePluginHost(explicit, pluginRoot, env = process.env) {
+  if (explicit?.trim() || env.IMPECCABLE_HOST?.trim() || env.CURSOR_PLUGIN_ROOT || env.PLUGIN_ROOT) return resolveHost(explicit, env);
+  const file = path.join(pluginRoot, 'plugin.json');
+  if (fs.existsSync(file) && fs.lstatSync(file).isFile()) {
+    const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (manifest.$schema === 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json') return 'agent-plugin';
+  }
+  return resolveHost(explicit, env);
 }

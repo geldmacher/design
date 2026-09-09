@@ -166,6 +166,7 @@ function writeJson(path, value) {
 function packageThirdPartyProvenance(destination, sourceRoot, impeccablePin) {
   const licensePath = join(destination, "licenses", "impeccable-apache-2.0.txt");
   copyRegular(join(sourceRoot, "upstream", "LICENSE"), licensePath, sourceRoot);
+  copyRegular(join(sourceRoot, "upstream", "impeccable.pin.json"), join(destination, "licenses/impeccable-pin.json"), sourceRoot);
   writeFileSync(join(destination, "THIRD_PARTY_NOTICES.md"), [
     "# Third-party notices",
     "",
@@ -215,6 +216,7 @@ function replaceRequired(source, search, replacement, label) {
 }
 
 const portableImpeccableTransforms = [
+  { path: "reference/new-work.md", label: "native engine plate production", search: "With parallel subagents, spawn the shipped asset producer (`impeccable-asset-producer`; `impeccable_asset_producer` in codex; `/impeccable-asset-producer` in Cursor; on GitHub Copilot say \"Use the impeccable-asset-producer agent\") with the spec path and let it produce them all; without subagents, produce them here.", replacement: "Load [degraded/asset-producer.md](degraded/asset-producer.md) and produce the plates inline using the spec path." },
   {
     path: "reference/new-work.md",
     label: "new-work asset producer",
@@ -230,14 +232,14 @@ const portableImpeccableTransforms = [
   {
     path: "reference/new-work.md",
     label: "new-work finish reviewer",
-    search: "Then spawn the shipped finish reviewer, `impeccable-finish-reviewer` (`impeccable_finish_reviewer` in codex; `/impeccable-finish-reviewer` in Cursor; on GitHub Copilot say \"Use the impeccable-finish-reviewer agent\"), with the original request, confirmed answers, the artifact path, the screenshot paths, the direction contract, existing hook findings, the QUALITY BAR card and approved comp paths (a code-led build has no approved comp; the chosen decision comp rides in that slot as the critique reference, named as such), the craft-floor reference path, and on a native platform the platform reference path(s), [ios.md](ios.md) / [android.md](android.md), both on adaptive, plus one line saying no detector ran, so the reviewer judges in the platform's conventions rather than the web's. The reviewer has no browser; screenshots you fail to pass are checks it cannot run. Never read the shipped agents' definition files before spawning; the harness loads them at spawn, and you owe only the input packet. Wait on any agent with one long timeout rather than a loop of short polls, and spend the wait on the next independent step. Verify the return carries the five contract sections (a recapture return carries one, its recapture list); on an empty or thrashed return, respawn once with the same inputs. This review never runs inside the build thread and never inherits it: spawn the reviewer fresh, with no forked conversation history (`fork_turns: 0` in codex); a reviewer that inherits your transcript inherits your framing, your optimism, and your abstractions, and everything it needs travels in the inputs above. Only a harness with no subagent capability at all substitutes a fresh in-thread pass after stepping fully out of the build context, run from [degraded/finish-reviewer.md](degraded/finish-reviewer.md), and a substituted or failed-and-replaced review is disclosed in one line at finish, never silently.",
-    replacement: "Then step fully out of the build context and run a fresh in-thread review by loading [degraded/finish-reviewer.md](degraded/finish-reviewer.md). Give that bundled role contract the original request, confirmed answers, artifact path, screenshot paths, direction contract, existing detector findings, QUALITY BAR card and approved comp paths (a code-led build has no approved comp; the chosen decision comp rides in that slot as the critique reference, named as such), the craft-floor reference path, and on a native platform the matching [ios.md](ios.md) / [android.md](android.md) reference path plus one line saying no detector ran. Screenshots you fail to inspect are checks the review cannot run. Verify the result carries the five contract sections, or the single recapture section when its evidence check fails; on an empty result, repeat the fresh degraded pass once with the same inputs. Disclose this standard-target degradation in one line at finish.",
+    search: "Then spawn the shipped finish reviewer, `impeccable-finish-reviewer` (`impeccable_finish_reviewer` in codex; `/impeccable-finish-reviewer` in Cursor; on GitHub Copilot say \"Use the impeccable-finish-reviewer agent\"), with the original request, confirmed answers, the artifact path, the screenshot paths, the direction contract, existing hook findings, the QUALITY BAR card and approved comp paths (a code-led build has no approved comp; the chosen decision comp rides in that slot as the critique reference, named as such), on a comp-led build the build state (`.impeccable/build/state.json`), the spec, and the diff directories (`.impeccable/review/diff/hero/` and `.impeccable/review/diff/final/`, whose side-by-side, heatmap, region pairs, and `report.json` are the fidelity evidence), the craft-floor reference path, and on a native platform the platform reference path(s), [ios.md](ios.md) / [android.md](android.md), both on adaptive, plus one line saying no detector ran, so the reviewer judges in the platform's conventions rather than the web's. The reviewer has no browser; screenshots you fail to pass are checks it cannot run. Never read the shipped agents' definition files before spawning; the harness loads them at spawn, and you owe only the input packet. Wait on any agent with one long timeout rather than a loop of short polls, and spend the wait on the next independent step. Verify the return carries the five contract sections (a recapture return carries one, its recapture list); on an empty or thrashed return, respawn once with the same inputs. This review never runs inside the build thread and never inherits it: spawn the reviewer fresh, with no forked conversation history (`fork_turns: 0` in codex); a reviewer that inherits your transcript inherits your framing, your optimism, and your abstractions, and everything it needs travels in the inputs above. Only a harness with no subagent capability at all substitutes a fresh in-thread pass after stepping fully out of the build context, run from [degraded/finish-reviewer.md](degraded/finish-reviewer.md), and a substituted or failed-and-replaced review is disclosed in one line at finish, never silently.",
+    replacement: "Load [degraded/finish-reviewer.md](degraded/finish-reviewer.md) and run its full review inline in a fresh role context. Supply the original request, confirmed answers, artifact and screenshot paths, direction contract, detector findings, QUALITY BAR and approved comp paths (the decision comp is the critique reference for code-led work). For comp-led work also supply `.impeccable/build/state.json`, the spec, and `.impeccable/review/diff/hero/` and `.impeccable/review/diff/final/`, including side-by-side images, heatmaps, region pairs and report.json. Supply the craft-floor and applicable [ios.md](ios.md) / [android.md](android.md) references, both on adaptive, and state when no detector ran. Inspect every screenshot. Verify five contract sections, or the recapture list when evidence is invalid. Retry an empty result once and disclose the inline substitution.",
   },
   {
     path: "reference/new-work.md",
     label: "new-work documenter execution",
-    search: "Then spawn the shipped documenter, `impeccable-documenter` (`impeccable_documenter` in codex), with the project root, the artifact path, the direction contract, PRODUCT.md, the [document.md](document.md) reference path, and the boundary to write at; it records DESIGN.md and the sidecar from the built world, ground truth over intention; without subagents the pass runs from [degraded/documenter.md](degraded/documenter.md).",
-    replacement: "Then load [degraded/documenter.md](degraded/documenter.md) and follow that bundled role contract inline with the project root, artifact path, direction contract, PRODUCT.md, the [document.md](document.md) reference path, and the boundary to write at; it records DESIGN.md and the sidecar from the built world, ground truth over intention.",
+    search: "After the last correction, spawn the shipped documenter, `impeccable-documenter` (`impeccable_documenter` in codex), with the project root, artifact path, direction contract, PRODUCT.md, [document.md](document.md), and write boundary. Without subagents, load [degraded/documenter.md](degraded/documenter.md) and [document.md](document.md) before writing.",
+    replacement: "After the last correction, load [degraded/documenter.md](degraded/documenter.md) and [document.md](document.md), then follow the bundled role contract inline with the project root, artifact path, direction contract, PRODUCT.md, and write boundary.",
   },
   {
     path: "reference/new-work.md",
@@ -248,8 +250,8 @@ const portableImpeccableTransforms = [
   {
     path: "reference/visualize.md",
     label: "visualize asset producer",
-    search: "When the harness runs subagents, spawn the shipped asset producer every time, even when the inventory's produce bucket looks empty: its manifest is the independent second opinion on your media, and the runs that skipped the spawn are the runs whose cotton became CSS. An honestly empty manifest costs one cheap spawn; a wrongly empty produce bucket costs the build its materials. Use `impeccable-asset-producer` (`impeccable_asset_producer` in codex; `/impeccable-asset-producer` in Cursor; on GitHub Copilot say \"Use the impeccable-asset-producer agent\"): give it the approved comp, output paths, required dimensions and formats, transparency needs, crop notes, and what must remain semantic code. Without subagents, produce the minimum required assets in the current thread by the book: load [degraded/asset-producer.md](degraded/asset-producer.md) and follow it inline, with whatever generation exists.",
-    replacement: "Run the bundled asset-producer role every time, even when the inventory's produce bucket looks empty: load [degraded/asset-producer.md](degraded/asset-producer.md) and follow it inline as an independent second opinion on the build's media. Give it the approved comp, output paths, required dimensions and formats, transparency needs, crop notes, and what must remain semantic code. An honestly empty manifest is valid; a wrongly empty produce bucket costs the build its materials. Produce the minimum required assets with whatever generation exists, the native tool or generate-image.mjs.",
+    search: "by the shipped asset producer or in the current thread",
+    replacement: "inline by following [degraded/asset-producer.md](degraded/asset-producer.md)",
   },
   {
     path: "reference/live.md",
@@ -257,40 +259,7 @@ const portableImpeccableTransforms = [
     search: "When native subagents are available, delegate source edits to `impeccable_manual_edit_applier` / `impeccable-manual-edit-applier`. Pass cwd, scripts path, event id, page URL, chunk/deadline, `batch`, `evidencePath`, and the canonical JSON result schema. The subagent must not poll or reply. If unavailable, apply inline with the same contract.",
     replacement: "Load [degraded/manual-edit-applier.md](degraded/manual-edit-applier.md) and follow that bundled role contract inline. Supply cwd, scripts path, event id, page URL, chunk/deadline, `batch`, `evidencePath`, and the canonical JSON result schema. The inline role must not poll or reply.",
   },
-  {
-    path: "scripts/context.mjs",
-    label: "runtime subagent authorization directive",
-    search: `// Same class of harness default as the autonomy directive: some harnesses gate
-// agent-tool use on an explicit user request, which silently disables every
-// shipped subagent the skill's flows depend on (finish reviewer, asset
-// producer, manual-edit applier, critique panels). Observed live: the model
-// resolved the conflict against the skill without telling the user.
-function appendSubagentAuthorizationDirective(parts) {
-  parts.push([
-    'SUBAGENT_AUTHORIZATION: If your harness gates subagent or agent-tool use on an explicit user request,',
-    "the user's invocation of this skill is that request for the skill's shipped subagents;",
-    'spawn them where a reference file directs, without re-asking.',
-    'Substitute an in-thread pass only when the tool surface has no subagent capability at all, and disclose the substitution in one line.',
-  ].join(' '));
-}`,
-    replacement: `// Agent Plugins v1 does not register native agents. Portable projections keep
-// every role executable by pointing the active context at its bundled inline
-// contract instead of authorizing a host-specific agent alias.
-function appendSubagentAuthorizationDirective(parts) {
-  parts.push([
-    'DEGRADED_ROLE_DIRECTIVE: Native agent registration is unavailable in this Agent Plugins v1 package.',
-    'When a flow needs a reviewer, documenter, asset producer, or manual edit applier,',
-    'load the matching bundled reference/degraded role file and follow it inline in a fresh role context.',
-    'Disclose the standard-target degradation in one line.',
-  ].join(' '));
-}`,
-  },
-  {
-    path: "scripts/live/instructions.mjs",
-    label: "runtime live manual edit applier",
-    search: "Delegate the source edits to the impeccable_manual_edit_applier subagent when available (pass cwd, scripts path, event id, page URL, chunk/deadline, batch, evidencePath); it must not poll or reply.",
-    replacement: "Load reference/degraded/manual-edit-applier.md and follow that bundled role contract inline (pass cwd, scripts path, event id, page URL, chunk/deadline, batch, evidencePath); the inline role must not poll or reply.",
-  },
+
 ];
 
 const portableOperationNames = [
@@ -435,6 +404,10 @@ function adaptAgentPluginSkills(destination) {
   writeFileSync(impeccablePath, impeccable);
 
   const impeccableRoot = join(skillsRoot, "impeccable");
+  for (const file of files(impeccableRoot).filter((file) => file.endsWith('.md'))) {
+    const text = readFileSync(file, 'utf8').replace(/`impeccable (live(?:-[a-z]+)?|context|detect|generate-image|embed-prompt|comp-spec|comp-diff|build-phase|font-match|surface-brief)(?= |`)/g, '`<IMPECCABLE_SKILL_ROOT>/scripts/impeccable $1');
+    writeFileSync(file, text);
+  }
   for (const relativePath of portableInvocationProjectionPaths) {
     const path = join(impeccableRoot, relativePath);
     if (!existsSync(path)) throw new Error(`portable invocation projection path is missing: ${relativePath}`);
@@ -450,23 +423,11 @@ function adaptAgentPluginSkills(destination) {
     writeFileSync(path, replaceRequired(source, transformation.search, transformation.replacement, transformation.label));
   }
 
-  const providerPath = join(impeccableRoot, "scripts", "lib", "provider.mjs");
-  const provider = readFileSync(providerPath, "utf8");
-  writeFileSync(providerPath, replaceRequired(
-    provider,
-    `export const IMPECCABLE_COMMAND_PREFIX = IMPECCABLE_PROVIDER_ID === "cursor"\n  ? "/"\n  : IMPECCABLE_PROVIDER_ID === "codex"\n    ? "$"\n    : "";\nexport const IMPECCABLE_COMMAND = \`\${IMPECCABLE_COMMAND_PREFIX}impeccable\`;`,
-    `export const IMPECCABLE_COMMAND_PREFIX = IMPECCABLE_PROVIDER_ID === "cursor"\n  ? "/"\n  : IMPECCABLE_PROVIDER_ID === "codex"\n    ? "$"\n    : "operation:";\nexport const IMPECCABLE_COMMAND = IMPECCABLE_PROVIDER_ID === "agent-plugin"\n  ? "operation:"\n  : \`\${IMPECCABLE_COMMAND_PREFIX}impeccable\`;`,
-    "portable runtime operation notation",
-  ));
-
   const liveBrowserPath = join(impeccableRoot, "scripts", "live-browser.js");
-  const liveBrowser = readFileSync(liveBrowserPath, "utf8");
-  writeFileSync(liveBrowserPath, replaceRequired(
-    liveBrowser,
+  writeFileSync(liveBrowserPath, replaceRequired(readFileSync(liveBrowserPath, "utf8"),
     "  const IMPECCABLE_COMMAND = (window.__IMPECCABLE_COMMAND_PREFIX__ || '/') + 'impeccable';",
-    "  const IMPECCABLE_COMMAND = window.__IMPECCABLE_COMMAND_PREFIX__ === 'operation:'\n    ? 'operation:'\n    : (window.__IMPECCABLE_COMMAND_PREFIX__ || '/') + 'impeccable';",
-    "portable live browser operation notation",
-  ));
+    "  const IMPECCABLE_COMMAND = 'operation:';",
+    "portable live panel operation notation"));
 
   const hostPath = join(destination, "src", "host.mjs");
   const host = readFileSync(hostPath, "utf8");
@@ -549,7 +510,7 @@ function validateAgentPlugin(destination, version, sourceRoot) {
   if (/\b(?:Cursor|Codex)\b|\.cursor\/|\.codex\/|\.agents\//.test(designText)) throw new Error("portable Design contract contains native host guidance");
   if (impeccableText.includes("../../agents/")) throw new Error("portable Impeccable contract references native agents");
   if (!impeccableText.includes("reference/degraded/")) throw new Error("portable Impeccable contract omits degraded roles");
-  if (/[/\$]impeccable/.test(impeccableText)) throw new Error("portable Impeccable contract contains native invocation syntax");
+  if (/(?<![\w./:>-])[/\$]impeccable(?=\s|`|$)/.test(impeccableText)) throw new Error("portable Impeccable contract contains native invocation syntax");
   if ([designText, impeccableText].some((text) => text.includes("${CURSOR_PLUGIN_ROOT}") || text.includes("${PLUGIN_ROOT}"))) {
     throw new Error("portable skill contract contains a native plugin-root placeholder");
   }
@@ -592,13 +553,30 @@ function validateAgentPlugin(destination, version, sourceRoot) {
 }
 
 function packageReadme(host) {
-  const invocation = host === "cursor" ? "`/design` and `/impeccable`" : "`$design` and `$impeccable`";
+  const invocation = host === "cursor" ? "/design" : "$design";
   return [
     "# Design",
     "",
-    `This is the ${host === "cursor" ? "Cursor" : "Codex"} package for Geldmacher Design. Invoke it explicitly with ${invocation}.`,
+    "**Ship interfaces that feel intentional.**",
     "",
-    "See [Install Design from GitHub](docs/installation.md) for checksum verification, installation, update, rollback, trust, reload, and fresh-task boundaries.",
+    `Your design partner for websites and web apps in ${host === "cursor" ? "Cursor" : "Codex"}. Plan, build, review, and refine interfaces around your product and visual language.`,
+    "",
+    "## Start with your interface",
+    "",
+    "Open your project, identify the page or files you want to improve, and try:",
+    "",
+    "```text",
+    `${invocation} critique this page and prioritize the three most useful improvements`,
+    `${invocation} polish this checkout flow without changing its information architecture`,
+    "```",
+    "",
+    `For a read-only review of a branch's interface changes, use \`${invocation} review quick branch\`. Request a follow-up change when you are ready to apply an improvement.`,
+    "",
+    "## Your project, your decisions",
+    "",
+    `Design uses your existing PRODUCT.md, DESIGN.md, and .impeccable/ context. Run \`${invocation} setup\` to preview project integration, or \`${invocation} status\` to inspect it. Setup requires approval; optional UI checks stay off until enabled.`,
+    "",
+    "See [Install Design from GitHub](docs/installation.md) for prerequisites, installation, updates, rollback, and activation steps.",
     "",
   ].join("\n");
 }
@@ -617,6 +595,30 @@ function assertSourceRoot(sourceRoot) {
   return resolved;
 }
 
+function projectSelfContainedReferences(destination) {
+  const transformations = [
+  {
+    "path": "reference/live-setup.md",
+    "search": "Reference outputs: [nextjs-turborepo/expected-after-patch.ts](https://github.com/pbakaus/impeccable/blob/8dac6ae7e020c43ab10ce9b41939f6fd42627b96/tests/framework-fixtures/nextjs-turborepo/expected-after-patch.ts), [sveltekit-csp/expected-after-patch.js](https://github.com/pbakaus/impeccable/blob/8dac6ae7e020c43ab10ce9b41939f6fd42627b96/tests/framework-fixtures/sveltekit-csp/expected-after-patch.js). ",
+    "replacement": ""
+  },
+  {
+    "path": "reference/live-setup.md",
+    "search": "Reference outputs: [nextjs-inline-csp/expected-after-patch.js](https://github.com/pbakaus/impeccable/blob/8dac6ae7e020c43ab10ce9b41939f6fd42627b96/tests/framework-fixtures/nextjs-inline-csp/expected-after-patch.js), [nuxt-csp/expected-after-patch.ts](https://github.com/pbakaus/impeccable/blob/8dac6ae7e020c43ab10ce9b41939f6fd42627b96/tests/framework-fixtures/nuxt-csp/expected-after-patch.ts).\n",
+    "replacement": ""
+  },
+  {
+    "path": "reference/live.md",
+    "search": "The fake test agent's CSS in the [repo agent template](https://github.com/pbakaus/impeccable/blob/8dac6ae7e020c43ab10ce9b41939f6fd42627b96/tests/live-e2e/agent.mjs) is a faithful template.",
+    "replacement": ""
+  }
+];
+  for (const item of transformations) {
+    const file = join(destination, 'skills/impeccable', item.path);
+    writeFileSync(file, replaceRequired(readFileSync(file, 'utf8'), item.search, item.replacement, `self-contained ${item.path}`));
+  }
+}
+
 export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
   const projectRoot = assertSourceRoot(sourceRoot);
   const output = assertSafeBuildOutput(outputRoot);
@@ -627,6 +629,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
   for (const host of ["agent-plugin", "cursor", "codex"]) {
     const destination = join(output, host, plugin);
     for (const item of allowed[host]) copyAllowed(destination, item, projectRoot);
+    projectSelfContainedReferences(destination);
     if (host === "agent-plugin") {
       copyRegular(join(projectRoot, "manifests", "agent-plugin.json"), join(destination, "plugin.json"), projectRoot);
       adaptAgentPluginSkills(destination);

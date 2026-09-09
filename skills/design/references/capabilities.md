@@ -10,4 +10,4 @@ Choose the highest-specificity matching capability. A fallback is used only when
 | design-core | 0.9.0 | detector-scan - Explicit local detector scan | design | 100 | no | detect | website, web-app | - |
 | design-core | 0.9.0 | stakeholder-questionnaire - Stakeholder decision questionnaire | design | 100 | no | questionnaire | website, web-app | - |
 | design-core | 0.9.0 | change-interface-review - Change-scoped interface review | design | 90 | no | review | website, web-app | - |
-| impeccable | 4.1.2 | general-web-design - General website and web-app design | impeccable | 10 | yes | design, website, web app, frontend, ui, ux, landing page, dashboard, component | website, web-app | - |
+| impeccable | 4.3.1 | general-web-design - General website and web-app design | impeccable | 10 | yes | design, website, web app, frontend, ui, ux, landing page, dashboard, component | website, web-app | - |

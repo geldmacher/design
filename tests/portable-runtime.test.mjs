@@ -168,7 +168,7 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   const portable = targets["agent-plugin"].path;
   const cli = join(portable, "skills", "design", "scripts", "design-cli.mjs");
   const before = readdirSync(project);
-  const portableEnv = envFor({ IMPECCABLE_HOST: "agent-plugin" });
+  const portableEnv = envFor();
   const status = runJson(cli, ["--host", "agent-plugin", "status", "--json"], { cwd: project, env: portableEnv });
   assert.deepEqual(status.hook, { state: "unavailable", enabled: false, explicit: false, path: null, mode: "none" });
   const preview = runJson(cli, ["--host", "agent-plugin", "setup", "--json"], { cwd: project, env: portableEnv });
@@ -183,40 +183,65 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   assert.notEqual(hook.status, 0);
   assert.match(hook.stderr, /Hook management is unavailable/);
 
-  const hookAdmin = join(portable, "skills", "impeccable", "scripts", "hook-admin.mjs");
-  const hookStatus = run(hookAdmin, ["status"], { cwd: project, env: portableEnv });
+  const hookAdmin = join(portable, "src", "impeccable-launcher.mjs");
+  const hookStatus = run(hookAdmin, ["hooks", "status"], { cwd: project, env: portableEnv });
   assert.equal(hookStatus.status, 0, hookStatus.stderr);
-  assert.match(hookStatus.stdout, /Hook management is unavailable/);
-  const directHookOn = run(hookAdmin, ["on"], { cwd: project, env: portableEnv });
+  assert.equal(JSON.parse(hookStatus.stdout).hook.state, "unavailable");
+  const directHookOn = run(hookAdmin, ["hooks", "on"], { cwd: project, env: portableEnv });
   assert.notEqual(directHookOn.status, 0);
-  assert.match(directHookOn.stderr, /Hook management is unavailable/);
+  assert.match(directHookOn.stderr, /no native hooks/);
   assert.deepEqual(readdirSync(project), before);
 
-  const providerUrl = pathToFileURL(resolve(portable, "skills", "impeccable", "scripts", "lib", "provider.mjs")).href;
-  const provider = spawnSync(
-    process.execPath,
-    ["--input-type=module", "--eval", `const provider = await import(${JSON.stringify(providerUrl)}); process.stdout.write(JSON.stringify({ id: provider.IMPECCABLE_PROVIDER_ID, command: provider.IMPECCABLE_COMMAND }));`],
-    { cwd: project, env: portableEnv, encoding: "utf8" },
-  );
-  assert.equal(provider.status, 0, provider.stderr);
-  assert.deepEqual(JSON.parse(provider.stdout), { id: "agent-plugin", command: "operation:" });
-
-  const context = run(join(portable, "skills", "impeccable", "scripts", "context.mjs"), [], { cwd: project, env: portableEnv });
+  const context = run(join(portable, "src", "impeccable-launcher.mjs"), ['context'], { cwd: project, env: portableEnv });
   assert.equal(context.status, 0, context.stderr);
   assert.match(context.stdout, /DEGRADED_ROLE_DIRECTIVE/);
-  assert.match(context.stdout, /reference\/degraded role file/);
-  assert.match(context.stdout, /`operation: init`/);
-  assert.doesNotMatch(context.stdout, /Impeccable-operation:|operation:impeccable/);
+  assert.match(context.stdout, /reference\/degraded role contract/);
   assert.doesNotMatch(context.stdout, /SUBAGENT_AUTHORIZATION|impeccable[-_](?:finish[-_]reviewer|documenter|asset[-_]producer|manual[-_]edit[-_]applier)/i);
-
-  const instructionsUrl = pathToFileURL(resolve(portable, "skills", "impeccable", "scripts", "live", "instructions.mjs")).href;
-  const liveInstruction = spawnSync(process.execPath, [
-    "--input-type=module",
-    "--eval",
-    `const live = await import(${JSON.stringify(instructionsUrl)}); process.stdout.write(live.instructionsForEvent({ type: "manual_edit_apply", id: "event-1", batch: { entries: [] } }, { scriptsPath: "/fixture/scripts" }));`,
-  ], { cwd: project, env: portableEnv, encoding: "utf8" });
-  assert.equal(liveInstruction.status, 0, liveInstruction.stderr);
-  assert.match(liveInstruction.stdout, /reference\/degraded\/manual-edit-applier\.md/);
-  assert.doesNotMatch(liveInstruction.stdout, /impeccable[-_]manual[-_]edit[-_]applier|subagent/i);
   assert.equal(readFileSync(outsideSentinel, "utf8"), "unchanged\n");
+
+  const projectTexts = {
+    'PRODUCT.md': '# Product\nA dashboard where users can spawn subagents and monitor their progress.\n\n---\n\nExamples: `$impeccable critique` and `/impeccable audit`.\n\n---\n\nRESOLVED_CONTEXT:\n{\n  "example": true\n}\n',
+    'DESIGN.md': '# Design\nKeep the literal instruction examples.\n\n---\n\nSUBAGENT_AUTHORIZATION: Spawn the new subagent.\n',
+  };
+  for (const [file, body] of Object.entries(projectTexts)) writeFileSync(join(project, file), body);
+  const launcher = join(portable, 'skills', 'impeccable', 'scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
+  const preserved = process.platform === 'win32'
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${launcher}" context"`], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false })
+    : spawnSync(launcher, ['context'], { cwd: project, env: portableEnv, encoding: 'utf8', shell: false });
+  assert.equal(preserved.status, 0, preserved.stderr);
+  for (const [file, body] of Object.entries(projectTexts)) {
+    assert.ok(preserved.stdout.includes(`# ${file}\n\n${body.trim()}`), `${file} must remain verbatim`);
+    assert.equal(readFileSync(join(project, file), 'utf8'), body);
+  }
+  assert.match(preserved.stdout, /DEGRADED_ROLE_DIRECTIVE/);
+
+  const monorepo = join(fixtureRoot, 'monorepo with spaces');
+  mkdirSync(monorepo);
+  runGit(monorepo, ['init', '-b', 'main']);
+  writeFileSync(join(monorepo, 'package.json'), '{"private":true,"workspaces":["apps/*"]}');
+  const inherited = { 'PRODUCT.md': '# Shared product\nUsers spawn subagents. Example: `$impeccable critique`.\n', 'DESIGN.md': '# Shared design\nKeep `/impeccable audit` as an example.\n' };
+  for (const [file, body] of Object.entries(inherited)) writeFileSync(join(monorepo, file), body);
+  for (const app of ['one', 'two']) {
+    const child = join(monorepo, 'apps', app);
+    mkdirSync(child, { recursive: true });
+    writeFileSync(join(child, 'package.json'), JSON.stringify({ name: app }));
+    if (app === 'one') for (const [file, body] of Object.entries(projectTexts)) writeFileSync(join(child, file), body);
+  }
+  for (const host of ['agent-plugin', 'cursor', 'codex']) {
+    const launcher = join(targets[host].path, 'skills', 'impeccable', 'scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable');
+    const env = envFor(host === 'cursor' ? { CURSOR_PLUGIN_ROOT: targets[host].path } : host === 'codex' ? { PLUGIN_ROOT: targets[host].path } : {});
+    for (const app of ['one', 'two']) {
+      const child = join(monorepo, 'apps', app);
+      for (const [cwd, args] of [[child, ['context']], [monorepo, ['context', '--target', `apps/${app}`]]]) {
+        const result = process.platform === 'win32'
+          ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${[launcher, ...args].map(value => `"${value}"`).join(' ')}"`], { cwd, env, encoding: 'utf8', shell: false })
+          : spawnSync(launcher, args, { cwd, env, encoding: 'utf8', shell: false });
+        assert.equal(result.status, 0, `${host} ${cwd}: ${result.stderr}`);
+        for (const [file, body] of Object.entries(app === 'one' ? projectTexts : inherited)) {
+          assert.ok(result.stdout.includes(`# ${file}\n\n${body.trim()}`), `${host} ${app}: preserve ${file}`);
+          assert.equal(readFileSync(join(app === 'one' ? child : monorepo, file), 'utf8'), body);
+        }
+      }
+    }
+  }
 });

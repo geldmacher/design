@@ -29,6 +29,7 @@ import {
   createCandidateFromInputs,
   hashPath,
   materializeGitSource,
+  prepareCandidate,
   transformSkillFile,
   releaseArchiveExclusions,
   validateArchiveEntryName,
@@ -39,7 +40,7 @@ test("guidance transformations reproduce locked files and reject upstream anchor
   const workspace = mkdtempSync(join(tmpdir(), "design-guidance-transform-"));
   const lock = JSON.parse(readFileSync(new URL("../upstream/impeccable.lock.json", import.meta.url), "utf8"));
   const version = readPin().version;
-  const paths = ["reference/document.md", "reference/critique.md"];
+  const paths = ["reference/document.md", "reference/critique.md", "reference/hooks.md", "reference/doctor.md"];
   try {
     mkdirSync(join(workspace, "skills/impeccable/reference"), { recursive: true });
     for (const path of paths) cpSync(new URL(`../skills/impeccable/${path}`, import.meta.url), join(workspace, "skills/impeccable", path));
@@ -55,7 +56,7 @@ test("guidance transformations reproduce locked files and reject upstream anchor
       assert.equal(first.text, readFileSync(new URL(`../skills/impeccable/${path}`, import.meta.url), "utf8"));
       assert.deepEqual(first.operations, entry.transformations);
       assert.deepEqual(transformSkillFile(path, original, version), first);
-      const anchor = path.endsWith("document.md") ? "Rules that matter:" : "#### The Working Memory Rule";
+      const anchor = { "reference/document.md": "Rules that matter:", "reference/critique.md": "#### The Working Memory Rule", "reference/hooks.md": "Supported harnesses:", "reference/doctor.md": "- **`auto`**" }[path];
       assert.ok(original.includes(anchor));
       assert.throws(() => transformSkillFile(path, original.replace(anchor, "Changed upstream section"), version), /Upstream structure drift/);
     }
@@ -166,6 +167,7 @@ function sourceFiles(version) {
       "license: Apache 2.0",
       "---",
       "This skill gives you the tools and permission to create design fixtures.",
+      "The launcher runs a self-contained binary that ships next to it or is downloaded once on first run; no Node or other runtime is required.",
       "node .cursor/skills/impeccable/scripts/context.mjs",
       "**Pin / Unpin:**",
       "Fixture pin guidance.",
@@ -385,8 +387,29 @@ test("tag objects are materialized as bytes without a Git checkout", (t) => {
   assert.throws(() => readFileSync(join(materialized, ".git")), /EISDIR|ENOENT/);
 });
 
+test("dirty preparation requires an explicit working-tree baseline and retains release checks", async (t) => {
+  const fixture = candidateFixture(t);
+  execFileSync("git", ["init", "--quiet", fixture.repository]);
+  let requests = 0;
+  const fetchImpl = async () => { requests += 1; return { ok: false, status: 503 }; };
+  const options = { root: fixture.repository, tag: fixture.candidatePin.tag, fetchImpl };
+  await assert.rejects(prepareCandidate(options), /Local changes conflict/);
+  assert.equal(requests, 0);
+  await assert.rejects(prepareCandidate({ ...options, fromWorkingTree: true }), /GitHub release lookup failed with status 503/);
+  assert.equal(requests, 1);
+  await assert.rejects(prepareCandidate({ ...options, tag: "skill-v4.0.4", fromWorkingTree: true }), /must be newer/);
+  assert.equal(requests, 1);
+});
+
 test("candidate identity detects drift and transactional apply restores exact fixture bytes", (t) => {
   const fixture = candidateFixture(t);
+  execFileSync("git", ["init", "--quiet", fixture.repository]);
+  execFileSync("git", ["-C", fixture.repository, "add", "skills/impeccable/old.txt"]);
+  write(join(fixture.repository, "skills/impeccable/old.txt"), "unstaged update work\n");
+  write(join(fixture.repository, "skills/impeccable/local.bin"), Buffer.from([0, 255, 42]));
+  write(join(fixture.repository, ".gitignore"), "skills/impeccable/ignored.txt\n");
+  write(join(fixture.repository, "skills/impeccable/ignored.txt"), "ignored local work\n");
+  const initialIndex = readFileSync(join(fixture.repository, ".git/index"));
   const prepared = createCandidateFromInputs({ root: fixture.repository, source: fixture.source, archive: fixture.archive, pin: fixture.candidatePin, createdAt: fixedTime });
   assert.match(prepared.candidateId, /^iu-[0-9a-f]{16}$/);
   assert.equal(prepared.path, join(fixture.repository, ".build", "impeccable-candidates", prepared.candidateId));
@@ -396,6 +419,14 @@ test("candidate identity detects drift and transactional apply restores exact fi
   assert.equal(typeof manifest.identity.inventorySha256, "string");
   assert.equal(typeof manifest.identity.transformationPatchSha256, "string");
   assert.equal(typeof manifest.identity.repositoryPatchSha256, "string");
+  for (const destination of candidateDestinations) {
+    assert.equal(hashPath(join(prepared.path, "before", destination)), manifest.identity.baseline[destination]);
+  }
+  const backupLocal = join(prepared.path, "before/skills/impeccable/local.bin");
+  const localBytes = readFileSync(backupLocal);
+  writeFileSync(backupLocal, "damaged backup");
+  assert.throws(() => applyCandidate({ root: fixture.repository, candidateId: prepared.candidateId }), /backup drift/);
+  writeFileSync(backupLocal, localBytes);
 
   const notice = join(fixture.repository, "THIRD_PARTY_NOTICES.md");
   const originalNotice = readFileSync(notice);
@@ -417,6 +448,10 @@ test("candidate identity detects drift and transactional apply restores exact fi
   assert.deepEqual(applied.applied, [...candidateDestinations]);
   assert.equal(readPin(fixture.repository).version, "4.0.5");
   assert.equal(readFileSync(join(fixture.repository, "agents", "first-party.md"), "utf8"), "unrelated dirty agent\n");
+  assert.deepEqual(readFileSync(join(fixture.repository, ".git/index")), initialIndex);
+  assert.deepEqual(readFileSync(backupLocal), Buffer.from([0, 255, 42]));
+  assert.equal(readFileSync(join(prepared.path, "before/skills/impeccable/old.txt"), "utf8"), "unstaged update work\n");
+  assert.equal(readFileSync(join(prepared.path, "before/skills/impeccable/ignored.txt"), "utf8"), "ignored local work\n");
 });
 
 test("annotated tag identity mismatch aborts candidate preparation", (t) => {

@@ -50,7 +50,7 @@ Run each returned `patchCommands` entry to inspect both added and removed lines.
 2. Run Impeccable's context loader once, targeting the most representative in-scope interface file:
 
    ```bash
-   node "<IMPECCABLE_SKILL_ROOT>/scripts/context.mjs" --target "<path>"
+   "<IMPECCABLE_SKILL_ROOT>/scripts/impeccable" context --target "<path>"
    ```
 
    Use only the returned canonical `PRODUCT.md`, `DESIGN.md`, surface brief, and `.impeccable/` context. Missing context does not block a scoped review.
