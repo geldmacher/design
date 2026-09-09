@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.10.1
+
+- Fix Windows launcher paths and argument handling, CRLF normalization in context output and package generation, and platform-aware engine executable checks.
+
 ## 0.10.0
 
 - Update bundled Impeccable to 4.3.1 with native engine 0.1.5, pinned binaries for five platforms, and shared host-aware launchers.

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "geldmacher-design",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Plan, build, review, and refine websites and web apps around your product and visual language.",
   "author": {
     "name": "Dennis Geldmacher",
