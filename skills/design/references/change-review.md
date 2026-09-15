@@ -71,7 +71,7 @@ Run each returned `patchCommands` entry to inspect both added and removed lines.
 
    Replace `<host>` with the active host. Read the Design detector envelope, treat exit `2` as findings rather than infrastructure failure, verify every hit in context, and name false positives. For fetched refs, ranges whose head is not the active worktree, unsupported files, or unavailable runtime, mark the detector `Not verified`; do not substitute a different checkout or rerun it elsewhere in quick mode.
 
-Do not invoke `critique-storage.mjs`, write `.impeccable/critique/`, or load the persistent Impeccable critique playbook. The review report lives only in the current task.
+Keep the review read-only. Do not write `.impeccable/critique/` or load the persistent Impeccable critique playbook. The review report lives only in the current task.
 
 ## Review the affected interface
 

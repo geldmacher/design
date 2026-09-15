@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
 import { execFileSync } from "node:child_process";
 import {
   cpSync,
@@ -11,6 +13,8 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+import { enginePlatforms, engineRelativePath } from "../src/impeccable-engine.mjs";
 import {
   checkUpstream,
   compareVersions,
@@ -67,6 +71,10 @@ test("guidance transformations reproduce locked files and reject upstream anchor
   }
 });
 
+const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
+const enginePin = readPin().engine;
+const repositoryFiles = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], { cwd: repositoryRoot, encoding: "utf8" }).split("\0").filter(Boolean);
+
 const fixedTime = "2026-08-12T10:00:00.000Z";
 
 function write(path, value) {
@@ -78,7 +86,8 @@ function pin(version = "4.0.4", overrides = {}) {
   const tag = `skill-v${version}`;
   return {
     $schema: "./impeccable.pin.schema.json",
-    schemaVersion: 1,
+    schemaVersion: 2,
+    engine: structuredClone(enginePin),
     name: "Impeccable",
     version,
     repository: "https://github.com/pbakaus/impeccable",
@@ -159,81 +168,40 @@ function storedZip(entries) {
   return Buffer.concat([...localParts, central, end]);
 }
 
+let upstreamFiles;
 function sourceFiles(version) {
-  return new Map([
-    [".cursor/skills/impeccable/SKILL.md", [
-      "---",
-      "name: impeccable",
-      "description: Fixture",
-      `version: ${version}`,
-      "license: Apache 2.0",
-      "---",
-      "This skill gives you the tools and permission to create design fixtures.",
-      "The launcher runs a self-contained binary that ships next to it or is downloaded once on first run; no Node or other runtime is required.",
-      "node .cursor/skills/impeccable/scripts/context.mjs",
-      "**Pin / Unpin:**",
-      "Fixture pin guidance.",
-      "**Hooks:**",
-      "Fixture hook guidance.",
-      "",
-      "## Commands",
-      "",
-      "| Command | Category | Description | Reference |",
-      "|---|---|---|---|",
-      "| `polish [target]` | Refine | Fixture polish | [reference/plain.md](reference/plain.md) |",
-      "",
-    ].join("\n")],
-    [".cursor/skills/impeccable/reference/hooks.md", [
-      "# /impeccable hooks",
-      "record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed.",
-      "- The hook is bundled with the Impeccable skill and installed through project-local manifests: fixture",
-      "",
-    ].join("\n")],
-    [".cursor/skills/impeccable/scripts/context.mjs", [
-      "const FETCH_TIMEOUT_MS = 1200;",
-      "async function computeUpdateDirective(now = Date.now()) {",
-      "  try {",
-      "    return now;",
-      "  } catch {}",
-      "}",
-      "function enabledNames() {",
-      "  let enabled = true;",
-      "  for (const name of []) enabled = Boolean(name);",
-      "  return enabled;",
-      "}",
-      "function hookMode(ctx) {",
-      "  const activeRoot = path.resolve(ctx.projectRoot || process.cwd());",
-      "  if (!hookEnabledAt(activeRoot)) return 'none';",
-      "  const manifests = HOOK_MANIFESTS_BY_PROVIDER[IMPECCABLE_PROVIDER_ID] || [];",
-      "  return manifests.length;",
-      "}",
-      "",
-    ].join("\n")],
-    [".cursor/skills/impeccable/scripts/hook-admin.mjs", [
-      "import { IMPECCABLE_COMMAND } from './lib/provider.mjs';",
-      "const STATUS_MESSAGE = 'Checking UI changes';",
-      "async function administer(cwd, local, shared) {",
-      "  const cfg = readConfig(cwd);",
-      "  const envKill = process.env.IMPECCABLE_HOOK_DISABLED;",
-      "  const line = `  state:        ${cfg.enabled ? 'enabled' : 'disabled'}`;",
-      "  const repaired = repairHookManifests(cwd);",
-      "  try {",
-      "    let out = '';",
-      "    return { cfg, envKill, line, repaired, out };",
-      "  } catch {}",
-      "}",
-      "",
-    ].join("\n")],
-    [".cursor/skills/impeccable/scripts/lib/provider.mjs", "export const IMPECCABLE_COMMAND = '/impeccable';\n"],
-    [".cursor/skills/impeccable/scripts/lib/staleness-deep.mjs", "export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];\n  return findings;\n}\n"],
-    [".cursor/skills/impeccable/scripts/pin.mjs", "process.stdout.write('fixture');\n"],
-    [".cursor/skills/impeccable/scripts/command-metadata.json", JSON.stringify({ polish: { description: "Fixture polish", argumentHint: "[target]" } })],
-    [".cursor/skills/impeccable/reference/doctor.md", "Fixture doctor reference.\n"],
-    [".cursor/skills/impeccable/reference/plain.md", "No transformation is required.\n"],
-    [".cursor/skills/impeccable/assets/binary.bin", Buffer.from([0x00, 0x7f, 0x80, 0xff])],
-    ...agentNames.map((name) => [`.cursor/agents/${name}`, `# ${name}\nnode .cursor/skills/impeccable/scripts/context.mjs\n`]),
-    ["LICENSE", "Apache fixture license\n"],
-  ]);
+  if (!upstreamFiles) {
+    const scratch = mkdtempSync(join(tmpdir(), "design-native-upstream-fixture-"));
+    try {
+      const lock = JSON.parse(readFileSync(join(repositoryRoot, "upstream/impeccable.lock.json"), "utf8"));
+      const entries = lock.import.files.filter(file => file.source.startsWith(".cursor/"));
+      for (const file of entries) {
+        const target = join(scratch, file.destination);
+        mkdirSync(dirname(target), { recursive: true });
+        cpSync(join(repositoryRoot, file.destination), target);
+      }
+      // Reconstruct the pinned upstream input; exercise the real transformations again below.
+      execFileSync("git", ["apply", "--reverse", "-"], {
+        cwd: scratch, input: readFileSync(join(repositoryRoot, "upstream/patches/impeccable-plugin.patch")),
+      });
+      upstreamFiles = new Map(entries.map(file => {
+        const bytes = readFileSync(join(scratch, file.destination));
+        assert.equal(sha256Bytes(bytes), file.sourceSha256, file.source);
+        return [file.source, bytes];
+      }));
+      upstreamFiles.set("LICENSE", readFileSync(join(repositoryRoot, "upstream/LICENSE")));
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }
+  const files = new Map(upstreamFiles);
+  const skill = ".cursor/skills/impeccable/SKILL.md";
+  files.set(skill, files.get(skill).toString("utf8")
+    .replace(/^version:.*$/m, `version: ${version}`)
+    .replace("Final quality pass before shipping", "Fixture polish"));
+  files.set(".cursor/skills/impeccable/reference/plain.md", "No transformation is required.\n");
+  files.set(".cursor/skills/impeccable/assets/binary.bin", Buffer.from([0x00, 0x7f, 0x80, 0xff]));
+  return files;
 }
 
 function createTaggedSource(root, version = "4.0.5") {
@@ -261,21 +229,13 @@ function writeArchive(path, files, extra = []) {
   writeFileSync(path, storedZip([...archiveEntries, ...extra]));
 }
 
-function moduleDocument(id, version, source = null) {
-  return {
-    $schema: "./module.schema.json",
-    schemaVersion: 1,
-    id,
-    version,
-    ...(source ? { source } : { source: { type: "first-party", url: "https://github.com/geldmacher/design" } }),
-    license: id === "impeccable" ? "Apache-2.0" : "MIT",
-    capabilities: [{ id: `${id}-fixture`, title: `${id} fixture`, skill: id === "impeccable" ? "impeccable" : "design", fallback: id === "impeccable", triggers: id === "impeccable" ? [] : [id] }],
-    contributes: { skills: [], agents: [], rules: [], hooks: [], scripts: [], mcpServers: [] },
-  };
-}
-
 function createRepositoryFixture(base) {
   const root = join(base, "repository");
+  for (const name of repositoryFiles) {
+    const target = join(root, name);
+    mkdirSync(dirname(target), { recursive: true });
+    cpSync(join(repositoryRoot, name), target);
+  }
   const approved = pin();
   write(join(root, "upstream", "impeccable.pin.json"), `${JSON.stringify(approved, null, 2)}\n`);
   write(join(root, "upstream", "impeccable.lock.json"), "{\"fixture\":true}\n");
@@ -283,8 +243,10 @@ function createRepositoryFixture(base) {
   write(join(root, "upstream", "LICENSE"), "old license\n");
   write(join(root, "upstream", "patches", "impeccable-plugin.patch"), "old patch\n");
   write(join(root, "THIRD_PARTY_NOTICES.md"), "- Source: https://github.com/pbakaus/impeccable\n- Pinned release: `skill-v4.0.4`\n");
-  write(join(root, "modules", "impeccable.json"), `${JSON.stringify(moduleDocument("impeccable", approved.version, { type: "vendored", url: approved.repository, tag: approved.tag, commit: approved.commit, archiveSha256: approved.archive.sha256 }), null, 2)}\n`);
-  write(join(root, "modules", "design-core.json"), `${JSON.stringify(moduleDocument("design-core", "0.4.0"), null, 2)}\n`);
+  const module = JSON.parse(readFileSync(join(root, "modules/impeccable.json"), "utf8"));
+  module.version = approved.version;
+  Object.assign(module.source, { tag: approved.tag, commit: approved.commit, archiveSha256: approved.archive.sha256 });
+  write(join(root, "modules/impeccable.json"), JSON.stringify(module));
   write(join(root, "skills", "design", "references", "capabilities.md"), "old capabilities\n");
   write(join(root, "docs", "commands.md"), "old command reference\n");
   write(join(root, "skills", "impeccable", "old.txt"), "old skill\n");
@@ -338,7 +300,7 @@ test("offline sync rejects invalid command data before preview or apply can chan
   for (const [invalid, error] of [
     [skill.replace("| Category |", "| Kind |"), /unknown Commands table format/],
     [skill.replace("`polish [target]`", "`unknown [target]`"), /missing or invalid metadata/],
-    [skill.replace("(reference/plain.md)", "(reference/missing.md)"), /missing or unsupported reference/],
+    [skill.replace("(reference/polish.md)", "(reference/missing.md)"), /missing or unsupported reference/],
   ]) {
     write(join(f.repository, "overlays/skills/impeccable/SKILL.md"), invalid);
     const before = hashPath(f.repository);
@@ -352,6 +314,17 @@ test("offline sync rejects invalid command data before preview or apply can chan
 test("pin validation and projections fail closed on drift", () => {
   const valid = validatePin(pin());
   assert.equal(valid.tag, "skill-v4.0.4");
+  assert.throws(() => validatePin({ ...pin(), schemaVersion: 1 }), /schemaVersion must be 2/);
+  const { engine, ...withoutEngine } = pin();
+  assert.throws(() => validatePin(withoutEngine), /keys differ/);
+  const legacy = { ...withoutEngine, schemaVersion: 1 };
+  assert.throws(() => validatePin(legacy), /schemaVersion must be 2/);
+  const ajv = new Ajv({ allErrors: true });
+  addFormats(ajv);
+  const schema = ajv.compile(JSON.parse(readFileSync(join(repositoryRoot, "upstream/impeccable.pin.schema.json"), "utf8")));
+  assert.equal(schema(pin()), true, JSON.stringify(schema.errors));
+  assert.equal(schema(legacy), false);
+  assert.equal(schema(withoutEngine), false);
   assert.throws(() => validatePin({ ...pin(), tag: "skill-v4.0.5" }), /tag must equal/);
   assert.throws(() => validatePin({ ...pin(), unexpected: true }), /keys differ/);
   const root = mkdtempSync(join(tmpdir(), "impeccable-pin-"));
@@ -458,7 +431,7 @@ test("candidate identity detects drift and transactional apply restores exact fi
   write(join(fixture.repository, ".gitignore"), "skills/impeccable/ignored.txt\n");
   write(join(fixture.repository, "skills/impeccable/ignored.txt"), "ignored local work\n");
   const initialIndex = readFileSync(join(fixture.repository, ".git/index"));
-  const prepared = createCandidateFromInputs({ root: fixture.repository, source: fixture.source, archive: fixture.archive, pin: fixture.candidatePin, createdAt: fixedTime });
+  const prepared = createCandidateFromInputs({ root: fixture.repository, source: fixture.source, archive: fixture.archive, pin: fixture.candidatePin, engineDirectory: repositoryRoot, createdAt: fixedTime });
   assert.match(prepared.candidateId, /^iu-[0-9a-f]{16}$/);
   assert.equal(prepared.path, join(fixture.repository, ".build", "impeccable-candidates", prepared.candidateId));
   const manifest = JSON.parse(readFileSync(join(prepared.path, "candidate.json"), "utf8"));
@@ -493,6 +466,13 @@ test("candidate identity detects drift and transactional apply restores exact fi
   writeFileSync(projectionNotice, projectedBytes);
 
   const before = Object.fromEntries(candidateDestinations.map((destination) => [destination, hashPath(join(fixture.repository, destination))]));
+  const integration = join(fixture.repository, "src/impeccable-runtime.mjs");
+  const integrationBytes = readFileSync(integration);
+  rmSync(integration);
+  assert.throws(() => applyCandidate({ root: fixture.repository, candidateId: prepared.candidateId }), /entrypoint failed|Cannot find module/);
+  for (const destination of candidateDestinations) assert.equal(hashPath(join(fixture.repository, destination)), before[destination], `readiness failure changed ${destination}`);
+  writeFileSync(integration, integrationBytes);
+
   assert.throws(() => applyCandidate({ root: fixture.repository, candidateId: prepared.candidateId, failAfter: 2 }), /Injected candidate apply failure/);
   for (const destination of candidateDestinations) assert.equal(hashPath(join(fixture.repository, destination)), before[destination], `rollback drifted ${destination}`);
 
@@ -505,6 +485,24 @@ test("candidate identity detects drift and transactional apply restores exact fi
   assert.deepEqual(readFileSync(backupLocal), Buffer.from([0, 255, 42]));
   assert.equal(readFileSync(join(prepared.path, "before/skills/impeccable/old.txt"), "utf8"), "unstaged update work\n");
   assert.equal(readFileSync(join(prepared.path, "before/skills/impeccable/ignored.txt"), "utf8"), "ignored local work\n");
+});
+
+test("native candidate preparation rejects missing and corrupt pinned engine inputs", (t) => {
+  const f = candidateFixture(t);
+  const options = { root: f.repository, source: f.source, archive: f.archive, pin: f.candidatePin, engineDirectory: f.repository };
+  const engine = join(f.repository, engineRelativePath(enginePlatforms[0]));
+  const bytes = readFileSync(engine);
+  const before = Object.fromEntries(candidateDestinations.map(path => [path, hashPath(join(f.repository, path))]));
+  try {
+    rmSync(engine);
+    assert.throws(() => createCandidateFromInputs(options), /ENOENT/);
+    writeFileSync(engine, "corrupt native engine");
+    assert.throws(() => createCandidateFromInputs(options), /size|SHA-256|hash/i);
+  } finally {
+    cpSync(join(repositoryRoot, engineRelativePath(enginePlatforms[0])), engine);
+  }
+  assert.deepEqual(readFileSync(engine), bytes);
+  for (const path of candidateDestinations) assert.equal(hashPath(join(f.repository, path)), before[path]);
 });
 
 test("annotated tag identity mismatch aborts candidate preparation", (t) => {

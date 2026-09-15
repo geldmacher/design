@@ -89,11 +89,12 @@ export function runDesignCli(argv = process.argv.slice(2), options = {}) {
   const host = resolveHost(explicitHost);
   const lifecycleOptions = { pluginRoot, host };
   if (command === 'status') return output(inspectProject(projectRoot, lifecycleOptions));
-  if (command === 'doctor') throw new Error('Design CLI doctor was renamed to diagnose. Use the Impeccable skill for its doctor operation.');
+  if (command === 'doctor') throw new Error('Use diagnose for Design integration diagnostics. Invoke doctor through the Impeccable skill.');
   if (command === 'diagnose') {
-    const report = diagnoseProject(projectRoot, lifecycleOptions);
-    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered.' };
-    return output(report);
+    if ([...flags].some(flag => flag !== '--json') || action !== undefined || extraPositionals.length || hasSeparator) {
+      throw new Error('diagnose is read-only. Usage: diagnose [--host <host>] [--json].');
+    }
+    return output(diagnoseProject(projectRoot, lifecycleOptions));
   }
   if (command === 'setup') {
     return output(setupProject(projectRoot, { ...lifecycleOptions, apply: flags.has('--apply'), enableHook: !flags.has('--without-hook') }));

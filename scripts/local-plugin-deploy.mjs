@@ -17,7 +17,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -811,8 +811,12 @@ async function main() {
   if (cursorManifest.version !== packageManifest.version || codexManifest.version !== packageManifest.version) {
     throw new Error("repository manifests must keep the regular package product version");
   }
-  npmScript("deploy:prepare", repositoryRoot);
-  if (full) npmScript("release-check", repositoryRoot);
+  if (full) {
+    npmScript("deploy:build", repositoryRoot);
+    npmScript("release-check", repositoryRoot);
+  } else {
+    npmScript("deploy:prepare", repositoryRoot);
+  }
   const git = repositoryState(repositoryRoot);
   const result = deployPreparedTargets({
     root: repositoryRoot,

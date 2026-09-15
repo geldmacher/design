@@ -33,7 +33,7 @@ export function renderCapabilityIndex(modules) {
   for (const capability of capabilities.filter(capability => !capability.fallback)) {
     for (const command of capability.triggers) lines.push(`| \`${command}\` | ${capability.module}:${capability.id} - ${capability.title} | ${capability.skill} |`);
   }
-  lines.push('', `For every other request, including a leading \`doctor\`, load the bundled ${fallback[0].skill} skill with the request unchanged (${fallback[0].module}:${fallback[0].id}).`, '', 'A request explicitly addressed to Impeccable bypasses Design. Do not combine capabilities or invent additional routing rules.', '');
+  lines.push('', `For every other request, including a leading \`doctor\`, load the bundled ${fallback[0].skill} skill with the request unchanged (${fallback[0].module}:${fallback[0].id}).`, '', 'Follow the selected capability. A request explicitly addressed to Impeccable bypasses Design.', '');
   return lines.join('\n');
 }
 

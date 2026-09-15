@@ -12,17 +12,15 @@
     "tag",
     "tagObject",
     "commit",
-    "archive"
+    "archive",
+    "engine"
   ],
   "properties": {
     "$schema": {
       "const": "./impeccable.pin.schema.json"
     },
     "schemaVersion": {
-      "enum": [
-        1,
-        2
-      ]
+      "const": 2
     },
     "name": {
       "const": "Impeccable"
@@ -255,28 +253,5 @@
         }
       }
     }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "schemaVersion": {
-            "const": 2
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "engine"
-        ]
-      },
-      "else": {
-        "not": {
-          "required": [
-            "engine"
-          ]
-        }
-      }
-    }
-  ]
+  }
 }

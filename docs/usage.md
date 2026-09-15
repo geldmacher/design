@@ -28,9 +28,9 @@ $design questionnaire checkout approval
 $design polish this checkout flow without changing its information architecture
 ```
 
-Design chooses the most specific bundled capability for the request and falls back to Impeccable for general design work.
+Design selects a bundled capability from the leading command; all other requests go to Impeccable.
 
-`design diagnose` is the read-only Design integration diagnosis. `design doctor` forwards to Impeccable's project-context diagnosis, just like direct `impeccable doctor`. Use the appropriate host prefix for both. The old integration `doctor` alias is removed, including in the Design CLI; update scripts that call it to `diagnose`. Lifecycle commands match only at the start of the request, so words such as "setup" inside a design task do not select integration work.
+`design diagnose` reads Design integration status and reports conflicts. It is read-only; its CLI accepts host selection and `--json` and returns exit 0 on success. `design doctor` forwards to Impeccable's project-context diagnosis, just like direct `impeccable doctor`. Use the appropriate host prefix for both. Lifecycle commands match only at the start of the request, so words such as "setup" inside a design task do not select integration work.
 
 `design detect` is a read-only scan of one or more explicitly named local files or directories. It always uses the bundled Impeccable detector, works independently of hook activation, and returns a structured result without installing, updating, or fixing anything. A no-findings result means only that the detector returned no findings; it is not a complete interface-quality verdict.
 

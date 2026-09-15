@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { enginePlatforms, engineRelativePath, resolveEngine, validateEngine } from '../src/impeccable-engine.mjs';
+import { enginePlatforms, resolveEngine, validateEngine } from '../src/impeccable-engine.mjs';
 import { runBundledImpeccable, impeccableRuntimeEnvironment } from '../src/impeccable-runtime.mjs';
 import { projectEngineOutput } from '../src/impeccable-plugin-commands.mjs';
 import { evaluatePluginHook } from '../hooks/impeccable-plugin-hook.mjs';

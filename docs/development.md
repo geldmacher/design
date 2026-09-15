@@ -59,7 +59,7 @@ Choose one host or deploy both:
 | Codex only | `npm run deploy:local -- --dry-run --codex-only` | `npm run deploy:local -- --codex-only` |
 | Cursor and Codex | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
 
-Append `--full` to an install command to run the complete repository `release-check` before deployment. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
+`deploy:build` materializes the packages. The normal deploy uses `deploy:prepare` for its targeted checks; append `--full` to select the shared build followed by one complete `release-check`, without repeating the targeted suites. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
 
 The deploy command builds and validates all three packages, but deploys only the native bundles under `.build/plugins/{cursor,codex}/geldmacher-design`. It then atomically replaces only the selected physical host copies:
 

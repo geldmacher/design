@@ -49,7 +49,7 @@ Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> status --js
 
 ### Diagnose
 
-Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> diagnose --json` after replacing both placeholders. Diagnose only. Do not repair anything unless the user separately asks for an apply action.
+Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> diagnose --json` after replacing both placeholders. Read Design integration status and report conflicts. This command is read-only.
 
 ### Detect
 

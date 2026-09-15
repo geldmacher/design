@@ -28,10 +28,11 @@ function assertExactKeys(value, expected, label) {
 }
 
 export function validatePin(pin) {
-  assertExactKeys(pin, ["$schema", "schemaVersion", "name", "version", "repository", "tag", "tagObject", "commit", "archive", ...(pin.schemaVersion === 2 ? ["engine"] : [])], "Impeccable pin");
+  assertObject(pin, "Impeccable pin");
+  if (pin.schemaVersion !== 2) throw new Error("Impeccable pin schemaVersion must be 2.");
+  assertExactKeys(pin, ["$schema", "schemaVersion", "name", "version", "repository", "tag", "tagObject", "commit", "archive", "engine"], "Impeccable pin");
   if (pin.$schema !== "./impeccable.pin.schema.json") throw new Error("Impeccable pin schema reference is invalid.");
-  if (![1, 2].includes(pin.schemaVersion)) throw new Error("Impeccable pin schemaVersion must be 1 or 2.");
-  if (pin.schemaVersion === 2) validateEngine(pin.engine);
+  validateEngine(pin.engine);
   if (pin.name !== "Impeccable") throw new Error("Impeccable pin name is invalid.");
   if (!versionPattern.test(pin.version)) throw new Error("Impeccable pin version must be a stable numeric semantic version.");
   if (pin.repository !== "https://github.com/pbakaus/impeccable") throw new Error("Impeccable pin repository is invalid.");

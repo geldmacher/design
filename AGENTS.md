@@ -13,6 +13,7 @@ Design helps people ship websites and web apps that feel intentional. Act as a f
 ## Architecture
 
 - Keep a shared, host-neutral core behind thin host-native adapters.
+- Route changes to the same effective configuration through shared reading, preview, and writing logic. Preserve override precedence and unrelated settings; report the effective state read back after writes.
 - Keep the Agent Plugins v1 package as the portable skills-only floor; do not emulate hooks, native agents, distribution, or activation.
 - Cursor enters through `/design`, resolves plugin files from `${CURSOR_PLUGIN_ROOT}`, and may enforce known UI issues before a write.
 - Codex enters through `$design`, resolves plugin files from `${PLUGIN_ROOT}`, and reports issues after a change or at Stop. It does not pretend to roll back completed edits.
@@ -28,6 +29,7 @@ Impeccable is pinned vendored upstream. Update it only through the maintainer sy
 - Preserve human control. Work repository-only unless the user separately authorizes installation, live-host actions, commits, pushes, pull requests, deployment, or publication.
 - Keep evidence precise: repository gates, local installation, fresh Cursor or Codex runtime smoke, and Marketplace publication are separate states.
 - Runtime changes require both host contracts, repository gates, and fresh host evidence before making a runtime-support claim.
+- Anchor behavior checks to entrypoints actually used by skills, CLIs, and adapters, and assert observable output and state. Fixtures for current runtime acceptance must exercise its required validation branches rather than bypass them through retired formats.
 - Infrastructure diagnostics fail open for product edits, but remain visible. Never turn missing evidence into a positive result.
 - Preserve unrelated working-tree changes and keep edits within the user's approved scope.
 

@@ -180,14 +180,11 @@ export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
       message: `Hook config is malformed and therefore treated as disabled: ${state.hook.error}`,
     });
   }
-  const nodeAvailable = options.nodeAvailable ?? !!process.versions?.node;
   const nodeMajor = Number.parseInt(options.nodeVersion || process.versions?.node || '0', 10);
-  if (!nodeAvailable) {
-    findings.push({ id: 'node-missing', severity: 'diagnostic', message: 'Node is unavailable; the hook cannot run and must not block edits.' });
-  } else if (nodeMajor < 22) {
+  if (nodeMajor < 22) {
     findings.push({ id: 'node-baseline', severity: 'diagnostic', message: `Node ${nodeMajor} is below the supported baseline 22.` });
   }
-  return { ...state, findings, repairable: [] };
+  return { ...state, findings };
 }
 
 export function setupProject(projectRoot = process.cwd(), options = {}) {

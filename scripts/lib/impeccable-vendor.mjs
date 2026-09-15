@@ -604,24 +604,22 @@ export function createCandidateFromInputs({ root = pluginRoot, source, gitSource
     const vendor = buildVendorProjection({ source, gitSource, requireHead, pin, workspace: vendorWorkspace });
     const projection = join(workspace, "projection");
     projectionOutputs(root, projection, pin, vendor);
-    if (pin.schemaVersion === 2) {
-      if (!engineDirectory) throw new Error("Engine inputs are required for a native candidate.");
-      for (const platform of enginePlatforms) {
-        const relative = engineRelativePath(platform);
-        copyPath(join(engineDirectory, relative), join(projection, relative));
-        const [os, arch] = platform.split("-");
-        resolveEngine(projection, { platform: os === "windows" ? "win32" : os, arch });
-      }
-      for (const platform of enginePlatforms) {
-        const asset = pin.engine.assets[platform];
-        vendor.lock.import.files.push({ source: asset.url, destination: engineRelativePath(platform), sourceSha256: asset.sha256, vendoredSha256: asset.sha256, transformations: [] });
-      }
-      vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
-      writeJson(join(projection, "upstream/impeccable.lock.json"), vendor.lock);
-      const declaredVersion = readFileSync(join(projection, "skills/impeccable/scripts/VERSION"), "utf8").trim();
-      assertEqual(declaredVersion, pin.engine.version, "Skill engine VERSION");
-      verifyCandidateRuntime(root, projection, candidateDestinations);
+    if (!engineDirectory) throw new Error("Engine inputs are required for a native candidate.");
+    for (const platform of enginePlatforms) {
+      const relative = engineRelativePath(platform);
+      copyPath(join(engineDirectory, relative), join(projection, relative));
+      const [os, arch] = platform.split("-");
+      resolveEngine(projection, { platform: os === "windows" ? "win32" : os, arch });
     }
+    for (const platform of enginePlatforms) {
+      const asset = pin.engine.assets[platform];
+      vendor.lock.import.files.push({ source: asset.url, destination: engineRelativePath(platform), sourceSha256: asset.sha256, vendoredSha256: asset.sha256, transformations: [] });
+    }
+    vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
+    writeJson(join(projection, "upstream/impeccable.lock.json"), vendor.lock);
+    const declaredVersion = readFileSync(join(projection, "skills/impeccable/scripts/VERSION"), "utf8").trim();
+    assertEqual(declaredVersion, pin.engine.version, "Skill engine VERSION");
+    verifyCandidateRuntime(root, projection, candidateDestinations);
     const baseline = Object.fromEntries(candidateDestinations.map((destination) => [destination, hashPath(join(root, destination))]));
     const outputs = Object.fromEntries(candidateDestinations.map((destination) => [destination, {
       type: statSync(join(projection, destination)).isDirectory() ? "directory" : "file",
@@ -685,7 +683,8 @@ export function applyCandidate({ root = pluginRoot, candidateId, failAfter = Num
     if (hashPath(join(directory, "before", destination)) !== manifest.identity.baseline[destination]) throw new Error(`Candidate backup drift: ${destination}`);
   }
 
-  if (readPin(projection).schemaVersion === 2) verifyCandidateRuntime(root, projection, candidateDestinations);
+  readPin(projection);
+  verifyCandidateRuntime(root, projection, candidateDestinations);
   const transaction = mkdtempSync(join(directory, ".apply-"));
   const backup = join(transaction, "backup");
   const staged = join(transaction, "staged");
@@ -730,16 +729,14 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
   const workspace = mkdtempSync(join(tmpdir(), "geldmacher-design-sync-"));
   try {
     const vendor = buildVendorProjection({ source, pin, workspace });
-    if (pin.schemaVersion === 2) {
-      for (const platform of enginePlatforms) {
-        const [os, arch] = platform.split("-");
-        const engine = resolveEngine(root, { platform: os === "windows" ? "win32" : os, arch });
-        copyPath(engine.file, join(vendor.transformedDir, engineRelativePath(platform).slice("skills/impeccable/".length)));
-        const asset = pin.engine.assets[platform];
-        vendor.lock.import.files.push({ source: asset.url, destination: engineRelativePath(platform), sourceSha256: asset.sha256, vendoredSha256: asset.sha256, transformations: [] });
-      }
-      vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
+    for (const platform of enginePlatforms) {
+      const [os, arch] = platform.split("-");
+      const engine = resolveEngine(root, { platform: os === "windows" ? "win32" : os, arch });
+      copyPath(engine.file, join(vendor.transformedDir, engineRelativePath(platform).slice("skills/impeccable/".length)));
+      const asset = pin.engine.assets[platform];
+      vendor.lock.import.files.push({ source: asset.url, destination: engineRelativePath(platform), sourceSha256: asset.sha256, vendoredSha256: asset.sha256, transformations: [] });
     }
+    vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
     const overlay = join(root, "overlays", "skills", "impeccable");
     if (existsSync(overlay)) cpSync(overlay, vendor.transformedDir, { recursive: true });
     const commandReference = renderCommandReference({ skillRoot: vendor.transformedDir, version: pin.version });

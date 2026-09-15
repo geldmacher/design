@@ -1,6 +1,6 @@
 # Impeccable maintenance
 
-`upstream/impeccable.pin.json` is the single approved source of truth for the bundled Impeccable version and provenance. Schema 2 records the repository, stable skill tag, annotated tag object, peeled commit, canonical release archive URL, archive SHA-256, and the engine release identity with all five asset URLs, IDs, sizes and SHA-256 hashes. The engine version comes from the selected skill release, never from an independent latest-engine lookup. Repository validation checks the module, lock, notices, generated capability index, and packaged target notices against that pin.
+`upstream/impeccable.pin.json` is the single approved source of truth for the bundled Impeccable version and provenance. Only schema 2 is accepted; older pins without engine provenance are rejected. Schema 2 records the repository, stable skill tag, annotated tag object, peeled commit, canonical release archive URL, archive SHA-256, and the engine release identity with all five asset URLs, IDs, sizes and SHA-256 hashes. The engine version comes from the selected skill release, never from an independent latest-engine lookup. Repository validation checks the module, lock, notices, generated capability index, and packaged target notices against that pin.
 
 Normal plugin execution, target builds, `npm run release-check`, and `npm run sync:impeccable` remain offline. Runtime self-update checks are disabled. None of these paths polls GitHub, downloads content, or changes an approved pin.
 
@@ -74,7 +74,7 @@ The legacy offline source/archive workflow remains available:
 npm run sync:impeccable -- --source /absolute/path/to/tag-checkout --archive /absolute/path/to/universal.zip
 ```
 
-It reads the approved pin and previews by default. For native releases it verifies and reuses the five already pinned local engine files; it never downloads replacement binaries. `--apply --replace` preserves the existing explicit replacement interface.
+It reads the approved pin and previews by default. It verifies and reuses the five already pinned local engine files; it never downloads replacement binaries. `--apply --replace` preserves the existing explicit replacement interface.
 
 ## Weekly issue monitor
 

@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import {
   chmodSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -28,6 +32,69 @@ import {
 const plugin = "geldmacher-test";
 const baseVersion = "1.2.3";
 const gitHead = "0123456789abcdef0123456789abcdef01234567";
+
+for (const full of [false, true]) {
+  for (const failure of [null, ...(full ? ['deploy:build', 'release-check'] : ['deploy:prepare'])]) {
+    test(`deploy CLI selects ${full ? 'full' : 'targeted'} checks; failure=${failure}`, (t) => {
+      const item = fixture();
+      t.after(() => rmSync(item.root, { recursive: true, force: true }));
+      const scripts = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).scripts;
+      json(join(item.repository, 'package.json'), { name: plugin, version: baseVersion, type: 'module', scripts });
+      for (const host of ['cursor', 'codex']) json(join(item.repository, `.${host}-plugin/plugin.json`), { name: plugin, version: baseVersion });
+      const cli = join(item.repository, 'scripts/local-plugin-deploy.mjs');
+      mkdirSync(join(item.repository, 'scripts'));
+      cpSync(new URL('../scripts/local-plugin-deploy.mjs', import.meta.url), cli);
+      const callsPath = join(item.root, 'process-calls.jsonl');
+      const preload = join(item.root, 'process-boundary.mjs');
+      // Substitute expensive npm checks at the process boundary; run the real CLI and filesystem deployment.
+      writeFileSync(preload, `
+        import cp from 'node:child_process';
+        import { appendFileSync } from 'node:fs';
+        import { syncBuiltinESMExports } from 'node:module';
+        const original = cp.spawnSync;
+        cp.spawnSync = (command, args, options) => {
+          if (command !== 'npm') return original(command, args, options);
+          appendFileSync(process.env.DEPLOY_TEST_CALLS, JSON.stringify(args) + '\\n');
+          if (args[0] !== 'run') throw new Error('unexpected npm invocation');
+          return { status: args[1] === process.env.DEPLOY_TEST_FAILURE ? 1 : 0, stdout: '', stderr: '' };
+        };
+        syncBuiltinESMExports();
+      `);
+      for (const args of [['init', '--quiet'], ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '--allow-empty', '-m', 'fixture']]) {
+        const git = spawnSync('git', args, { cwd: item.repository, encoding: 'utf8' });
+        assert.equal(git.status, 0, git.stderr);
+      }
+      const marketplaceBefore = readFileSync(item.marketplace);
+      const result = spawnSync(process.execPath, ['--import', pathToFileURL(preload).href, realpathSync(cli), 'deploy', '--cursor-only', ...(full ? ['--full'] : [])], {
+        cwd: item.root,
+        env: { ...fixtureEnv(item), DEPLOY_TEST_CALLS: callsPath, DEPLOY_TEST_FAILURE: failure || '' },
+        encoding: 'utf8', timeout: 30000,
+      });
+      assert.equal(result.error, undefined);
+      assert.ok(existsSync(callsPath), `CLI did not reach its checks: status=${result.status}; ${result.stderr}`);
+      const calls = readFileSync(callsPath, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+      const expected = full ? (failure === 'deploy:build' ? ['deploy:build'] : ['deploy:build', 'release-check']) : ['deploy:prepare'];
+      assert.deepEqual(calls, expected.map(name => ['run', name]));
+      const destination = deploymentPaths(item.home, plugin).cursor;
+      if (failure) {
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /failed \(1\)/);
+        assert.equal(result.stdout, '');
+        assert.equal(existsSync(destination), false);
+      } else {
+        assert.equal(result.status, 0, result.stderr);
+        const report = JSON.parse(result.stdout);
+        assert.deepEqual(report.selected_hosts, ['cursor']);
+        assert.equal(readFileSync(join(destination, 'payload.txt'), 'utf8'), 'first\n');
+        assert.equal(JSON.parse(readFileSync(join(destination, '.local-deploy.json'))).content_sha256, report.targets.cursor.content_sha256);
+      }
+      assert.deepEqual(readFileSync(item.marketplace), marketplaceBefore);
+      assert.equal(existsSync(deploymentPaths(item.home, plugin).codex), false);
+      assert.equal(readFileSync(item.sentinel, 'utf8'), 'unchanged\n');
+      assert.deepEqual(deploymentTemporaryArtifacts(item.home), []);
+    });
+  }
+}
 
 function json(path, value) {
   mkdirSync(join(path, ".."), { recursive: true });

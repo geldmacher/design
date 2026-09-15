@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { hashPath } from "../scripts/lib/impeccable-vendor.mjs";
 import {
   buildPluginTargets,
   createTargetBuildWorkspace,
@@ -137,11 +137,26 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
     assert.equal(status.hook.mode, host === "agent-plugin" ? "none" : host === "cursor" ? "pre-write" : "post-write-stop");
     const preview = runJson(cli, ["--host", host, "setup", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
     assert.equal(preview.applied, false);
+    const beforeDiagnosis = hashPath(project);
     const diagnosis = runJson(cli, ["--host", host, "diagnose", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
     assert.equal(diagnosis.upstream.skillVersion, impeccableModule.version);
-    const obsolete = run(cli, ['--host', host, 'doctor', '--json'], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
-    assert.equal(obsolete.status, 1);
-    assert.match(obsolete.stderr, /renamed to diagnose/);
+    assert.ok(Array.isArray(diagnosis.findings));
+    assert.equal(Object.hasOwn(diagnosis, 'repairable'), false);
+    assert.equal(Object.hasOwn(diagnosis, 'apply'), false);
+    for (const args of [['--apply'], ['--unsupported'], ['extra'], [''], ['--', 'extra'], ['--']]) {
+      const invalid = run(cli, ['--host', host, 'diagnose', ...args], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
+      assert.equal(invalid.status, 1, invalid.stderr);
+      assert.equal(invalid.stdout, '');
+      assert.match(invalid.stderr, /diagnose is read-only/);
+      assert.match(invalid.stderr, /Usage: diagnose \[--host <host>\] \[--json\]/);
+    }
+    assert.equal(hashPath(project), beforeDiagnosis, 'diagnose changed the project');
+    const directDoctor = run(cli, ['--host', host, 'doctor', '--json'], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
+    assert.equal(directDoctor.status, 1);
+    assert.equal(directDoctor.stdout, '');
+    assert.match(directDoctor.stderr, /Use diagnose for Design integration diagnostics/);
+    assert.match(directDoctor.stderr, /Invoke doctor through the Impeccable skill/);
+    assert.equal(hashPath(project), beforeDiagnosis, 'direct doctor changed the project');
   }
 
   const cursorHook = run(

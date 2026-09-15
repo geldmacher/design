@@ -12,7 +12,7 @@ Each module declares:
 - capabilities with skill owner, leading command triggers, and fallback status;
 - every contributed skill, agent, rule, hook, script, or MCP configuration.
 
-The generated `skills/design/references/capabilities.md` is the skill's only routing index. It recognizes `setup`, `status`, `diagnose`, `detect`, `review`, and `questionnaire` only at the beginning, followed by whitespace or the end of the request. Every other request, including `doctor`, goes unchanged to Impeccable. There is no scoring, competition, or capability composition.
+The generated `skills/design/references/capabilities.md` is the skill's only routing index. It recognizes `setup`, `status`, `diagnose`, `detect`, `review`, and `questionnaire` only at the beginning, followed by whitespace or the end of the request. Every other request, including `doctor`, goes unchanged to Impeccable.
 
 `src/registry.mjs` loads module metadata for status and index generation. The schema is development-only; packaged module files omit `$schema` references.
 
@@ -29,11 +29,11 @@ Build projection narrows contributions per target. Cursor and Codex retain their
 
 ## First-party change review
 
-`design-core:change-interface-review` is a first-party capability inside the existing `design` skill, not a third skill or vendored module. It owns Git scope resolution, change classification, finding caps, and the task-local report. Impeccable remains the fallback and supplies canonical context, design principles, detector evidence, and the separately approved refinement flow.
+`design-core:change-interface-review` is a first-party capability inside the existing `design` skill. It owns Git scope resolution, change classification, finding caps, and the task-local report. Impeccable remains the fallback and supplies canonical context, design principles, detector evidence, and the separately approved refinement flow.
 
 ## First-party stakeholder questionnaire
 
-`design-core:stakeholder-questionnaire` is a first-party capability inside the existing `design` skill, not a third skill or vendored module. It owns only a leading `questionnaire` intent, reads the canonical Design context without changing it, previews the complete Markdown, and requires an exact post-preview `.md` destination before writing at most one file. It sends nothing and does not import or analyze completed answers.
+`design-core:stakeholder-questionnaire` is a first-party capability inside the existing `design` skill. It owns only a leading `questionnaire` intent, reads the canonical Design context without changing it, previews the complete Markdown, and requires an exact post-preview `.md` destination before writing at most one file. It sends nothing and does not import or analyze completed answers.
 
 ## First-party detector orchestration
 

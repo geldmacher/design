@@ -72,7 +72,8 @@ test('review contract fixes modes, caps, classifications, and verdicts', () => {
 });
 
 test('review remains task-local, read-only, and hands approved work to Design', () => {
-  assert.match(review, /Do not invoke `critique-storage\.mjs`/);
+  assert.match(review, /Keep the review read-only/);
+  assert.match(review, /Do not write `\.impeccable\/critique\/` or load the persistent Impeccable critique playbook/);
   assert.match(review, /The review report lives only in the current task/);
   assert.match(review, /Do not edit after the report/);
   assert.match(review, /Wait for a separate user instruction/);

@@ -25,7 +25,7 @@
 - [ ] Codex deployment fixtures mutate registry and versioned caches, restore prior or absent installation state after failure, and aggregate incomplete rollback errors.
 - [ ] `upstream/impeccable.lock.json` inventories every vendored skill/agent file and all hashes match.
 - [ ] `upstream/impeccable.pin.json` validates and matches the lock, module, notices, generated capability index, and packaged target provenance.
-- [ ] Impeccable maintenance fixture tests cover honest release states, archive/tag equivalence, candidate drift and rollback, and marked issue reconciliation without network or tracked-file mutation.
+- [ ] Impeccable maintenance fixture tests cover honest release states, archive/tag equivalence, native candidate readiness, schema-1 rejection, drift and rollback, and marked issue reconciliation without network or tracked-file mutation.
 - [ ] The generated transformation patch contains only the closed allowlist.
 - [ ] Root MIT and separate Impeccable Apache-2.0 license/NOTICE remain present.
 - [ ] Root `AGENTS.md` remains the single shared development instruction, is excluded from package content, and is not declared by either plugin manifest or a module.
@@ -36,13 +36,13 @@ The optional upstream check is not part of the offline gate. If explicitly run, 
 
 ## Cursor live gate
 
-Follow `docs/runtime-smoke.md` in a fresh Cursor window after reload. Record the date, Cursor version, project path, and observations in the unversioned `.tests/` workspace.
+Follow the [Cursor entry and shared journeys](runtime-smoke.md) in a fresh Cursor window after reload. Record the date, Cursor version, project path, and observations in the unversioned `.tests/` workspace.
 
 - [ ] Plugin discovery is visible.
 - [ ] `/design` and `/impeccable` are visible in a fresh conversation.
 - [ ] Plugin-relative scripts work from a foreign project cwd.
 - [ ] All four Impeccable agents resolve.
-- [ ] Strict project-local activation and deactivation behave as documented.
+- [ ] The shared configuration matrix passes: full preview, both opposite local overrides, explicit on/off, reread state, repetition and preserved foreign settings.
 - [ ] A clean UI write is allowed and the known detector fixture is denied.
 - [ ] No duplicate `.cursor/hooks.json` entry is created.
 - [ ] `/design review` defaults to task-local quick mode, preserves the checkout, and hands separately approved refinement to Impeccable through `/design`.
@@ -59,12 +59,12 @@ Until that separately authorized gate exists, report real Agent Plugins client d
 
 ## Codex live gate
 
-Follow `docs/codex-runtime-smoke.md` after a read-only helper preview and separately authorized local deployment. Record the date, Codex version, project path, plugin path, trust decisions, and observations in `.tests/`.
+Follow the [Codex entry and shared journeys](codex-runtime-smoke.md) after a read-only helper preview and separately authorized local deployment. Record the date, Codex version, project path, plugin path, trust decisions, and observations in `.tests/`.
 
 - [ ] `geldmacher-design@personal` is visible, installed, and enabled at the previewed content-addressed local version.
 - [ ] `$design status` and `$impeccable` resolve only after explicit invocation in a fresh task.
 - [ ] The detector is silent before project activation.
-- [ ] `$design setup` previews every changed config file and, after confirmation, updates the main config and an existing local `hook.enabled` override.
+- [ ] The shared configuration matrix passes: full preview, both opposite local overrides, explicit on/off, reread state, repetition and preserved foreign settings.
 - [ ] `Edit`, `Write`, and `apply_patch` produce valid PostToolUse behavior.
 - [ ] A bad UI edit remains written but produces correction context.
 - [ ] Stop reports deferred findings once and then deduplicates them.

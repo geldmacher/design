@@ -15,4 +15,4 @@ Match only the leading command of the request, case-insensitively, followed by w
 
 For every other request, including a leading `doctor`, load the bundled impeccable skill with the request unchanged (impeccable:general-web-design).
 
-A request explicitly addressed to Impeccable bypasses Design. Do not combine capabilities or invent additional routing rules.
+Follow the selected capability. A request explicitly addressed to Impeccable bypasses Design.

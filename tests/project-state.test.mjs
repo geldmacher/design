@@ -48,15 +48,15 @@ test('direct Impeccable installations and duplicate hooks are detected and not o
   assert.equal(fs.existsSync(path.join(root, '.impeccable')), false);
 });
 
-test('malformed config and missing Node produce honest non-blocking diagnostics', (t) => {
+test('malformed config and unsupported Node versions produce honest non-blocking diagnostics', (t) => {
   const root = project();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, '.impeccable'), { recursive: true });
   fs.writeFileSync(path.join(root, '.impeccable', 'config.json'), '{broken');
-  const report = diagnoseProject(root, { host: 'cursor', nodeAvailable: false });
+  const report = diagnoseProject(root, { host: 'cursor', nodeVersion: '20.0.0' });
   assert.equal(report.hook.enabled, false);
   assert.ok(report.findings.some((finding) => finding.id === 'malformed-impeccable-config'));
-  assert.ok(report.findings.some((finding) => finding.id === 'node-missing'));
+  assert.ok(report.findings.some((finding) => finding.id === 'node-baseline'));
   assert.equal(setupProject(root, { host: 'cursor', apply: true }).blocked, true);
 });
 

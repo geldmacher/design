@@ -1,91 +1,24 @@
 # Fresh Cursor runtime smoke
 
-This smoke is intentionally manual because repository validation cannot prove Cursor discovery, runtime skill injection, agent resolution, or host enforcement of a hook denial.
+Follow the [shared preparation and journeys](runtime-smoke-common.md), with the Cursor discovery and adapter checks below. This manual trial proves only the recorded Cursor behavior; it does not publish the plugin or establish untested host versions.
 
-## Prepare an isolated project
+## Discovery
 
-Create a disposable project beneath the ignored `.tests/` workspace, for example `.tests/runtime-project`, with one clean `src/Card.jsx`. Do not use a production repository.
+1. Reload the separately installed plugin, open only the disposable project and start a fresh conversation.
+2. Confirm Design discovery and visible `/design` and `/impeccable` invocations.
+3. Run `/design status` from the project rather than the plugin root. Compare identity and versions with the recorded package provenance; expect disabled hooks and the project context state.
+4. Resolve `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer` and `impeccable-manual-edit-applier`. Files alone do not prove agent discovery.
+5. Complete the shared detector, diagnosis, questionnaire, review and configuration journeys.
 
-Before the run, record:
+## Pre-write enforcement
 
-- date and Cursor version;
-- plugin path;
-- test project path;
-- `node --version`;
-- initial project file list and `.cursor/hooks.json` hash or absence.
+1. Complete the [activation handoff](runtime-smoke-common.md#activation-handoff-to-host-adapter-checks) in this adapter test project, including confirmed setup and an enabled status read-back. Then write a clean UI component. Cursor must allow it.
+2. Propose the [shared `side-tab` fixture](runtime-smoke-common.md#detector-and-native-engine) as a new HTML file. Cursor must deny the write before it lands.
+3. Edit `README.md`; it must be unaffected. Follow the shared handoff's deactivation step, verify disabled status in this same project, and confirm the UI fixture can be written.
+4. Repeat activation and deactivation. The original `.cursor/hooks.json` hash or absence must remain unchanged, without a second registration.
 
-## Discovery and foreign-cwd resolution
+## Host conflicts and infrastructure failures
 
-1. Reload Cursor and open only the disposable project.
-2. Start a fresh conversation.
-3. Confirm `Design` is discovered as a local plugin.
-4. Confirm `/design` and `/impeccable` are visible.
-5. Run `/design status`; confirm plugin `0.10.1`, the Impeccable version from `upstream/impeccable.pin.json`, disabled hook, and the project context state.
-6. Confirm the command succeeds while cwd is the disposable project rather than the plugin root.
-7. Resolve each agent: `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer`, and `impeccable-manual-edit-applier`. Do not infer agent discovery from files alone.
+In disposable copies, add `.cursor/skills/impeccable/SKILL.md`, then separately a legacy Impeccable command in `.cursor/hooks.json`. Status must report shadowing or a double-hook conflict; setup must not remove or overwrite those files.
 
-## Explicit detector scan
-
-Keep the hook disabled for this section and record the project file list before and after each command.
-
-1. Run `/design detect -- src/Card.jsx`; confirm status `no-findings`, exit `0`, plugin-bundled Impeccable provenance, and no project write. Treat the result only as no deterministic findings.
-2. Add the known `side-tab` fixture below, then run `/design detect -- <fixture>`; confirm status `findings`, exit `2`, primary count greater than zero, and a normalized `side-tab` finding. Confirm the file remains unchanged.
-3. Run `/design detect --` with no target, then try a URL and a path outside the disposable project. Confirm each returns one `blocked` JSON envelope with exit `1` and never invokes a remote or project-local detector.
-4. Confirm the scan never enables the hook, writes an ignore, or offers an automatic fix. Any `/impeccable polish <target>` text must be a separate optional next invocation only.
-
-## Stakeholder questionnaire
-
-Keep the hook disabled and record the project file list plus hashes of `PRODUCT.md`, `DESIGN.md`, relevant `.impeccable/` files, and host hook configuration before this section.
-
-1. Put the questionnaire topic, audience, decision need, and answer use across the invocation and canonical project context. Run `/design questionnaire checkout approval`; confirm known facts are not asked again and only missing required facts are requested in one compact round.
-2. Complete any missing facts. Confirm the full questionnaire appears as Markdown in the conversation, contains 5–10 prioritized atomic questions and no more than 12, covers every stated information need, and has written no file.
-3. After the preview, provide the exact new path `docs/checkout-questionnaire.md`. Confirm exactly one file is created, its bytes match the approved preview, and the recorded context and hook hashes are unchanged.
-4. Repeat with an already existing `.md` destination. Confirm Design reports the conflict or diff and does not overwrite it until a separate explicit overwrite confirmation is given.
-5. Confirm the flow sends nothing, imports no completed answers, and creates no second file.
-
-## Change review
-
-Use a disposable Git history with one committed UI change, one uncommitted UI file, and one changed lockfile.
-
-1. Run `/design review`. Confirm it defaults to `quick`, selects the branch plus uncommitted change, excludes and names the lockfile, caps actionable findings at five, and changes no file.
-2. In a clean branch with no commits ahead, run `/design review`. Confirm it names the current branch and last commit, offers an explicit target or `/design critique <surface>`, and does not review `HEAD~1..HEAD` automatically.
-3. Start a disposable preview, then run `/design review quick working`. Confirm it may reuse the preview but starts no server and creates no worktree.
-4. Stop the preview and run `/design review full branch`. Confirm it starts at most one documented safe preview, records verification, stops the process, and leaves the working tree unchanged.
-5. Review a disposable pull request. Confirm the head is fetched into a remote-tracking ref, the active checkout does not change, every `.git` write is reported, and unavailable rendering is marked `Not verified`.
-6. Confirm no `.impeccable/critique/` snapshot is written. Then explicitly run `/design polish <surface> using review finding 1`; confirm the router hands the approved refinement to bundled Impeccable.
-
-## Strict activation and blocking
-
-1. Run `/design setup`. Before confirmation, verify the disposable project has no new file.
-2. Confirm activation. Verify only `.impeccable/config.json` is created or changed and it contains `hook.enabled: true`.
-3. Verify no `.cursor/hooks.json` entry was created.
-4. Write a clean UI component and confirm Cursor allows it.
-5. Propose this known detector fixture in an HTML file and confirm Cursor denies the write before it lands:
-
-   ```html
-   <style>.card { border-left: 4px solid #7c3aed; border-radius: 16px; }</style>
-   <div class="card">Hello</div>
-   ```
-
-6. Edit a non-UI file such as `README.md` and confirm it is unaffected.
-7. Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host cursor hook off` through `/design` after resolving the skill root, then confirm a UI write is no longer scanned.
-8. Activate and deactivate once more. Confirm the original `.cursor/hooks.json` hash/absence is unchanged and no second entry exists.
-
-## Conflict and failure diagnostics
-
-In disposable copies only:
-
-1. Add `.cursor/skills/impeccable/SKILL.md`; `/design status` must report shadowing and setup must not remove it.
-2. Add a legacy Impeccable command to `.cursor/hooks.json`; status must report a double-hook conflict and setup must not overwrite it.
-3. Malform `.impeccable/config.json`; the diagnostic must be visible and the edit must be allowed.
-4. A missing/broken detector path or unavailable Node runtime must be reported as infrastructure failure and must not deny the edit.
-
-Store receipts in `.tests/` only. A successful run may support a future minimum Cursor version; it does not publish the plugin.
-
-## Native engine evidence
-
-Before a fresh editor trial, run `npm run verify:impeccable-engine` from the source checkout and retain the printed evidence directory. Verify that the separately installed package includes the schema-2 pin and the matching platform binary. Installation alignment does not prove activation.
-
-In the fresh task, invoke the host's explicit Design detect command against both the clean and known-finding fixtures above. Record `engineVersion` and `platform` from the detector provenance, then perform the hook steps above. Run context through `"<IMPECCABLE_SKILL_ROOT>/scripts/impeccable" context` after resolving the actual installed skill directory (use `impeccable.cmd` on Windows). Context and doctor must show configuration honestly and must not install host manifests or query for an engine update. Keep errors visible; a missing, unsupported or modified binary cannot produce a successful detector result. No engine fallback or download is permitted.
-
-Record installed package identity, fresh task identity, explicit invocation, adapter output and cleanup. Repository tests alone do not close these editor checks.
+For the shared malformed-config case, a broken detector or unavailable Node runtime, expect a visible infrastructure diagnostic that does not deny the product edit. Restore each trial copy before testing the next case. Finish with the [shared closeout](runtime-smoke-common.md#closeout).
