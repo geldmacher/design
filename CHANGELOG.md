@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.12.0
+
+- Enable automatic Design selection for matching website and web-app UI tasks in Cursor and Codex, while keeping Impeccable routed or explicitly invoked and maintainer operations explicit.
+- Clarify all seven skill descriptions and preserve ordinary interface critiques without routing them to branch reviews.
+- Generate native host guidance that supports automatic selection, with isolated host metadata and CRLF-safe skill projection.
+- Extend package checks and host smoke scenarios to cover selection boundaries, loaded skill sources, and unintended side effects.
+
 ## 0.11.0
 
 - Select product versions automatically from published history and public-contract changes, with an explicit initial-development policy for 0.x.
