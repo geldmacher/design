@@ -16,24 +16,8 @@
       "id": "general-web-design",
       "title": "General website and web-app design",
       "skill": "impeccable",
-      "specificity": 10,
       "fallback": true,
-      "triggers": [
-        "design",
-        "website",
-        "web app",
-        "frontend",
-        "ui",
-        "ux",
-        "landing page",
-        "dashboard",
-        "component"
-      ],
-      "scope": [
-        "website",
-        "web-app"
-      ],
-      "combinableWith": []
+      "triggers": []
     }
   ],
   "contributes": {

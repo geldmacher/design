@@ -19,6 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { renderCapabilityIndex } from "../build-capability-index.mjs";
+import { renderCommandReference } from "../build-command-reference.mjs";
 import { canonicalJson, compareVersions, parseSkillTag, pluginRoot, readPin, sha256Bytes, sha256File, validatePin } from "./impeccable-maintenance.mjs";
 
 export const transformations = Object.freeze([
@@ -308,7 +309,7 @@ export function transformSkillFile(relativePath, original, version) {
       );
       operations.push("replace-project-hook-installation-with-plugin-hook");
     }
-    const updateRedirected = text.replaceAll("npx impeccable update", "the Design doctor command");
+    const updateRedirected = text.replaceAll("npx impeccable update", "the Design diagnose command");
     if (updateRedirected !== text) operations.push("disable-runtime-self-update");
     text = updateRedirected;
     const portable = portableMarkdown(text);
@@ -540,10 +541,13 @@ function projectionOutputs(root, projection, pin, vendor) {
   writeJson(join(projection, "modules", "impeccable.json"), module);
   const design = JSON.parse(readFileSync(join(root, "modules", "design-core.json"), "utf8"));
   writeFileSync(join(projection, "skills", "design", "references", "capabilities.md"), renderCapabilityIndex([design, module]));
+  mkdirSync(join(projection, "docs"), { recursive: true });
+  writeFileSync(join(projection, "docs", "commands.md"), renderCommandReference({ skillRoot: skill, version: pin.version }));
 }
 
 export const candidateDestinations = Object.freeze([
   "THIRD_PARTY_NOTICES.md",
+  "docs/commands.md",
   ...agentNames.map((name) => `agents/${name}`),
   "modules/impeccable.json",
   "skills/design/references/capabilities.md",
@@ -736,6 +740,9 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
       }
       vendor.lock.import.files.sort((a, b) => a.destination.localeCompare(b.destination));
     }
+    const overlay = join(root, "overlays", "skills", "impeccable");
+    if (existsSync(overlay)) cpSync(overlay, vendor.transformedDir, { recursive: true });
+    const commandReference = renderCommandReference({ skillRoot: vendor.transformedDir, version: pin.version });
     if (!apply) return { mode: "verified", pin, files: vendor.inventory.length, transformed: vendor.changed.length };
     const skillTarget = join(root, "skills", "impeccable");
     const agentsTarget = join(root, "agents");
@@ -746,12 +753,12 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
     }
     cpSync(vendor.transformedDir, skillTarget, { recursive: true });
     cpSync(vendor.transformedAgentsDir, agentsTarget, { recursive: true });
-    const overlay = join(root, "overlays", "skills", "impeccable");
-    if (existsSync(overlay)) cpSync(overlay, skillTarget, { recursive: true });
     mkdirSync(join(root, "upstream", "patches"), { recursive: true });
     writeFileSync(join(root, "upstream", "patches", "impeccable-plugin.patch"), vendor.patchText);
     cpSync(vendor.licensePath, join(root, "upstream", "LICENSE"));
     writeJson(join(root, "upstream", "impeccable.lock.json"), vendor.lock);
+    mkdirSync(join(root, "docs"), { recursive: true });
+    writeFileSync(join(root, "docs", "commands.md"), commandReference);
     return { mode: "imported", pin, files: vendor.inventory.length, transformed: vendor.changed.length };
   } finally {
     rmSync(workspace, { recursive: true, force: true });

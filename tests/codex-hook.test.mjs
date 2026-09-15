@@ -51,7 +51,7 @@ test('disabled Codex hook is completely silent', (t) => {
   const result = evaluateCodexPluginHook({
     event: postEvent(root, 'src/Card.html'),
     pluginRoot,
-    nodePath: '',
+    runtime: () => assert.fail('Disabled hook must not invoke the runtime'),
   });
   assert.equal(result.payload, null);
   assert.equal(result.stdout, '');
@@ -69,7 +69,7 @@ test('Codex hook diagnostics are non-blocking and event-correct', (t) => {
 
   const results = [
     evaluateCodexPluginHook({ event: postEvent(malformed, 'src/x.html'), pluginRoot }),
-    evaluateCodexPluginHook({ event: postEvent(missing, 'src/x.html'), pluginRoot, nodePath: '', detectorPath: '/missing' }),
+    evaluateCodexPluginHook({ event: postEvent(missing, 'src/x.html'), pluginRoot: missing }),
     evaluateCodexPluginHook({ event: { hook_event_name: 'Stop', cwd: conflict }, pluginRoot }),
   ];
 

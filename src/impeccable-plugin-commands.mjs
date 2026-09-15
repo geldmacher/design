@@ -3,38 +3,11 @@ import path from 'node:path';
 import os from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { readHookActivation, detectProjectConflicts } from './project-state.mjs';
+import { configNames, configPath, readConfig, writeConfig, applyHookActivation } from './hook-config.mjs';
 
 const subagentDirective = "SUBAGENT_AUTHORIZATION: If your harness gates subagent or agent-tool use on an explicit user request, the user's invocation of this skill is that request for the skill's shipped subagents; spawn them where a reference file directs, without re-asking. Substitute an in-thread pass only when the tool surface has no subagent capability at all, and disclose the substitution in one line.";
 const inlineDirective = 'DEGRADED_ROLE_DIRECTIVE: Agent Plugins v1 provides no native hooks or subagents. Load the matching reference/degraded role contract and perform it inline; disclose this limitation.';
 const blocked = new Set(['skills', 'help', 'install', 'link', 'update', 'check', 'pin', 'unpin']);
-const configNames = ['config.json', 'config.local.json'];
-
-function configPath(root, name) {
-  const directory = path.join(root, '.impeccable');
-  for (const file of [directory, path.join(directory, name)]) {
-    if (fs.existsSync(file) && fs.lstatSync(file).isSymbolicLink()) throw new Error('Refusing symlinked Impeccable configuration.');
-  }
-  return path.join(directory, name);
-}
-
-function readConfig(root, name) {
-  const file = configPath(root, name);
-  if (!fs.existsSync(file)) return null;
-  const value = JSON.parse(fs.readFileSync(file, 'utf8'));
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Impeccable configuration must be an object.');
-  return value;
-}
-
-function writeConfig(root, name, value) {
-  const file = configPath(root, name);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}.tmp`;
-  try {
-    fs.writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
-    fs.renameSync(temporary, file);
-  } finally { fs.rmSync(temporary, { force: true }); }
-}
-
 export function interceptPluginCommand({ command, args, host, cwd, run }) {
   if (blocked.has(command)) throw new Error('Standalone installation, shortcuts and self-update are disabled. Use the Design maintainer workflow.');
   if (command === 'doctor' && (args.includes('--help') || args.includes('-h'))) return { status: 0, stdout: 'Usage: bundled impeccable doctor [--json] [--target <path>]\nReport project drift and plugin configuration. Read-only; review and authorize project migrations separately.\n', stderr: '' };
@@ -50,16 +23,16 @@ export function interceptPluginCommand({ command, args, host, cwd, run }) {
     if (host === 'agent-plugin') throw new Error('Agent Plugins v1 has no native hooks.');
     if (args.length > 1) throw new Error('Unexpected hook lifecycle arguments.');
     if (action === 'on' && detectProjectConflicts(cwd, { host }).some((item) => item.severity === 'conflict')) throw new Error('Hook activation conflicts with a project installation.');
-    for (const name of configNames) {
-      const value = configs[name];
-      if (action === 'reset') {
+    if (action === 'reset') {
+      for (const name of configNames) {
+        const value = configs[name];
         if (!value) continue;
         delete value.hook;
         delete value.detector;
         writeConfig(cwd, name, value);
-      } else if (name === 'config.json' || value?.hook?.enabled !== undefined) {
-        writeConfig(cwd, name, { ...value, hook: { ...value?.hook, enabled: action === 'on' } });
       }
+    } else {
+      applyHookActivation(cwd, action === 'on');
     }
     if (action === 'reset') for (const name of ['hook.cache.json', 'hook.pending.json']) fs.rmSync(configPath(cwd, name), { force: true });
     return { status: 0, stdout: `Plugin hooks ${action}; only .impeccable/ changed.\n`, stderr: '' };

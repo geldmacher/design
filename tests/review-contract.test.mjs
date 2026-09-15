@@ -35,11 +35,8 @@ test('change review is a narrow first-party capability over the Impeccable fallb
     id: 'change-interface-review',
     title: 'Change-scoped interface review',
     skill: 'design',
-    specificity: 90,
     fallback: false,
     triggers: ['review'],
-    scope: ['website', 'web-app'],
-    combinableWith: [],
   });
   assert.match(designSkill, /change-interface-review/);
   assert.match(designSkill, /change-review\.md/);

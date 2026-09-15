@@ -23,10 +23,11 @@ const defaultRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-design";
 const nativeShared = [
   "agents",
-  "assets",
+  "assets/logo.svg",
   "docs/installation.md",
   "LICENSE",
-  "modules",
+  "modules/design-core.json",
+  "modules/impeccable.json",
   "scripts/design-cli.mjs",
   "skills/design",
   "skills/impeccable",
@@ -48,7 +49,8 @@ const allowed = {
   ],
   "agent-plugin": [
     "LICENSE",
-    "modules",
+    "modules/design-core.json",
+  "modules/impeccable.json",
     "skills/design",
     "skills/impeccable",
     "src",
@@ -206,6 +208,8 @@ function narrowModules(destination, host) {
       host === "cursor" ? "hooks/impeccable-plugin-hook.mjs" : "hooks/impeccable-codex-hook.mjs",
     ];
   }
+  delete design.$schema;
+  delete impeccable.$schema;
   writeJson(designPath, design);
   writeJson(impeccablePath, impeccable);
 }
@@ -340,45 +344,32 @@ function projectPortableInvocationSyntax(source) {
     .replaceAll("auto-run a command", "auto-run an operation");
 }
 
+export function projectDesignSkill(source) {
+  const text = source.replace(/\r\n/g, "\n");
+  const start = "<!-- design-host:start -->";
+  const end = "<!-- design-host:end -->";
+  if (text.split(start).length !== 2 || text.split(end).length !== 2 || text.indexOf(end) < text.indexOf(start)) {
+    throw new Error("Design host markers must occur exactly once in order.");
+  }
+  const match = text.match(/^---\n([\s\S]*?)\n---\n/);
+  if (!match) throw new Error("Design frontmatter is missing.");
+  const metadata = YAML.parse(match[1]);
+  metadata.description = "Use when a user loads the design skill for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or website and web-app design work. Routes explicit operations to bundled Design capabilities and general design work to Impeccable.";
+  const contract = [
+    "## Host contract", "",
+    "This standard package declares the bare `design` and `impeccable` skill names; the client decides how they are exposed or invoked. Set `<host>` to `agent-plugin`.", "",
+    "Agent Plugins v1 does not standardize hooks or native subagents. Report hooks as unavailable, do not install or emulate them, and use the bundled Impeccable degraded role instructions inline. This target does not inspect or change client-local skill and hook installations.",
+  ].join("\n");
+  const body = text.slice(match[0].length);
+  return `---\n${YAML.stringify(metadata)}---\n${body.slice(0, body.indexOf(start))}${contract}${body.slice(body.indexOf(end) + end.length)}`;
+}
+
 function adaptAgentPluginSkills(destination) {
   const skillsRoot = join(destination, "skills");
   for (const skillName of ["design", "impeccable"]) rmSync(join(skillsRoot, skillName, "agents"), { recursive: true, force: true });
 
   const designPath = join(skillsRoot, "design", "SKILL.md");
-  let design = readProjectedText(designPath);
-  design = replaceRequired(
-    design,
-    "description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
-    "description: Use when a user loads the design skill for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.",
-    "design description",
-  );
-  design = replaceRequired(
-    design,
-    "Determine the active host from the invocation: Cursor uses `/design` and `/impeccable`; Codex uses `$design` and `$impeccable`; a generic Agent Plugins client loads the bare `design` and `impeccable` skill names.",
-    "This standard package declares the bare `design` and `impeccable` skill names; the client decides how they are exposed or invoked.",
-    "design host contract",
-  );
-  design = design
-    .replace("An explicit `/impeccable ...` or `$impeccable ...` request", "A request explicitly addressed to the loaded Impeccable skill")
-    .replace("For `/design setup|status|doctor` or `$design setup|status|doctor`", "For a `setup`, `status`, or `doctor` intent addressed to the loaded Design skill")
-    .replace("replace `<host>` with `cursor`, `codex`, or `agent-plugin`", "replace `<host>` with `agent-plugin`")
-    .replace(
-      "2. Report conflicts and the exact proposed writes. A host-local Impeccable skill or hook entry (`.cursor/...` on Cursor, `.agents/skills/...` or `.codex/hooks.json` on Codex) is a conflict; never remove or overwrite it.",
-      "2. Report the exact proposed writes. Standard mode does not inspect, remove, or overwrite client-local skill and hook paths.",
-    )
-    .replace("### `design setup`", "### Setup request")
-    .replace("### `design status`", "### Status request")
-    .replace("### `design doctor`", "### Doctor request")
-    .replace("### `design detect`", "### Detect request")
-    .replace("- An explicit `design detect` remains available when the hook is disabled and never enables it.", "- An explicit Detect request remains available without hook support and never tries to enable a hook.")
-    .replace("offer the host-native Impeccable `init` invocation", "offer the loaded Impeccable skill's `init` operation through the client")
-    .replace("offer the corresponding `document` invocation", "offer the corresponding `document` operation")
-    .replace("name the host-native Impeccable `polish <target>` invocation", "name the loaded Impeccable skill's `polish <target>` operation through the client")
-    .replace(
-      "- The plugin hook is inactive unless `.impeccable/config.json` parses and contains `hook.enabled: true`.\n- An explicit Detect request remains available without hook support and never tries to enable a hook.\n- On Cursor, a real Impeccable detector finding may deny a proposed UI write. On Codex, findings arrive after the edit and again through the deduplicated Stop deep pass.\n- Agent Plugins v1 does not standardize hooks or native subagents. Its portable target reports hooks as unavailable and uses Impeccable's bundled degraded role instructions.",
-      "- Agent Plugins v1 does not standardize hooks or native subagents. This target reports hooks as unavailable and uses Impeccable's bundled degraded role instructions.\n- An explicit Detect request remains available without hook support.",
-    );
-  writeFileSync(designPath, design);
+  writeFileSync(designPath, projectDesignSkill(readProjectedText(designPath)));
 
   const impeccablePath = join(skillsRoot, "impeccable", "SKILL.md");
   // SKILL.md anchors below are LF-authored; normalize CRLF from Windows checkouts.
@@ -531,8 +522,8 @@ function validateAgentPlugin(destination, version, sourceRoot) {
   const portableResources = files(join(destination, "skills")).filter((path) => /\.(?:md|mjs|js)$/.test(path));
   const nativeInvocation = /(?<![\w./:>-])\/impeccable(?=(?:\s|`|[),.:]|$))|(?<![\w.>-])\$impeccable(?=(?:\s|`|[),.:]|$))/;
   const inventedPortableInvocation = new RegExp(
-    "`(?:design\\s+(?:setup|status|doctor|detect)|impeccable\\s+(?:" + portableOperationAlternation + "))(?:\\s+[^`]*)?`"
-      + "|\\b(?:run|offer|invoke|recommend|use)\\s+(?:design\\s+(?:setup|status|doctor|detect)|impeccable\\s+(?:" + portableOperationAlternation + "))(?=\\s|[),.:]|$)",
+    "`(?:design\\s+(?:setup|status|diagnose|detect)|impeccable\\s+(?:" + portableOperationAlternation + "))(?:\\s+[^`]*)?`"
+      + "|\\b(?:run|offer|invoke|recommend|use)\\s+(?:design\\s+(?:setup|status|diagnose|detect)|impeccable\\s+(?:" + portableOperationAlternation + "))(?=\\s|[),.:]|$)",
     "i",
   );
   const nativeRoleContract = /impeccable[-_](?:finish[-_]reviewer|documenter|asset[-_]producer|manual[-_]edit[-_]applier)|SUBAGENT_AUTHORIZATION|shipped (?:finish reviewer|documenter|asset producer|subagent)|agent continuation/i;

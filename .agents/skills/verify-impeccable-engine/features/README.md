@@ -4,3 +4,5 @@
 - [Design and hook journeys](journeys.md): detector results, Cursor pre-write denial, Codex post-write and Stop deduplication, configuration and portable behavior.
 
 The executable entrypoint is `npm run verify:impeccable-engine` at the repository root. It runs the complete map on the available native platform; other platforms need CI evidence. Editor activation, browser sessions, image-provider calls and production projects are outside this verifier.
+
+The `--all` mode recursively discovers every test file once, including verifier failure/cleanup tests and configuration override regressions. Evidence includes the exact selection and source hashes. The focused mode retains the candidate/engine map; CI retains its platform matrix.

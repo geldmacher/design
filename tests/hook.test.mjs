@@ -29,7 +29,7 @@ function event(root, file, content) {
 test('disabled hook allows UI changes without invoking the detector', (t) => {
   const root = project(false);
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const result = evaluatePluginHook({ event: event(root, 'src/Card.html', '<div>ok</div>'), pluginRoot, nodePath: '' });
+  const result = evaluatePluginHook({ event: event(root, 'src/Card.html', '<div>ok</div>'), pluginRoot, runtime: () => assert.fail('Disabled hook must not invoke the runtime') });
   assert.deepEqual(result.payload, { permission: 'allow' });
 });
 
@@ -68,7 +68,7 @@ test('malformed config, missing runtime and direct install conflicts are diagnos
 
   for (const result of [
     evaluatePluginHook({ event: event(malformed, 'src/x.html', '<div/>'), pluginRoot }),
-    evaluatePluginHook({ event: event(missing, 'src/x.html', '<div/>'), pluginRoot, nodePath: '', detectorPath: '/missing' }),
+    evaluatePluginHook({ event: event(missing, 'src/x.html', '<div/>'), pluginRoot: missing }),
     evaluatePluginHook({ event: event(conflict, 'src/x.html', '<div/>'), pluginRoot }),
   ]) {
     assert.equal(result.payload.permission, 'allow');

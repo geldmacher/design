@@ -126,19 +126,22 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
     rmSync(join(project, '-'));
   }
 
-  for (const host of ["cursor", "codex"]) {
+  for (const host of ["cursor", "codex", "agent-plugin"]) {
     const target = targets[host].path;
     const impeccableModule = JSON.parse(readFileSync(join(target, "modules", "impeccable.json"), "utf8"));
     assert.equal(existsSync(join(target, "upstream")), false);
     const cli = join(target, "skills", "design", "scripts", "design-cli.mjs");
     const status = runJson(cli, ["--host", host, "status", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
-    assert.equal(status.plugin.version, "0.10.1");
+    assert.equal(status.plugin.version, JSON.parse(readFileSync(new URL("../package.json", import.meta.url))).version);
     assert.equal(status.upstream.archiveSha256, impeccableModule.source.archiveSha256);
-    assert.equal(status.hook.mode, host === "cursor" ? "pre-write" : "post-write-stop");
+    assert.equal(status.hook.mode, host === "agent-plugin" ? "none" : host === "cursor" ? "pre-write" : "post-write-stop");
     const preview = runJson(cli, ["--host", host, "setup", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
     assert.equal(preview.applied, false);
-    const doctor = runJson(cli, ["--host", host, "doctor", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
-    assert.equal(doctor.upstream.skillVersion, impeccableModule.version);
+    const diagnosis = runJson(cli, ["--host", host, "diagnose", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
+    assert.equal(diagnosis.upstream.skillVersion, impeccableModule.version);
+    const obsolete = run(cli, ['--host', host, 'doctor', '--json'], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
+    assert.equal(obsolete.status, 1);
+    assert.match(obsolete.stderr, /renamed to diagnose/);
   }
 
   const cursorHook = run(

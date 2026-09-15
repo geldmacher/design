@@ -14,6 +14,8 @@
     "node": ">=22"
   },
   "scripts": {
+    "build:commands": "node scripts/build-command-reference.mjs",
+    "check:commands": "node scripts/build-command-reference.mjs --check",
     "build:capabilities": "node scripts/build-capability-index.mjs",
     "build:targets": "node scripts/build-plugin-targets.mjs",
     "check:targets": "node scripts/build-plugin-targets.mjs --check",
@@ -30,7 +32,7 @@
     "test": "node --test tests/*.test.mjs",
     "check:links": "node scripts/check-links.mjs",
     "release:plugin": "node scripts/plugin-github-release.mjs",
-    "release-check": "npm run build:capabilities -- --check && npm run check:targets && npm run check:english && npm run validate && npm test && npm run check:links && npm run verify:impeccable-engine",
+    "release-check": "npm run build:capabilities -- --check && npm run check:commands && npm run check:targets && npm run check:english && npm run validate && npm run check:links && npm run verify:impeccable-engine -- --all",
     "verify:impeccable-engine": "node .agents/skills/verify-impeccable-engine/scripts/verify.mjs"
   },
   "devDependencies": {

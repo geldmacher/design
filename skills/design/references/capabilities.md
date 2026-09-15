@@ -2,12 +2,17 @@
 
 # Curated capabilities
 
-Choose the highest-specificity matching capability. A fallback is used only when no narrower capability matches.
+Match only the leading command of the request, case-insensitively, followed by whitespace or the end of the request. A word inside a design task never selects a command.
 
-| Module | Version | Capability | Skill | Specificity | Fallback | Triggers | Scope | Combinable with |
-|---|---:|---|---|---:|---|---|---|---|
-| design-core | 0.10.1 | project-integration - Project setup and diagnostics | design | 100 | no | setup, status, doctor | website, web-app | - |
-| design-core | 0.10.1 | detector-scan - Explicit local detector scan | design | 100 | no | detect | website, web-app | - |
-| design-core | 0.10.1 | stakeholder-questionnaire - Stakeholder decision questionnaire | design | 100 | no | questionnaire | website, web-app | - |
-| design-core | 0.10.1 | change-interface-review - Change-scoped interface review | design | 90 | no | review | website, web-app | - |
-| impeccable | 4.3.1 | general-web-design - General website and web-app design | impeccable | 10 | yes | design, website, web app, frontend, ui, ux, landing page, dashboard, component | website, web-app | - |
+| Leading command | Capability | Skill |
+|---|---|---|
+| `setup` | design-core:project-integration - Project setup and diagnostics | design |
+| `status` | design-core:project-integration - Project setup and diagnostics | design |
+| `diagnose` | design-core:project-integration - Project setup and diagnostics | design |
+| `detect` | design-core:detector-scan - Explicit local detector scan | design |
+| `questionnaire` | design-core:stakeholder-questionnaire - Stakeholder decision questionnaire | design |
+| `review` | design-core:change-interface-review - Change-scoped interface review | design |
+
+For every other request, including a leading `doctor`, load the bundled impeccable skill with the request unchanged (impeccable:general-web-design).
+
+A request explicitly addressed to Impeccable bypasses Design. Do not combine capabilities or invent additional routing rules.

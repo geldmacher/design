@@ -30,11 +30,13 @@ import {
   hashPath,
   materializeGitSource,
   prepareCandidate,
+  syncPinned,
   transformSkillFile,
   releaseArchiveExclusions,
   validateArchiveEntryName,
   verifyArchiveMatchesSource,
 } from "../scripts/lib/impeccable-vendor.mjs";
+import { buildCommandReference } from "../scripts/build-command-reference.mjs";
 
 test("guidance transformations reproduce locked files and reject upstream anchor drift", () => {
   const workspace = mkdtempSync(join(tmpdir(), "design-guidance-transform-"));
@@ -174,6 +176,12 @@ function sourceFiles(version) {
       "**Hooks:**",
       "Fixture hook guidance.",
       "",
+      "## Commands",
+      "",
+      "| Command | Category | Description | Reference |",
+      "|---|---|---|---|",
+      "| `polish [target]` | Refine | Fixture polish | [reference/plain.md](reference/plain.md) |",
+      "",
     ].join("\n")],
     [".cursor/skills/impeccable/reference/hooks.md", [
       "# /impeccable hooks",
@@ -219,6 +227,8 @@ function sourceFiles(version) {
     [".cursor/skills/impeccable/scripts/lib/provider.mjs", "export const IMPECCABLE_COMMAND = '/impeccable';\n"],
     [".cursor/skills/impeccable/scripts/lib/staleness-deep.mjs", "export function checkHookInstallation({ projectRoot, repoRoot, providerId }) {\n  const findings = [];\n  return findings;\n}\n"],
     [".cursor/skills/impeccable/scripts/pin.mjs", "process.stdout.write('fixture');\n"],
+    [".cursor/skills/impeccable/scripts/command-metadata.json", JSON.stringify({ polish: { description: "Fixture polish", argumentHint: "[target]" } })],
+    [".cursor/skills/impeccable/reference/doctor.md", "Fixture doctor reference.\n"],
     [".cursor/skills/impeccable/reference/plain.md", "No transformation is required.\n"],
     [".cursor/skills/impeccable/assets/binary.bin", Buffer.from([0x00, 0x7f, 0x80, 0xff])],
     ...agentNames.map((name) => [`.cursor/agents/${name}`, `# ${name}\nnode .cursor/skills/impeccable/scripts/context.mjs\n`]),
@@ -259,7 +269,7 @@ function moduleDocument(id, version, source = null) {
     version,
     ...(source ? { source } : { source: { type: "first-party", url: "https://github.com/geldmacher/design" } }),
     license: id === "impeccable" ? "Apache-2.0" : "MIT",
-    capabilities: [{ id: `${id}-fixture`, title: `${id} fixture`, skill: id === "impeccable" ? "impeccable" : "design", specificity: id === "impeccable" ? 10 : 100, fallback: id === "impeccable", triggers: [id], scope: ["fixture"], combinableWith: [] }],
+    capabilities: [{ id: `${id}-fixture`, title: `${id} fixture`, skill: id === "impeccable" ? "impeccable" : "design", fallback: id === "impeccable", triggers: id === "impeccable" ? [] : [id] }],
     contributes: { skills: [], agents: [], rules: [], hooks: [], scripts: [], mcpServers: [] },
   };
 }
@@ -276,6 +286,7 @@ function createRepositoryFixture(base) {
   write(join(root, "modules", "impeccable.json"), `${JSON.stringify(moduleDocument("impeccable", approved.version, { type: "vendored", url: approved.repository, tag: approved.tag, commit: approved.commit, archiveSha256: approved.archive.sha256 }), null, 2)}\n`);
   write(join(root, "modules", "design-core.json"), `${JSON.stringify(moduleDocument("design-core", "0.4.0"), null, 2)}\n`);
   write(join(root, "skills", "design", "references", "capabilities.md"), "old capabilities\n");
+  write(join(root, "docs", "commands.md"), "old command reference\n");
   write(join(root, "skills", "impeccable", "old.txt"), "old skill\n");
   for (const name of agentNames) write(join(root, "agents", name), `old ${name}\n`);
   write(join(root, "agents", "first-party.md"), "unrelated dirty agent\n");
@@ -300,6 +311,43 @@ function candidateFixture(t) {
   });
   return { base, repository, archive, candidatePin, ...tagged };
 }
+
+test("offline sync validates preview and imports the command reference from the overlaid skill", (t) => {
+  const f = candidateFixture(t);
+  write(join(f.repository, "upstream/impeccable.pin.json"), JSON.stringify(f.candidatePin));
+  const skill = transformSkillFile("SKILL.md", f.files.get(".cursor/skills/impeccable/SKILL.md"), f.candidatePin.version).text;
+  write(join(f.repository, "overlays/skills/impeccable/SKILL.md"), skill.replace("Fixture polish", "Overlay polish"));
+  const options = { root: f.repository, source: f.source, archive: f.archive };
+  const before = hashPath(f.repository);
+  assert.equal(syncPinned(options).mode, "verified");
+  assert.equal(hashPath(f.repository), before, "preview changed repository files");
+  assert.equal(syncPinned({ ...options, apply: true, replace: true }).mode, "imported");
+  const reference = buildCommandReference({ root: f.repository, check: true });
+  assert.match(reference, /Bundled Impeccable \*\*4\.0\.5\*\*/);
+  assert.match(reference, /Overlay polish/);
+  assert.equal(readFileSync(join(f.repository, "agents/first-party.md"), "utf8"), "unrelated dirty agent\n");
+  const imported = hashPath(f.repository);
+  syncPinned({ ...options, apply: true, replace: true });
+  assert.equal(hashPath(f.repository), imported, "identical inputs changed imported bytes");
+});
+
+test("offline sync rejects invalid command data before preview or apply can change files", (t) => {
+  const f = candidateFixture(t);
+  write(join(f.repository, "upstream/impeccable.pin.json"), JSON.stringify(f.candidatePin));
+  const skill = transformSkillFile("SKILL.md", f.files.get(".cursor/skills/impeccable/SKILL.md"), f.candidatePin.version).text;
+  for (const [invalid, error] of [
+    [skill.replace("| Category |", "| Kind |"), /unknown Commands table format/],
+    [skill.replace("`polish [target]`", "`unknown [target]`"), /missing or invalid metadata/],
+    [skill.replace("(reference/plain.md)", "(reference/missing.md)"), /missing or unsupported reference/],
+  ]) {
+    write(join(f.repository, "overlays/skills/impeccable/SKILL.md"), invalid);
+    const before = hashPath(f.repository);
+    for (const apply of [false, true]) {
+      assert.throws(() => syncPinned({ root: f.repository, source: f.source, archive: f.archive, apply, replace: apply }), error);
+      assert.equal(hashPath(f.repository), before, "invalid command data changed repository files");
+    }
+  }
+});
 
 test("pin validation and projections fail closed on drift", () => {
   const valid = validatePin(pin());
@@ -417,6 +465,10 @@ test("candidate identity detects drift and transactional apply restores exact fi
   assert.equal(manifest.identity.upstream.tagObject, fixture.candidatePin.tagObject);
   assert.equal(manifest.identity.upstream.archiveSha256, fixture.candidatePin.archive.sha256);
   assert.equal(typeof manifest.identity.inventorySha256, "string");
+  const projectedCommands = readFileSync(join(prepared.path, "projection/docs/commands.md"), "utf8");
+  assert.match(projectedCommands, /Bundled Impeccable \*\*4\.0\.5\*\*/);
+  assert.match(projectedCommands, /Fixture polish/);
+  assert.match(readFileSync(join(prepared.path, "repository.patch"), "utf8"), /docs\/commands\.md/);
   assert.equal(typeof manifest.identity.transformationPatchSha256, "string");
   assert.equal(typeof manifest.identity.repositoryPatchSha256, "string");
   for (const destination of candidateDestinations) {
@@ -447,6 +499,7 @@ test("candidate identity detects drift and transactional apply restores exact fi
   const applied = applyCandidate({ root: fixture.repository, candidateId: prepared.candidateId });
   assert.deepEqual(applied.applied, [...candidateDestinations]);
   assert.equal(readPin(fixture.repository).version, "4.0.5");
+  assert.equal(readFileSync(join(fixture.repository, "docs/commands.md"), "utf8"), projectedCommands);
   assert.equal(readFileSync(join(fixture.repository, "agents", "first-party.md"), "utf8"), "unrelated dirty agent\n");
   assert.deepEqual(readFileSync(join(fixture.repository, ".git/index")), initialIndex);
   assert.deepEqual(readFileSync(backupLocal), Buffer.from([0, 255, 42]));

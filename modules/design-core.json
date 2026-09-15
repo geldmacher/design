@@ -13,49 +13,58 @@
       "id": "project-integration",
       "title": "Project setup and diagnostics",
       "skill": "design",
-      "specificity": 100,
       "fallback": false,
-      "triggers": ["setup", "status", "doctor"],
-      "scope": ["website", "web-app"],
-      "combinableWith": []
+      "triggers": [
+        "setup",
+        "status",
+        "diagnose"
+      ]
     },
     {
       "id": "detector-scan",
       "title": "Explicit local detector scan",
       "skill": "design",
-      "specificity": 100,
       "fallback": false,
-      "triggers": ["detect"],
-      "scope": ["website", "web-app"],
-      "combinableWith": []
+      "triggers": [
+        "detect"
+      ]
     },
     {
       "id": "stakeholder-questionnaire",
       "title": "Stakeholder decision questionnaire",
       "skill": "design",
-      "specificity": 100,
       "fallback": false,
-      "triggers": ["questionnaire"],
-      "scope": ["website", "web-app"],
-      "combinableWith": []
+      "triggers": [
+        "questionnaire"
+      ]
     },
     {
       "id": "change-interface-review",
       "title": "Change-scoped interface review",
       "skill": "design",
-      "specificity": 90,
       "fallback": false,
-      "triggers": ["review"],
-      "scope": ["website", "web-app"],
-      "combinableWith": []
+      "triggers": [
+        "review"
+      ]
     }
   ],
   "contributes": {
-    "skills": ["skills/design"],
+    "skills": [
+      "skills/design"
+    ],
     "agents": [],
     "rules": [],
-    "hooks": ["hooks/cursor-hooks.json", "hooks/hooks.json"],
-    "scripts": ["skills/design/scripts/design-cli.mjs", "skills/design/scripts/review-scope.mjs", "scripts/design-cli.mjs", "hooks/impeccable-plugin-hook.mjs", "hooks/impeccable-codex-hook.mjs"],
+    "hooks": [
+      "hooks/cursor-hooks.json",
+      "hooks/hooks.json"
+    ],
+    "scripts": [
+      "skills/design/scripts/design-cli.mjs",
+      "skills/design/scripts/review-scope.mjs",
+      "scripts/design-cli.mjs",
+      "hooks/impeccable-plugin-hook.mjs",
+      "hooks/impeccable-codex-hook.mjs"
+    ],
     "mcpServers": []
   }
 }

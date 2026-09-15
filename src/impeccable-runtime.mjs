@@ -48,14 +48,12 @@ export function runBundledImpeccable({
   args = [],
   input,
   timeout,
-  nodePath = process.execPath,
   env = process.env,
   extraEnv = {},
   spawn = spawnSync,
 } = {}) {
   let noticeCache;
   try {
-    if (!nodePath) throw new Error('Node runtime is unavailable.');
     const runtime = resolveEngine(pluginRoot);
     const verb = command || ENGINE_COMMANDS[scriptId];
     if (!verb) throw new Error(`Unknown engine command: ${scriptId}`);

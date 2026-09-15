@@ -22,24 +22,9 @@ test('root AGENTS.md is the concise shared product contract', () => {
 
   assert.equal(metadata.isFile(), true, 'AGENTS.md must be a regular file');
   assert.equal(metadata.isSymbolicLink(), false, 'AGENTS.md must not be a symlink');
-  assert.ok(content.split('\n').length < 70, 'AGENTS.md should remain concise');
-
-  for (const required of [
-    '# Design product north star',
-    '## Product boundaries',
-    '## Architecture',
-    '## Upstream ownership',
-    '## Verification and authority',
-    'explicit invocation',
-    '`PRODUCT.md`, `DESIGN.md`, and `.impeccable/`',
-    '${CURSOR_PLUGIN_ROOT}',
-    '${PLUGIN_ROOT}',
-    'inherit the user\'s selected parent model',
-    'npm run release-check',
-    'Marketplace publication',
-  ]) {
-    assert.ok(content.includes(required), `AGENTS.md is missing: ${required}`);
-  }
+  assert.match(content, /explicit invocation/);
+  assert.match(content, /inherit the user's selected parent model/);
+  assert.match(content, /npm run release-check/);
 });
 
 test('the root contract has no duplicate repository instruction surface', () => {

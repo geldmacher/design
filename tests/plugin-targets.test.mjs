@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   buildPluginTargets,
+  projectDesignSkill,
   createTargetBuildWorkspace,
   removeTargetBuildWorkspace,
 } from "../scripts/build-plugin-targets.mjs";
@@ -36,7 +37,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.equal(codexManifest.name, "geldmacher-design");
     const agentPluginManifest = JSON.parse(readFileSync(join(first["agent-plugin"].path, "plugin.json")));
     assert.equal(agentPluginManifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-    assert.equal(agentPluginManifest.version, "0.10.1");
+    assert.equal(agentPluginManifest.version, JSON.parse(readFileSync(join(repositoryRoot, "package.json"))).version);
     assert.equal(Object.hasOwn(agentPluginManifest, "extensions"), false);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "cursor-hooks.json")), true);
     assert.equal(existsSync(join(first.cursor.path, "hooks", "hooks.json")), false);
@@ -56,8 +57,8 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.doesNotMatch(agentPluginImpeccableSkill, /\.\.\/\.\.\/agents\//);
     assert.match(agentPluginImpeccableSkill, /reference\/degraded\//);
     assert.match(agentPluginImpeccableSkill, /`operation: <name>`/);
-    assert.match(agentPluginDesignSkill, /`setup`, `status`, or `doctor` intent addressed to the loaded Design skill/);
-    assert.match(agentPluginDesignSkill, /### Detect request/);
+    assert.match(agentPluginDesignSkill, /references\/capabilities.md/);
+    assert.match(agentPluginDesignSkill, /### Detect/);
     assert.match(agentPluginDesignSkill, /change-interface-review/);
     assert.match(agentPluginDesignSkill, /stakeholder-questionnaire/);
     for (const host of ["agent-plugin", "cursor", "codex"]) {
@@ -79,6 +80,9 @@ test("deterministic target allowlists isolate the portable package and native ad
       assert.equal(existsSync(join(first[host].path, "skills", "design", "scripts", "review-scope.mjs")), true);
       assert.equal(existsSync(join(first[host].path, "src", "detector-scan.mjs")), true);
       assert.equal(existsSync(join(first[host].path, "src", "impeccable-runtime.mjs")), true);
+      assert.equal(existsSync(join(first[host].path, "modules/module.schema.json")), false);
+      for (const moduleName of ["design-core", "impeccable"]) assert.equal(Object.hasOwn(JSON.parse(readFileSync(join(first[host].path, `modules/${moduleName}.json`))), "$schema"), false);
+      if (host !== "agent-plugin") assert.deepEqual(readdirSync(join(first[host].path, "assets")), ["logo.svg"]);
       const designModule = JSON.parse(readFileSync(join(first[host].path, "modules", "design-core.json"), "utf8"));
       assert.equal(designModule.capabilities.some((capability) => capability.id === "change-interface-review"), true);
       assert.equal(designModule.capabilities.some((capability) => capability.id === "detector-scan"), true);
@@ -92,7 +96,7 @@ test("deterministic target allowlists isolate the portable package and native ad
         `${host} drifted the host-neutral stakeholder questionnaire`,
       );
     }
-    assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|doctor|detect|questionnaire)\b/);
+    assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|diagnose|detect|questionnaire)\b/);
     const portableResourcePaths = resourceFiles(join(first["agent-plugin"].path, "skills"))
       .filter((path) => /\.(?:md|mjs|js)$/.test(path));
     const portableResources = portableResourcePaths
@@ -233,4 +237,16 @@ test("target builder rejects roots, foreign temporary paths, and symlink escapes
   } finally {
     rmSync(foreign, { recursive: true, force: true });
   }
+});
+
+test('Design host projection rejects missing, duplicate and reversed markers', () => {
+  const source = readFileSync(join(repositoryRoot, 'skills/design/SKILL.md'), 'utf8');
+  const start = '<!-- design-host:start -->', end = '<!-- design-host:end -->';
+  for (const malformed of [source.replace(start, ''), source.replace(end, ''), source + start, source + end, source.replace(start, 'SWAP').replace(end, start).replace('SWAP', end)]) {
+    assert.throws(() => projectDesignSkill(malformed), /host markers/);
+  }
+  const projected = projectDesignSkill(source);
+  assert.doesNotMatch(projected, /design-host:|CURSOR_PLUGIN_ROOT|\$\{PLUGIN_ROOT\}/);
+  assert.equal(projectDesignSkill(source.replace(/\n/g, '\r\n')), projected);
+  assert.ok(projected.endsWith(source.slice(source.indexOf(end) + end.length)));
 });

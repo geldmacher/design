@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostInvocation, resolveHost } from './host.mjs';
 import { loadModules } from './registry.mjs';
+import { readHookActivation, planHookActivation, applyHookActivation } from './hook-config.mjs';
+export { readHookActivation } from './hook-config.mjs';
 
 const DEFAULT_PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const IMPECCABLE_MARKERS = [
@@ -25,31 +27,6 @@ function valueContainsMarker(value) {
   if (Array.isArray(value)) return value.some(valueContainsMarker);
   if (value && typeof value === 'object') return Object.values(value).some(valueContainsMarker);
   return false;
-}
-
-export function readHookActivation(projectRoot) {
-  const configPath = path.join(projectRoot, '.impeccable', 'config.json');
-  const localPath = path.join(projectRoot, '.impeccable', 'config.local.json');
-  const configs = [safeJson(configPath), safeJson(localPath)];
-  let enabled = false;
-  let explicit = false;
-  for (const [index, info] of configs.entries()) {
-    const currentPath = index === 0 ? configPath : localPath;
-    if (info.malformed) return { state: 'malformed', enabled: false, explicit: false, path: currentPath, error: info.error };
-    if (!info.exists) continue;
-    const hook = info.value?.hook;
-    if (hook !== undefined && (!hook || typeof hook !== 'object' || Array.isArray(hook))) {
-      return { state: 'malformed', enabled: false, explicit: false, path: currentPath, error: 'hook must be an object' };
-    }
-    if (Object.hasOwn(hook || {}, 'enabled')) {
-      if (typeof hook.enabled !== 'boolean') {
-        return { state: 'malformed', enabled: false, explicit: false, path: currentPath, error: 'hook.enabled must be a boolean' };
-      }
-      explicit = true;
-      enabled = hook.enabled;
-    }
-  }
-  return { state: enabled ? 'enabled' : 'disabled', enabled, explicit, path: configPath };
 }
 
 function repositoryRoot(projectRoot) {
@@ -213,25 +190,12 @@ export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
   return { ...state, findings, repairable: [] };
 }
 
-function writeHookEnabled(projectRoot, enabled) {
-  const configPath = path.join(projectRoot, '.impeccable', 'config.json');
-  const existing = safeJson(configPath);
-  if (existing.malformed) throw new Error(`Refusing to overwrite malformed ${path.relative(projectRoot, configPath)}.`);
-  const base = existing.value && typeof existing.value === 'object' && !Array.isArray(existing.value) ? existing.value : {};
-  const hook = base.hook && typeof base.hook === 'object' && !Array.isArray(base.hook) ? base.hook : {};
-  const next = { ...base, hook: { ...hook, enabled } };
-  fs.mkdirSync(path.dirname(configPath), { recursive: true });
-  const temporary = path.join(path.dirname(configPath), `.config.${process.pid}.${Date.now()}.tmp`);
-  fs.writeFileSync(temporary, `${JSON.stringify(next, null, 2)}\n`, { flag: 'wx' });
-  fs.renameSync(temporary, configPath);
-  return configPath;
-}
-
 export function setupProject(projectRoot = process.cwd(), options = {}) {
   const state = inspectProject(projectRoot, options);
   const enableHook = state.host !== 'agent-plugin' && options.enableHook !== false;
   const plan = {
-    writes: enableHook ? ['.impeccable/config.json: set hook.enabled=true'] : [],
+    writes: enableHook && state.hook.state !== 'malformed'
+      ? planHookActivation(state.projectRoot, true).map(({ name }) => `.impeccable/${name}: set hook.enabled=true`) : [],
     offers: [
       state.context.product ? 'PRODUCT.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} init; do not create PRODUCT.md without confirmation.`,
       state.context.design ? 'DESIGN.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} document when an incumbent design should be captured.`,
@@ -245,7 +209,7 @@ export function setupProject(projectRoot = process.cwd(), options = {}) {
   if (state.hook.state === 'malformed') {
     return { applied: false, blocked: true, state, plan, reason: 'Malformed config is never overwritten by setup.' };
   }
-  const written = enableHook ? [path.relative(state.projectRoot, writeHookEnabled(state.projectRoot, true))] : [];
+  const written = enableHook ? applyHookActivation(state.projectRoot, true) : [];
   return { applied: true, state: inspectProject(projectRoot, options), plan, written };
 }
 
@@ -258,5 +222,6 @@ export function setProjectHook(projectRoot, enabled, options = {}) {
   if (enabled && state.conflicts.some((finding) => finding.severity === 'conflict')) {
     throw new Error('Activation refused because a direct Impeccable installation or duplicate hook exists.');
   }
-  return path.relative(state.projectRoot, writeHookEnabled(state.projectRoot, enabled));
+  applyHookActivation(state.projectRoot, enabled);
+  return '.impeccable/config.json';
 }

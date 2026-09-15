@@ -34,7 +34,6 @@ export function evaluateCodexPluginHook({
   event = {},
   projectRoot,
   pluginRoot,
-  nodePath = process.execPath,
   runtime = runBundledImpeccable,
 } = {}) {
   const root = path.resolve(projectRoot || projectRootFromEvent(event));
@@ -62,7 +61,6 @@ export function evaluateCodexPluginHook({
     cwd: root,
     input: JSON.stringify(event),
     timeout: eventName(event) === 'Stop' ? 28000 : 4500,
-    nodePath,
     extraEnv: { IMPECCABLE_HOOK_HARNESS: 'codex' },
   });
 
@@ -94,7 +92,7 @@ export function evaluateCodexPluginHook({
   } catch {
     // Converted into a visible, non-blocking diagnostic below.
   }
-  return result(contextPayload(event, 'Detector returned an invalid response; edit retained. Run $design doctor.'), true);
+  return result(contextPayload(event, 'Detector returned an invalid response; edit retained. Run $design diagnose.'), true);
 }
 
 async function readEvent() {

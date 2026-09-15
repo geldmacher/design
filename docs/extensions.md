@@ -9,10 +9,12 @@ Each module declares:
 - stable ID and version;
 - first-party or vendored source URL plus an exact tag/commit and packaged archive hash when applicable;
 - license;
-- capabilities with skill owner, triggers, supported scope, specificity, fallback status, and explicit combination allowlist;
+- capabilities with skill owner, leading command triggers, and fallback status;
 - every contributed skill, agent, rule, hook, script, or MCP configuration.
 
-The generated `skills/design/references/capabilities.md` is the runtime routing index. A more specific matching capability wins over the Impeccable fallback. Equal winners ask once. Composition is permitted only when every winner mutually lists the other capability as `<module>:<capability>` in `combinableWith`.
+The generated `skills/design/references/capabilities.md` is the skill's only routing index. It recognizes `setup`, `status`, `diagnose`, `detect`, `review`, and `questionnaire` only at the beginning, followed by whitespace or the end of the request. Every other request, including `doctor`, goes unchanged to Impeccable. There is no scoring, competition, or capability composition.
+
+`src/registry.mjs` loads module metadata for status and index generation. The schema is development-only; packaged module files omit `$schema` references.
 
 ## Admission rules
 

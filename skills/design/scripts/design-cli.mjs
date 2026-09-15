@@ -80,7 +80,6 @@ export function runDesignCli(argv = process.argv.slice(2), options = {}) {
       targets,
       pluginRoot,
       host: explicitHost,
-      nodePath: options.nodePath,
       runtime: options.runtime,
     });
     return output(result.envelope, result.exitCode);
@@ -90,16 +89,18 @@ export function runDesignCli(argv = process.argv.slice(2), options = {}) {
   const host = resolveHost(explicitHost);
   const lifecycleOptions = { pluginRoot, host };
   if (command === 'status') return output(inspectProject(projectRoot, lifecycleOptions));
-  if (command === 'doctor') {
+  if (command === 'doctor') throw new Error('Design CLI doctor was renamed to diagnose. Use the Impeccable skill for its doctor operation.');
+  if (command === 'diagnose') {
     const report = diagnoseProject(projectRoot, lifecycleOptions);
-    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered in 0.10.1.' };
+    if (flags.has('--apply')) report.apply = { applied: false, message: 'No safe automatic repairs are registered.' };
     return output(report);
   }
   if (command === 'setup') {
     return output(setupProject(projectRoot, { ...lifecycleOptions, apply: flags.has('--apply'), enableHook: !flags.has('--without-hook') }));
   }
   if (command === 'hook' && ['on', 'off'].includes(action)) {
-    return output({ written: setProjectHook(projectRoot, action === 'on', lifecycleOptions), enabled: action === 'on', host });
+    const written = setProjectHook(projectRoot, action === 'on', lifecycleOptions);
+    return output({ written, enabled: inspectProject(projectRoot, lifecycleOptions).hook.enabled, host });
   }
   throw new Error(`Unknown command: ${command}${action ? ` ${action}` : ''}`);
 }

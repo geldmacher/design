@@ -79,6 +79,7 @@ A portable Agent Plugins v1 package also provides the `design` and `impeccable` 
 ## Documentation and development
 
 - [Usage and commands](docs/usage.md)
+- [Complete command reference](docs/commands.md)
 - [Installation, updates, and rollback](docs/installation.md)
 - [Development, package targets, and local deployment](docs/development.md)
 - [Impeccable maintenance](docs/impeccable-maintenance.md)

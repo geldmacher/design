@@ -27,17 +27,14 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "title", "skill", "specificity", "triggers", "scope", "combinableWith"],
+        "required": ["id", "title", "skill", "triggers", "fallback"],
         "additionalProperties": false,
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
           "title": { "type": "string", "minLength": 1 },
           "skill": { "type": "string", "minLength": 1 },
-          "specificity": { "type": "integer", "minimum": 0 },
           "fallback": { "type": "boolean" },
-          "triggers": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-          "scope": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-          "combinableWith": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          "triggers": { "type": "array", "items": { "type": "string", "minLength": 1 } }
         }
       }
     },

@@ -44,6 +44,12 @@ The native packages remain separate compatibility layers. They are not embedded 
 
 ## Validation and evidence
 
-`npm run check:targets` validates the locked v1.0.0 schema, closed manifest fields, immediate skill directories, Agent Skills frontmatter, safe output boundaries, target-specific inventories, questionnaire contracts, and deterministic digests. The portable validator scans every delivered Markdown and JavaScript resource for native invocation syntax, role aliases, and authorization directives. `tests/portable-runtime.test.mjs` runs status, doctor, setup, review-scope, provider, context, live-event, and hook behavior from generated packages with fixture-only home, host, XDG, and update-cache paths.
+`npm run check:targets` validates the locked v1.0.0 schema, closed manifest fields, immediate skill directories, Agent Skills frontmatter, safe output boundaries, target-specific inventories, questionnaire contracts, and deterministic digests. The portable validator scans every delivered Markdown and JavaScript resource for native invocation syntax, role aliases, and authorization directives. `tests/portable-runtime.test.mjs` runs status, diagnose, setup, review-scope, provider, context, live-event, and hook behavior from generated packages with fixture-only home, host, XDG, and update-cache paths.
 
 These repository checks prove package shape and simulated behavior only. They do not prove discovery, permissions, trust, fresh-task activation, distribution, or publication in a real client. Importing the generated package is client-specific and requires a separate human-authorized live gate.
+
+## Shared source and package boundaries
+
+Design uses the generated leading-command index in `skills/design/references/capabilities.md`; other requests, including `doctor`, fall through to Impeccable. The builder projects the explicitly marked host section and portable description from the shared Design skill. It rejects missing or duplicate markers. The vendored Impeccable transformations remain separately controlled.
+
+The module schema stays in the development checkout. Packaged module metadata omits its schema reference. Native branding is limited to `assets/logo.svg`; the portable target has no branding assets. `npm run release-check` runs the complete discovered test suite once through the isolated verifier; standalone `npm test` and the focused engine verifier remain available.

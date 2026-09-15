@@ -254,7 +254,6 @@ export function runDetectorScan({
   targets = [],
   pluginRoot,
   host,
-  nodePath = process.execPath,
   timeout = DETECT_TIMEOUT_MS,
   runtime = runBundledImpeccable,
 } = {}) {
@@ -294,7 +293,6 @@ export function runDetectorScan({
     cwd: validated.physicalRoot,
     args: ['--json', ...validated.targets.map((target) => target.absolute)],
     timeout,
-    nodePath,
   });
 
   if (child.runtime?.engineVersion) Object.assign(base.detector, { engineVersion: child.runtime.engineVersion, platform: child.runtime.platform });

@@ -1,6 +1,6 @@
 ---
 name: design
-description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and narrower work to registered curated modules.
+description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and explicit operations to bundled Design capabilities.
 license: MIT
 compatibility: Requires Node.js 22 or newer.
 ---
@@ -9,25 +9,25 @@ compatibility: Requires Node.js 22 or newer.
 
 This is the stable Geldmacher Design router for websites and web apps. It adds integration and routing only. `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` remain the sole shared project context.
 
+<!-- design-host:start -->
 ## Host contract
 
-Determine the active host from the invocation: Cursor uses `/design` and `/impeccable`; Codex uses `$design` and `$impeccable`; a generic Agent Plugins client loads the bare `design` and `impeccable` skill names. Resolve `<DESIGN_SKILL_ROOT>` to the absolute directory containing this `SKILL.md`, replace `<host>` with `cursor`, `codex`, or `agent-plugin`, and keep cwd at the user's project. Never execute an unresolved placeholder.
+Determine the active host from the invocation: Cursor uses `/design` and `/impeccable`; Codex uses `$design` and `$impeccable`. Set `<host>` to `cursor` or `codex` accordingly. On Cursor, configured checks may deny a proposed UI write; Codex reports findings after an edit and through the deduplicated Stop pass. Configuration does not prove fresh host activation. Resolve `<DESIGN_SKILL_ROOT>` to `${CURSOR_PLUGIN_ROOT}/skills/design` on Cursor or `${PLUGIN_ROOT}/skills/design` on Codex; never use the foreign project cwd as the plugin root.
 
-## First step
+A project-local Impeccable skill or hook manifest may conflict with the plugin. Report conflicts and preserve those files; setup must never remove or overwrite them. Specialized roles and their invocation follow the bundled Impeccable host contract.
+<!-- design-host:end -->
 
-Read [references/capabilities.md](references/capabilities.md). It is generated from the curated module manifests and is the routing authority.
+Resolve `<DESIGN_SKILL_ROOT>` to the absolute directory containing this `SKILL.md`. Replace all script placeholders before execution and keep cwd at the user's project. Never execute an unresolved placeholder.
 
 ## Routing
 
-1. An explicit `/impeccable ...` or `$impeccable ...` request is never intercepted. Load and follow the bundled [impeccable skill](../impeccable/SKILL.md) directly.
-2. For `/design setup|status|doctor` or `$design setup|status|doctor`, follow the lifecycle flow below.
-3. When `design-core:detector-scan` wins, follow the explicit detector flow below.
-4. When `design-core:stakeholder-questionnaire` wins, read and follow [questionnaire.md](references/questionnaire.md).
-5. When `design-core:change-interface-review` wins, read and follow [change-review.md](references/change-review.md). The review is read-only and task-local.
-6. For any other request, choose the single highest-specificity matching capability from the capability index.
-7. If nothing narrower matches, load and follow the bundled [impeccable skill](../impeccable/SKILL.md) with the user's request unchanged.
-8. If equal-specificity capabilities match, ask one concise clarification question. Do not guess.
-9. Combine capabilities only when every selected manifest explicitly lists every other capability in `combinableWith`.
+Read [references/capabilities.md](references/capabilities.md) and use it as the sole routing authority. Its command names identify operations after the client loads this skill, not universal client invocation syntax.
+
+- For `design-core:project-integration`, follow the matching lifecycle operation below.
+- For `design-core:detector-scan`, follow the Detect operation below.
+- For `design-core:stakeholder-questionnaire`, read and follow [references/questionnaire.md](references/questionnaire.md).
+- For `design-core:change-interface-review`, read and follow [references/change-review.md](references/change-review.md). The review is read-only and task-local.
+- When the index selects Impeccable, load the bundled [impeccable skill](../impeccable/SKILL.md) with the user's request unchanged.
 
 Do not download skills, resolve dynamic URLs, install packages, or invent a module at runtime.
 
@@ -35,36 +35,34 @@ Do not download skills, resolve dynamic URLs, install packages, or invent a modu
 
 All commands keep the cwd at the user's project.
 
-### `design setup`
+### Setup
 
 1. Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> setup --json` after replacing both placeholders.
-2. Report conflicts and the exact proposed writes. A host-local Impeccable skill or hook entry (`.cursor/...` on Cursor, `.agents/skills/...` or `.codex/hooks.json` on Codex) is a conflict; never remove or overwrite it.
+2. Report conflicts and the exact proposed writes, including any existing local hook override. Preserve all unrelated settings.
 3. Ask for explicit confirmation before applying. Without a clear yes, stop with no writes.
-4. After confirmation only, run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> setup --apply --json` after replacing both placeholders. In the generic Agent Plugins target this completes without enabling or emulating a hook.
-5. If `PRODUCT.md` is missing, offer the host-native Impeccable `init` invocation reported by setup; do not create it implicitly. If an incumbent design should be captured and `DESIGN.md` is missing, offer the corresponding `document` invocation.
+4. After confirmation only, run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> setup --apply --json` after replacing both placeholders. When the host reports hooks as unavailable, this completes without enabling or emulating a hook.
+5. If `PRODUCT.md` is missing, offer the loaded Impeccable skill’s `init` operation reported by setup; do not create it implicitly. If an incumbent design should be captured and `DESIGN.md` is missing, offer its `document` operation.
 
-### `design status`
+### Status
 
 Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> status --json` after replacing both placeholders, then report plugin/module versions, hook availability, conflicts, and existing canonical context. This command is read-only.
 
-### `design doctor`
+### Diagnose
 
-Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> doctor --json` after replacing both placeholders. Diagnose only. Do not repair anything unless the user separately asks for an apply action.
+Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> diagnose --json` after replacing both placeholders. Diagnose only. Do not repair anything unless the user separately asks for an apply action.
 
-### `design detect`
+### Detect
 
 1. Accept only `detect -- <target> [target...]` addressed explicitly to Design. Require at least one target after the `--` separator; do not infer a default target.
 2. Run `node "<DESIGN_SKILL_ROOT>/scripts/design-cli.mjs" --host <host> detect --json -- <target> [target...]` after replacing both placeholders and passing every target as a separate, safely quoted argument.
 3. Treat exit `0` as `no-findings` or `advisory-only`, exit `2` as primary findings, and exit `1` as `blocked`. Exit `2` is detector evidence, not an infrastructure failure.
 4. Report the requested targets and detector provenance. Group findings by file, separate primary and advisory findings, and preserve each rule ID, line, snippet, and description.
 5. Say `The detector returned no findings` for `no-findings`; never call the interface clean, correct, complete, or approved from detector output alone.
-6. Keep the operation read-only. Do not edit source, configuration, ignores, or hooks. After findings, you may name the host-native Impeccable `polish <target>` invocation as a separate optional next action, but never run it within `detect`.
+6. Keep the operation read-only. Do not edit source, configuration, ignores, or hooks. After findings, you may name the loaded Impeccable skill’s `polish <target>` operation as a separate optional next action, but never run it within `detect`.
 
 ## Safety boundary
 
-- The plugin hook is inactive unless `.impeccable/config.json` parses and contains `hook.enabled: true`.
-- An explicit `design detect` remains available when the hook is disabled and never enables it.
-- On Cursor, a real Impeccable detector finding may deny a proposed UI write. On Codex, findings arrive after the edit and again through the deduplicated Stop deep pass.
-- Agent Plugins v1 does not standardize hooks or native subagents. Its portable target reports hooks as unavailable and uses Impeccable's bundled degraded role instructions.
-- Missing runtime files, malformed config, malformed hook input, or detector failure are visible diagnostics and allow the edit.
+- Optional checks stay disabled until explicitly enabled in canonical configuration. An existing `hook.enabled` in `.impeccable/config.local.json` overrides `.impeccable/config.json`.
+- An explicit Detect operation remains available when checks are disabled and never enables them.
+- Missing runtime files, malformed configuration or hook input, and detector failures remain visible diagnostics and allow the edit.
 - Non-UI files remain unaffected by Impeccable's detector.

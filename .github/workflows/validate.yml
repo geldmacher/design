@@ -51,5 +51,5 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - name: Exercise native engine and host adapters
-        run: node --test tests/impeccable-engine.test.mjs tests/detector-orchestration.test.mjs tests/hook.test.mjs tests/codex-hook.test.mjs
+      - name: Exercise native engine, host adapters and verifier
+        run: node --test tests/impeccable-engine.test.mjs tests/detector-orchestration.test.mjs tests/hook.test.mjs tests/codex-hook.test.mjs tests/verification.test.mjs

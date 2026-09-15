@@ -12,13 +12,13 @@ Impeccable is reproducibly pinned; see [upstream provenance](../upstream/README.
 
 In this source checkout, invoke `$update-impeccable` in Codex or `/update-impeccable` in Cursor to update the bundled skill to the latest stable Impeccable release. One invocation authorizes checking, preparing, reviewing, and applying a verified candidate without another confirmation, followed by the repository gates. This source-only maintainer skill preserves unrelated local changes and stops on conflicting update paths or failed verification. It does not install the plugin into a host, commit, push, or publish. See [Impeccable maintenance](impeccable-maintenance.md) for the complete flow and failure states.
 
-The source-only `$release-plugin`, `/release-plugin`, and `npm run release:plugin` surfaces provide one explicit validated GitHub Release lifecycle. The skills select and prepare the appropriate semantic version from the actual changes; the underlying script uses that consistent declared version. They may create one release commit plus lightweight tag, atomically push `main` and the tag, publish separate Cursor and Codex archives, and verify downloaded bytes. They never deploy locally, restart a host, submit a Marketplace entry, overwrite a release, or repair mixed remote state. See [GitHub Release validation](release-validation.md).
+For `$release-plugin` or `/release-plugin`, follow the [Release Plugin skill](../.agents/skills/release-plugin/SKILL.md), the authority for version selection, preparation, publication, and retry boundaries. [GitHub Release validation](release-validation.md) describes the script and its evidence.
 
 ## Bundled native Impeccable engine
 
 Impeccable 4.3.1 uses pinned engine 0.1.5. All three plugin packages include macOS ARM64/x64, Linux ARM64/x64 and Windows x64 binaries. Node.js 22+ remains required by the Design integration. Execution uses only the verified in-package binary; no runtime installation or self-update occurs.
 
-Maintainers run `npm run verify:impeccable-engine` for isolated engine, detector, hook and package checks. The [verifier](../.agents/skills/verify-impeccable-engine/SKILL.md) reports the native platform exercised and preserves evidence outside the repository. Fresh editor smoke is a separate acceptance step.
+Maintainers run `npm run verify:impeccable-engine` for isolated engine, detector, hook and package checks. `npm run release-check` uses the same verifier with `--all`, discovering every test file and running it once; `npm test` and the focused verifier remain independently available. The [verifier](../.agents/skills/verify-impeccable-engine/SKILL.md) reports the native platform exercised and preserves evidence outside the repository. Fresh editor smoke is a separate acceptance step.
 
 ## Package targets
 
@@ -30,7 +30,7 @@ One source checkout produces three deterministic packages:
 | Cursor | `.build/plugins/cursor/geldmacher-design` | `/design`, `/impeccable`, pre-write hook, and native agents |
 | Codex | `.build/plugins/codex/geldmacher-design` | `$design`, `$impeccable`, PostToolUse/Stop hook, and inherited generic subagents |
 
-Run `npm run build:targets` to materialize all three. The Agent Plugins package follows v1.0.0 and declares the skill identities `design` and `impeccable`. Discovery, presentation, and invocation syntax remain client-specific because the standard does not define distribution, permissions, hooks, native agents, commands, or client UX. See [the Agent Plugins target guide](agent-plugin-target.md).
+Run `npm run build:targets` to materialize all three. First-party Design text is shared; an explicitly marked host section and selected frontmatter fields are projected for the portable target. Missing or duplicate markers fail the build. Native packages include only `assets/logo.svg`; other branding stays in source. The Agent Plugins package follows v1.0.0 and declares the skill identities `design` and `impeccable`. Discovery, presentation, and invocation syntax remain client-specific because the standard does not define distribution, permissions, hooks, native agents, commands, or client UX. See [the Agent Plugins target guide](agent-plugin-target.md).
 
 ## Local maintainer deployment
 

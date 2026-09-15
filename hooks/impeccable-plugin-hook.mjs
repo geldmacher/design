@@ -17,7 +17,6 @@ export function evaluatePluginHook({
   event = {},
   projectRoot,
   pluginRoot,
-  nodePath = process.execPath,
   runtime = runBundledImpeccable,
 } = {}) {
   const root = path.resolve(projectRoot || projectRootFromEvent(event));
@@ -43,7 +42,7 @@ export function evaluatePluginHook({
     cwd: root,
     input: JSON.stringify(event),
     timeout: 7000,
-    nodePath,
+
   });
 
   if (!child.started || child.status !== 0) {
@@ -56,7 +55,7 @@ export function evaluatePluginHook({
   } catch {
     // Handled by the non-blocking diagnostic below.
   }
-  return { payload: allow(diagnostic('Detector returned an invalid response; edit allowed. Run /design doctor.')), diagnostic: true };
+  return { payload: allow(diagnostic('Detector returned an invalid response; edit allowed. Run /design diagnose.')), diagnostic: true };
 }
 
 async function main() {
@@ -77,6 +76,6 @@ async function main() {
 if (process.argv[1] && fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   main().catch((error) => {
     process.stderr.write(`${diagnostic(`Unexpected hook failure: ${error.message}`)}\n`);
-    process.stdout.write(JSON.stringify(allow(diagnostic('Unexpected hook failure; edit allowed. Run /design doctor.'))));
+    process.stdout.write(JSON.stringify(allow(diagnostic('Unexpected hook failure; edit allowed. Run /design diagnose.'))));
   });
 }

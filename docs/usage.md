@@ -2,6 +2,8 @@
 
 Start with a page, flow, or local path and describe what you want to improve. Use `/design` in Cursor or `$design` in Codex.
 
+See the [complete command reference](commands.md) for every bundled Impeccable design command, arguments, aliases, and live-mode prerequisites.
+
 
 | Goal | Agent Plugins v1 skill identity | Cursor invocation | Codex invocation |
 | --- | --- | --- | --- |
@@ -11,7 +13,7 @@ Start with a page, flow, or local path and describe what you want to improve. Us
 | Prepare a stakeholder questionnaire | `design` | `/design questionnaire [topic]` | `$design questionnaire [topic]` |
 | Check the project setup | `design` | `/design status` | `$design status` |
 | Prepare project integration | `design` | `/design setup` | `$design setup` |
-| Diagnose conflicts | `design` | `/design doctor` | `$design doctor` |
+| Diagnose conflicts | `design` | `/design diagnose` | `$design diagnose` |
 | Use Impeccable directly | `impeccable` | `/impeccable <request>` | `$impeccable <request>` |
 
 The Agent Plugins column identifies the declared skill, not a universal user-facing command. A compatible client decides how users or models discover and load that skill.
@@ -28,6 +30,8 @@ $design polish this checkout flow without changing its information architecture
 
 Design chooses the most specific bundled capability for the request and falls back to Impeccable for general design work.
 
+`design diagnose` is the read-only Design integration diagnosis. `design doctor` forwards to Impeccable's project-context diagnosis, just like direct `impeccable doctor`. Use the appropriate host prefix for both. The old integration `doctor` alias is removed, including in the Design CLI; update scripts that call it to `diagnose`. Lifecycle commands match only at the start of the request, so words such as "setup" inside a design task do not select integration work.
+
 `design detect` is a read-only scan of one or more explicitly named local files or directories. It always uses the bundled Impeccable detector, works independently of hook activation, and returns a structured result without installing, updating, or fixing anything. A no-findings result means only that the detector returned no findings; it is not a complete interface-quality verdict.
 
 `design questionnaire` prepares a focused questionnaire for one recipient or homogeneous audience. It reuses facts already present in the request and canonical project context, asks only for missing decision-critical information, and previews the complete Markdown before any write. A file is created only after the preview is followed by an exact `.md` destination; an existing destination requires a separate overwrite confirmation. The operation sends nothing, imports no answers, and does not change Design context or configuration.
@@ -36,7 +40,7 @@ Design chooses the most specific bundled capability for the request and falls ba
 
 ## Controlled by default
 
-Design never activates itself. Setup shows its proposed changes and waits for confirmation. Optional UI checks stay silent until `.impeccable/config.json` contains `hook.enabled: true`.
+Design never activates itself. Setup shows its proposed changes and waits for confirmation. Optional UI checks stay silent until the effective `hook.enabled` value is true. `.impeccable/config.local.json` overrides `.impeccable/config.json`. Explicit on/off updates the main setting and any existing local `hook.enabled` override while preserving other settings; it never creates a local config. Setup previews all affected files, then reports the reread effective state.
 
 Cursor can stop a proposed UI write when it finds a known issue. Codex checks after the edit and requests a correction without rolling the change back. The Agent Plugins target reports hooks as unavailable and uses bundled degraded role instructions instead of pretending native agents exist. Infrastructure failures remain visible but never block edits.
 

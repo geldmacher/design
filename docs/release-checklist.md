@@ -14,7 +14,7 @@
 - [ ] Two builds from the same materialized commit produce byte-identical target trees and archives with exactly one `geldmacher-design/` root and the matching host manifest.
 - [ ] The builder accepts only repository `.build/plugins` or a newly owned `geldmacher-design-build-*/targets` workspace and rejects repository roots, protected ancestors, the temp root, foreign temp directories, and symlink segments before cleanup.
 - [ ] Portable Markdown and runtime resources contain no native role aliases or `SUBAGENT_AUTHORIZATION`; context and live manual apply point to bundled degraded roles.
-- [ ] Built-target simulations cover status, doctor, setup preview, generic hook refusal, portable context/live events, native fail-open adapters, and Impeccable provider selection without writing to real host state.
+- [ ] Built-target simulations cover status, diagnose, setup preview, generic hook refusal, portable context/live events, native fail-open adapters, and Impeccable provider selection without writing to real host state.
 - [ ] Review-scope fixtures cover branch-plus-dirty work, staged and untracked files, exact two-dot and three-dot ranges, renames, exclusions, detached HEAD, shallow history, PR fetches, empty scope, and in-progress Git operations without checkout mutation.
 - [ ] All three target packages include the review reference and resolver while retaining exactly the `design` and `impeccable` skills.
 - [ ] All three target packages include the host-neutral questionnaire reference while retaining exactly two skills, two modules, no added agent, hook, script, or MCP contribution, and byte-identical native projections.
@@ -53,7 +53,7 @@ Until this section has fresh evidence, report these points as unverified, not fa
 
 ## Agent Plugins client gate
 
-Version 0.10.1 deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that the loaded `design` skill recognizes a leading `questionnaire` intent while hooks and native subagents are reported as unavailable rather than emulated.
+The portable target deliberately stops at the repository package and isolated simulations. A future real-client gate must start from a fresh supported Agent Plugins client, import only `.build/plugins/agent-plugin/geldmacher-design`, record the client/version and package digest, and verify both bare skills. It must also confirm that the loaded `design` skill recognizes a leading `questionnaire` intent while hooks and native subagents are reported as unavailable rather than emulated.
 
 Until that separately authorized gate exists, report real Agent Plugins client discovery, permissions, and activation as unverified. Do not infer them from schema validation or from Cursor/Codex behavior.
 
@@ -64,7 +64,7 @@ Follow `docs/codex-runtime-smoke.md` after a read-only helper preview and separa
 - [ ] `geldmacher-design@personal` is visible, installed, and enabled at the previewed content-addressed local version.
 - [ ] `$design status` and `$impeccable` resolve only after explicit invocation in a fresh task.
 - [ ] The detector is silent before project activation.
-- [ ] `$design setup` changes only `.impeccable/config.json` after explicit confirmation.
+- [ ] `$design setup` previews every changed config file and, after confirmation, updates the main config and an existing local `hook.enabled` override.
 - [ ] `Edit`, `Write`, and `apply_patch` produce valid PostToolUse behavior.
 - [ ] A bad UI edit remains written but produces correction context.
 - [ ] Stop reports deferred findings once and then deduplicates them.
@@ -78,4 +78,4 @@ Until this section has fresh evidence, report these points as unverified, not fa
 
 ## Publication gate
 
-Ordinary repository work never commits, pushes, creates a repository, imports into a real client, deploys, restarts a host, or publishes to a Marketplace. Explicit `$release-plugin` or `/release-plugin` is the bounded exception for one validated release commit, lightweight tag, atomic `main` plus tag push, and verified GitHub Release. It does not authorize version selection, Marketplace submission, local deployment, installation, or host activation. See [GitHub Release validation](release-validation.md).
+Release authorization and its boundaries are defined by the [Release Plugin skill](../.agents/skills/release-plugin/SKILL.md), including semantic-version selection and preparation. Follow [GitHub Release validation](release-validation.md) for script mechanics and retained retry evidence. Repository checks alone do not authorize publication, installation, or host activation.

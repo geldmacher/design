@@ -17,11 +17,8 @@ test('stakeholder questionnaire is an explicit first-party Design capability', (
     id: 'stakeholder-questionnaire',
     title: 'Stakeholder decision questionnaire',
     skill: 'design',
-    specificity: 100,
     fallback: false,
     triggers: ['questionnaire'],
-    scope: ['website', 'web-app'],
-    combinableWith: [],
   });
   assert.match(designSkill, /design-core:stakeholder-questionnaire/);
   assert.match(designSkill, /references\/questionnaire\.md/);
