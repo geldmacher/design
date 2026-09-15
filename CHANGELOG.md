@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.11.0
+
 - Select product versions automatically from published history and public-contract changes, with an explicit initial-development policy for 0.x.
 - Build real-source installer fixtures without pre-existing release tags so any product version can be verified.
 
