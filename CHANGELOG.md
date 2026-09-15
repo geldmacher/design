@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Select product versions automatically from published history and public-contract changes, with an explicit initial-development policy for 0.x.
+- Build real-source installer fixtures without pre-existing release tags so any product version can be verified.
+
+- Use `design diagnose` for read-only integration diagnostics; `design doctor` routes to Impeccable project-context diagnosis. Direct Design CLI callers must use `diagnose`. Diagnosis accepts host selection and `--json`, rejects unsupported arguments, and returns status and findings without the previous `repairable` and `apply` fields.
+- Unify hook activation for Design setup and Impeccable commands, including existing local overrides, complete previews, configuration validation, atomic file replacement, and effective-state read-back.
+- Simplify routing to a generated leading-command index, share host-neutral Design instructions, and streamline package assets and module metadata across all three targets.
+- Require native engine provenance for maintenance pins and verify native candidate preparation, application, and rollback with current engine fixtures.
+- Run the complete test suite once through the isolated verifier and avoid duplicate deployment checks; retain source, results, platform, and cleanup evidence.
+- Add a generated command reference, consolidate host smoke instructions, and describe the current supported operations consistently.
+
 ## 0.10.1
 
 - Fix Windows launcher paths and argument handling, CRLF normalization in context output and package generation, and platform-aware engine executable checks.

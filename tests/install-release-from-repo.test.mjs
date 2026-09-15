@@ -85,7 +85,7 @@ if (action === 'add') {
 console.log('{}');
 `;
 
-function fixture(t) {
+function fixture(t, { seedRelease = true } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "design-release-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const root = join(directory, "repository");
@@ -114,7 +114,7 @@ function fixture(t) {
     command("git", ["tag", `v${version}`], { cwd: root, env });
     return command("git", ["rev-parse", "HEAD"], { cwd: root, env });
   };
-  item.commit = item.cut("1.0.0");
+  if (seedRelease) item.commit = item.cut("1.0.0");
   item.execute = (binary, args, options) => {
     item.calls.push({ binary, args: [...args], cwd: options?.cwd });
     if (binary === "cursor") return "fixture cursor";
@@ -295,7 +295,8 @@ test("failed first Codex install restores absence and preserves unrelated Market
 });
 
 test("real Design source builds, validates and installs through the release path in an isolated host", async t => {
-  const item = fixture(t);
+  const item = fixture(t, { seedRelease: false });
+  assert.equal(command("git", ["tag", "--list"], { cwd: item.root }), "");
   for (const entry of readdirSync(item.root)) {
     if (entry !== ".git") rmSync(join(item.root, entry), { recursive: true, force: true });
   }
