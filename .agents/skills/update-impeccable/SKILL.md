@@ -1,6 +1,7 @@
 ---
 name: update-impeccable
-description: Update this Design source repository to the latest stable Impeccable skill release through its verified candidate workflow. Use only when the user explicitly invokes $update-impeccable or /update-impeccable in this repository.
+description: Update vendored Impeccable in this Design source repository through verified candidate preparation, review, and application. Use only on explicit update-impeccable invocation; does not install, deploy, or publish Design.
+disable-model-invocation: true
 ---
 
 # Update Impeccable

@@ -6,7 +6,7 @@ Follow the [shared preparation and journeys](runtime-smoke-common.md), with the 
 
 1. Reload the separately installed plugin, open only the disposable project and start a fresh conversation.
 2. Confirm Design discovery and visible `/design` and `/impeccable` invocations.
-3. Run `/design status` from the project rather than the plugin root. Compare identity and versions with the recorded package provenance; expect disabled hooks and the project context state.
+3. Complete the shared skill-selection scenarios, then run `/design status` from the project rather than the plugin root. Compare identity and versions with the recorded package provenance; expect disabled hooks and the project context state.
 4. Resolve `impeccable-asset-producer`, `impeccable-documenter`, `impeccable-finish-reviewer` and `impeccable-manual-edit-applier`. Files alone do not prove agent discovery.
 5. Complete the shared detector, diagnosis, questionnaire, review and configuration journeys.
 

@@ -24,7 +24,7 @@ A design partner for Cursor and Codex. Plan, build, review, and refine websites 
 
 **Describe the task in your own words.** One entry point selects the relevant bundled capability, from design critique and polish to change reviews and stakeholder questionnaires.
 
-**Choose when it acts.** Invoke Design when you need it. Project setup previews changes for approval, and optional UI checks stay off until you enable them.
+**Keep control of the task.** Cursor and Codex can select Design for a matching web UI request, or you can invoke it directly. Design respects your choice of another skill. Project setup previews changes for approval, and optional UI checks stay off until you enable them.
 
 Design combines the bundled [Impeccable](https://github.com/pbakaus/impeccable) toolkit with project integration, focused review and discovery workflows, and optional checks adapted to each host. See [upstream provenance](upstream/README.md) for the pinned version and maintained adaptations.
 
@@ -52,7 +52,7 @@ For exact host prerequisites, Git or Marketplace import, verified ZIP installati
 
 ## Your first request
 
-Open the project and identify the page or files you want Design to inspect. In Codex, start with:
+Open the project and identify the page or files you want to improve. Design can be selected for a request such as “Improve this form on mobile” without a command prefix. To select it explicitly in Codex, start with:
 
 ```text
 $design critique this dashboard and prioritize the three most useful improvements

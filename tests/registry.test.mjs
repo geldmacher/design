@@ -17,6 +17,9 @@ test('the actual skill loads a current index with every leading command and the 
   ]);
   assert.match(rendered, /Match only the leading command/);
   assert.match(rendered, /A word inside a design task never selects a command/);
+  assert.match(rendered, /Use the table only when the user explicitly requests a Design operation with its command syntax/);
+  assert.match(rendered, /Review this checkout page/);
+  assert.match(rendered, /An explicit Design invocation alone does not turn an ordinary UI request into an operation/);
   assert.match(rendered, /every other request, including a leading `doctor`/);
   assert.match(rendered, /impeccable:general-web-design/);
   assert.match(rendered, /explicitly addressed to Impeccable bypasses Design/);

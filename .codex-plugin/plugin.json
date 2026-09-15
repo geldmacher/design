@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "Design",
     "shortDescription": "Your design partner for websites and web apps",
-    "longDescription": "Plan, build, review, and refine interfaces around your product and visual language. Start with a focused critique, polish an existing flow, or review the interface impact of a code change. You choose when Design runs and whether to enable optional UI checks.",
+    "longDescription": "Plan, build, review, and refine interfaces around your product and visual language. Start with a focused critique, polish an existing flow, or review the interface impact of a code change. Design can be selected for matching web UI tasks. Project setup and optional UI checks remain under your control.",
     "developerName": "Geldmacher",
     "category": "Developer Tools",
     "capabilities": [

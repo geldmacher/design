@@ -62,7 +62,7 @@ Until that separately authorized gate exists, report real Agent Plugins client d
 Follow the [Codex entry and shared journeys](codex-runtime-smoke.md) after a read-only helper preview and separately authorized local deployment. Record the date, Codex version, project path, plugin path, trust decisions, and observations in `.tests/`.
 
 - [ ] `geldmacher-design@personal` is visible, installed, and enabled at the previewed content-addressed local version.
-- [ ] `$design status` and `$impeccable` resolve only after explicit invocation in a fresh task.
+- [ ] In a fresh task, web UI requests can select Design automatically; `$design status` and direct `$impeccable` remain available. Complete the shared positive and negative skill-selection cases.
 - [ ] The detector is silent before project activation.
 - [ ] The shared configuration matrix passes: full preview, both opposite local overrides, explicit on/off, reread state, repetition and preserved foreign settings.
 - [ ] `Edit`, `Write`, and `apply_patch` produce valid PostToolUse behavior.

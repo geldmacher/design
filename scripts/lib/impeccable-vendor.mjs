@@ -26,6 +26,7 @@ export const transformations = Object.freeze([
   "native-engine-launcher",
   "plugin-project-maintenance",
   "agent-skills-frontmatter",
+  "scoped-skill-discovery",
   "portable-dual-host-script-paths",
   "dual-host-provider-routing",
   "codex-generic-subagent-contract",
@@ -264,6 +265,8 @@ export function transformSkillFile(relativePath, original, version) {
         "Agent Skills frontmatter",
       );
       operations.push("agent-skills-frontmatter");
+      text = mustReplace(text, "description: Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.", "description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.", "scoped Impeccable discovery");
+      operations.push("scoped-skill-discovery");
       text = mustReplace(text,
         "The launcher runs a self-contained binary that ships next to it or is downloaded once on first run; no Node or other runtime is required.",
         "The plugin launcher requires Node.js 22 or newer and runs only the verified platform engine bundled in this plugin. Missing binaries are diagnosed; runtime downloads and external binary overrides are disabled.",

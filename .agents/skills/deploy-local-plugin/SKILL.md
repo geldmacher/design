@@ -1,6 +1,7 @@
 ---
 name: deploy-local-plugin
-description: Build, inspect, dry-run, or deploy the current repository's host-specific local plugin copies for Cursor and Codex. Use only when the user explicitly invokes $deploy-local-plugin in a plugin development repository.
+description: Build, inspect, preview, or deploy this Design source checkout to selected local Cursor and Codex installations. Use only on explicit deploy-local-plugin invocation; installing a published release is a separate operation.
+disable-model-invocation: true
 ---
 
 # Deploy Local Plugin

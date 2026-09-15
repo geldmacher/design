@@ -20,7 +20,7 @@ The helper deploys the generated Codex target and updates this plugin's entry in
 
 1. Confirm `geldmacher-design@personal` is installed and enabled at the content-addressed version reported by the preview.
 2. Start a fresh task in the disposable project. Invoke `$design status`; compare versions with the recorded package provenance and expect disabled hooks and Codex-specific diagnostics.
-3. Invoke `$impeccable` and confirm the installed skill is selected instead of a project-local copy. Ordinary UI work without invocation must not activate either skill implicitly.
+3. Invoke `$impeccable` and confirm the installed skill is selected instead of a project-local copy. Then complete the shared skill-selection scenarios: ordinary web UI work may select Design, which loads bundled Impeccable. Impeccable must not compete as an independent implicit entry point.
 4. Complete the shared detector, diagnosis, questionnaire and review journeys. Before enabling checks, write a UI file and confirm no plugin-hook output. Grant hook trust manually when Codex requests it, then complete the shared configuration journey.
 
 ## PostToolUse and Stop

@@ -4,4 +4,4 @@ interface:
   brand_color: "#FF5C35"
   default_prompt: "Use $design to critique this page and prioritize the three most useful improvements."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

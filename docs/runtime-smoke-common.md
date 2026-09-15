@@ -17,12 +17,33 @@ Complete the host entry's discovery steps, then run the shared sections in order
 
 Below, command suffixes such as `detect -- src/Card.jsx` follow the selected Design invocation. Keep hooks disabled until the configuration section. Record file contents before and after each read-only journey.
 
+## Skill selection
+
+Run each case in a fresh task on a disposable copy so a previously loaded skill cannot influence selection. Use the same cases for Cursor and Codex. Record the exact prompt, host/model version, installed package hash, task identity, selected skill and the actual loaded `SKILL.md` path. Inspect skill-load/tool evidence rather than relying only on the assistant's claim. Missing load evidence is unverified.
+
+| Request | Expected selection and boundary |
+| --- | --- |
+| “Design a landing page using the existing components.” | Design, then bundled Impeccable; preserve the existing product truth. |
+| “Improve this form on mobile.” | Design, then bundled Impeccable; stay within the requested interface. |
+| “Review this checkout page.” | Design, then Impeccable UI critique; no branch scope resolver or source edits. |
+| “Optimize the backend database query.” | Neither Design nor Impeccable selected. |
+| “Review this backend change for correctness.” | Neither Design nor Impeccable selected. |
+| Direct Impeccable invocation using the host prefix | Installed Impeccable loads directly, without routing through Design. |
+| Explicit Design `review quick branch`, `status`, and `detect -- src/Card.jsx` | The corresponding existing specialized operations, with their read-only boundaries. |
+| A UI request explicitly assigning another available skill | Respect that skill; no automatic Design takeover. Record the other skill's actual name. |
+
+For every ordinary UI case, compare project configuration and host hook files before and after. No setup, hook activation, migration, installation, update, deployment, or publication may occur as a consequence of selection. Existing initialization rules for new design work remain applicable; use incumbent project context for these focused selection cases.
+
+Separately, in a fresh task in the Design **source checkout**, ask to validate an engine or host-adapter change. Expect the repository `verify-impeccable-engine` skill and isolated test evidence. A request to critique an application page must not select this verifier. Confirm the four maintainer skills remain explicit-only and their existing host-prefixed commands remain discoverable; do not run mutating commands just to test discovery. Maintainer skills must be absent from installed runtime packages.
+
+Package metadata checks and a written walkthrough of these cases do not prove actual host selection. Record each unexecuted host case as `Not verified` and retain the transcripts when separately commissioned trials become available.
+
 ## Detector and native engine
 
 1. Invoke `detect -- src/Card.jsx`. Expect `no-findings`, exit `0`, and bundled Impeccable provenance, including `engineVersion` and `platform`. This proves only the absence of deterministic findings.
 2. Create `src/Bad.html` with the fixture below and invoke `detect -- src/Bad.html`. Expect `findings`, exit `2`, a positive primary count, and a normalized `side-tab` finding. The scan must leave its input unchanged.
 3. Invoke `detect --` without a target, then try a URL and a path outside the disposable project. Each must return one `blocked` JSON envelope with exit `1` and must not invoke a remote or project-local detector.
-4. Confirm scans never activate hooks, change ignores, or fix files. Refinement is a separate explicit invocation.
+4. Confirm scans never activate hooks, change ignores, or fix files. Refinement requires a separate user request; it is never a scan side effect.
 5. Resolve the installed Impeccable skill directory and run its `scripts/impeccable context` launcher (`impeccable.cmd` on Windows) from the disposable project. Context and Impeccable `doctor` must report configuration honestly without installing manifests or querying for an engine update. Missing, unsupported, or modified engines remain visible failures; no fallback or download is allowed.
 
 ```html
@@ -74,4 +95,4 @@ Return to the disposable project used for the host adapter trial, not a malforme
 
 ## Closeout
 
-Retain installed package identity, task identity, explicit invocations, adapter outputs, file comparisons, omissions and cleanup receipts under `.tests/`; keep the verifier's external evidence directory. Stop only trial-owned processes and remove only trial-owned disposable resources. Installation removal is a separately authorized host action. State unexecuted cases explicitly. Repository checks, installation alignment, fresh host observations and publication are separate evidence.
+Retain installed package identity, task identity, prompts, selected skills and their loaded source paths, explicit invocations, adapter outputs, file comparisons, omissions and cleanup receipts under `.tests/`; keep the verifier's external evidence directory. Stop only trial-owned processes and remove only trial-owned disposable resources. Installation removal is a separately authorized host action. State unexecuted cases explicitly. Repository checks, installation alignment, fresh host observations and publication are separate evidence.

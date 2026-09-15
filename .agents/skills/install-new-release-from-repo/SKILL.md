@@ -1,6 +1,7 @@
 ---
 name: install-new-release-from-repo
-description: Install or preview the latest published stable Design release for the selected Cursor or Codex harness from the open Design source repository. Use only when the user explicitly invokes $install-new-release-from-repo or its Cursor command.
+description: Install or preview the latest published stable Design release for one selected Cursor or Codex host from this source repository. Use only on explicit install-new-release-from-repo invocation; does not deploy unpublished local changes.
+disable-model-invocation: true
 ---
 
 # Install new Release from repo

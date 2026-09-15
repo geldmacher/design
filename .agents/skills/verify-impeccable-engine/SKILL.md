@@ -1,6 +1,6 @@
 ---
 name: verify-impeccable-engine
-description: Verify the pinned Impeccable engine, Design detector, hook adapters and package boundaries in isolated local projects.
+description: Validate changes to the pinned Impeccable engine, Design detector, host adapters, or plugin packages in this source repository. Runs isolated integration tests; excludes application UI reviews and live editor activation.
 ---
 
 # Verify Impeccable engine

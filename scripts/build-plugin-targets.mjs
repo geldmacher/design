@@ -354,7 +354,6 @@ export function projectDesignSkill(source) {
   const match = text.match(/^---\n([\s\S]*?)\n---\n/);
   if (!match) throw new Error("Design frontmatter is missing.");
   const metadata = YAML.parse(match[1]);
-  metadata.description = "Use when a user loads the design skill for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or website and web-app design work. Routes explicit operations to bundled Design capabilities and general design work to Impeccable.";
   const contract = [
     "## Host contract", "",
     "This standard package declares the bare `design` and `impeccable` skill names; the client decides how they are exposed or invoked. Set `<host>` to `agent-plugin`.", "",
@@ -362,6 +361,36 @@ export function projectDesignSkill(source) {
   ].join("\n");
   const body = text.slice(match[0].length);
   return `---\n${YAML.stringify(metadata)}---\n${body.slice(0, body.indexOf(start))}${contract}${body.slice(body.indexOf(end) + end.length)}`;
+}
+
+export function projectNativeSkill(text, host, allowImplicit) {
+  text = text.replace(/\r\n/g, "\n");
+  if (!["cursor", "codex"].includes(host)) throw new Error(`Unknown native skill host: ${host}`);
+  if (typeof allowImplicit !== "boolean") throw new Error("Native skill invocation policy must be explicit.");
+  const match = text.match(/^---\n([\s\S]*?)\n---\n/);
+  if (!match) throw new Error("Native skill frontmatter is missing.");
+  const metadata = YAML.parse(match[1]);
+  if (!["design", "impeccable"].includes(metadata.name)) throw new Error("Unknown native skill identity.");
+  if (Object.hasOwn(metadata, "disable-model-invocation")) throw new Error("Shared runtime skill contains Cursor-only invocation metadata.");
+  if (host === "cursor") text = text.replace(/^---\n/, `---\ndisable-model-invocation: ${!allowImplicit}\n`);
+  if (metadata.name === "design") {
+    const start = "<!-- design-host:start -->";
+    const end = "<!-- design-host:end -->";
+    if (text.split(start).length !== 2 || text.split(end).length !== 2 || text.indexOf(end) < text.indexOf(start)) {
+      throw new Error("Design host markers must occur exactly once in order.");
+    }
+    text = replaceRequired(text, `${start}\n## Host contract\n`, `${start}\n## Host contract\n\nThis package targets ${host === "cursor" ? "Cursor" : "Codex"}. Set \`<host>\` to \`${host}\` and pass \`IMPECCABLE_HOST=${host}\` when running the bundled Impeccable launcher, including after automatic skill selection.`, "native Design host");
+  }
+  return text;
+}
+
+function adaptNativeSkills(destination, host) {
+  for (const name of ["design", "impeccable"]) {
+    const root = join(destination, "skills", name);
+    const policy = YAML.parse(readFileSync(join(root, "agents", "openai.yaml"), "utf8")).policy;
+    const path = join(root, "SKILL.md");
+    writeFileSync(path, projectNativeSkill(readFileSync(path, "utf8"), host, policy?.allow_implicit_invocation));
+  }
 }
 
 function adaptAgentPluginSkills(destination) {
@@ -479,6 +508,15 @@ function validateNative(destination, host, version) {
   const module = JSON.parse(readFileSync(join(destination, "modules", "design-core.json"), "utf8"));
   const expectedHook = host === "cursor" ? "hooks/cursor-hooks.json" : "hooks/hooks.json";
   if (JSON.stringify(module.contributes.hooks) !== JSON.stringify([expectedHook])) throw new Error(`${host} target module hooks drifted`);
+  for (const name of ["design", "impeccable"]) {
+    const skillRoot = join(destination, "skills", name);
+    const { value } = parseSkillFrontmatter(join(skillRoot, "SKILL.md"), `skills/${name}/SKILL.md`);
+    const policy = YAML.parse(readFileSync(join(skillRoot, "agents", "openai.yaml"), "utf8"));
+    if (policy?.policy?.allow_implicit_invocation !== (name === "design")) throw new Error(`${name} Codex invocation policy drifted`);
+    if (host === "cursor" ? value["disable-model-invocation"] !== (name !== "design") : Object.hasOwn(value, "disable-model-invocation")) {
+      throw new Error(`${host} ${name} skill has incorrect Cursor invocation metadata`);
+    }
+  }
   files(destination);
 }
 
@@ -556,6 +594,8 @@ function packageReadme(host) {
     "",
     "## Start with your interface",
     "",
+    "Design can be selected automatically for web UI tasks. It forwards ordinary interface work to bundled Impeccable and respects an explicit choice of another skill. Backend-only tasks and general code reviews are outside its scope.",
+    "",
     "Open your project, identify the page or files you want to improve, and try:",
     "",
     "```text",
@@ -632,6 +672,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
       copyRegular(join(projectRoot, "manifests", "agent-plugin.json"), join(destination, "plugin.json"), projectRoot);
       adaptAgentPluginSkills(destination);
     } else {
+      adaptNativeSkills(destination, host);
       writeFileSync(join(destination, "README.md"), packageReadme(host));
     }
     packageThirdPartyProvenance(destination, projectRoot, impeccablePin);

@@ -1,6 +1,7 @@
 ---
 name: release-plugin
-description: Choose the appropriate semantic version and complete this repository's validated Cursor and Codex GitHub Release in one invocation. Use only when the user explicitly invokes $release-plugin in this repository.
+description: Choose the semantic version and publish one validated Design GitHub Release for Cursor and Codex. Use only on explicit release-plugin invocation in this source repository; local installation and deployment are separate operations.
+disable-model-invocation: true
 ---
 
 # Release Plugin

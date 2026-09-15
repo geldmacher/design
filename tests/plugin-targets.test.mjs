@@ -5,9 +5,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import YAML from "yaml";
 import {
   buildPluginTargets,
   projectDesignSkill,
+  projectNativeSkill,
   createTargetBuildWorkspace,
   removeTargetBuildWorkspace,
 } from "../scripts/build-plugin-targets.mjs";
@@ -149,6 +151,8 @@ test("deterministic target allowlists isolate the portable package and native ad
       assert.equal(existsSync(join(first["agent-plugin"].path, hostOnly)), false, `${hostOnly} leaked into Agent Plugins target`);
     }
     for (const target of [first["agent-plugin"].path, first.cursor.path, first.codex.path]) {
+      assert.equal(existsSync(join(target, "AGENTS.md")), false);
+      assert.equal(existsSync(join(target, "rules")), false);
       for (const developmentRoot of [".agents", ".build", ".cursor", ".git", "node_modules", "tests", "upstream", "overlays"]) {
         assert.equal(existsSync(join(target, developmentRoot)), false, `${developmentRoot} leaked into ${target}`);
       }
@@ -184,12 +188,37 @@ test("deterministic target allowlists isolate the portable package and native ad
       }
     }
     for (const host of ["cursor", "codex"]) {
+      for (const name of ["design", "impeccable"]) {
+        const relativePath = `skills/${name}/SKILL.md`;
+        const source = readFileSync(join(repositoryRoot, relativePath), "utf8").replace(/\r\n/g, "\n");
+        const target = readFileSync(join(first[host].path, relativePath), "utf8");
+        const frontmatter = (text) => YAML.parse(text.match(/^---\n([\s\S]*?)\n---\n/)[1]);
+        const metadata = frontmatter(target);
+        if (host === "cursor") {
+          assert.equal(metadata["disable-model-invocation"], name !== "design");
+          delete metadata["disable-model-invocation"];
+        } else assert.equal(Object.hasOwn(metadata, "disable-model-invocation"), false);
+        assert.deepEqual(metadata, frontmatter(source));
+        const policy = YAML.parse(readFileSync(join(first[host].path, `skills/${name}/agents/openai.yaml`), "utf8"));
+        assert.equal(policy.policy.allow_implicit_invocation, name === "design");
+        let normalized = target.replace(/^disable-model-invocation: (true|false)\n/m, "");
+        if (name === "design") {
+          const hostLines = normalized.match(/^This package targets .*$/gm);
+          assert.equal(hostLines?.length, 1);
+          assert.ok(hostLines[0].includes(host === "cursor" ? "Cursor" : "Codex"));
+          assert.ok(hostLines[0].includes(`\`<host>\` to \`${host}\``));
+          assert.ok(hostLines[0].includes(`IMPECCABLE_HOST=${host}`));
+          normalized = normalized.replace(`\n${hostLines[0]}`, "");
+        }
+        assert.equal(normalized, source, `${host} changed shared ${name} instructions outside the host projection`);
+        const portable = frontmatter(readFileSync(join(first["agent-plugin"].path, relativePath), "utf8"));
+        assert.equal(Object.hasOwn(portable, "disable-model-invocation"), false);
+        assert.equal(portable.description, metadata.description);
+      }
       for (const relativePath of [
-        "skills/design/SKILL.md",
         "skills/design/references/change-review.md",
         "skills/design/references/questionnaire.md",
         "skills/design/scripts/review-scope.mjs",
-        "skills/impeccable/SKILL.md",
         "agents/impeccable-asset-producer.md",
         "agents/impeccable-documenter.md",
         "agents/impeccable-finish-reviewer.md",
@@ -250,3 +279,29 @@ test('Design host projection rejects missing, duplicate and reversed markers', (
   assert.equal(projectDesignSkill(source.replace(/\n/g, '\r\n')), projected);
   assert.ok(projected.endsWith(source.slice(source.indexOf(end) + end.length)));
 });
+
+
+test('native skill projection rejects unknown hosts, policies, and shared Cursor metadata', () => {
+  const source = readFileSync(join(repositoryRoot, 'skills/design/SKILL.md'), 'utf8');
+  assert.throws(() => projectNativeSkill(source, 'unknown', true), /Unknown native skill host/);
+  assert.throws(() => projectNativeSkill(source, 'codex'), /policy must be explicit/);
+  assert.throws(() => projectNativeSkill(source.replace('name: design', 'name: other'), 'codex', true), /Unknown native skill identity/);
+  assert.throws(() => projectNativeSkill(source.replace('name: design', 'disable-model-invocation: true\nname: design'), 'codex', true), /Cursor-only/);
+  for (const host of ['cursor', 'codex']) {
+    assert.throws(() => projectNativeSkill(source.replace('<!-- design-host:end -->', ''), host, true), /markers/);
+  }
+});
+
+for (const name of ['design', 'impeccable']) {
+  for (const host of ['cursor', 'codex']) {
+    test(`native skill projection normalizes CRLF for ${name} on ${host}`, () => {
+      const lf = readFileSync(join(repositoryRoot, 'skills', name, 'SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
+      const crlf = lf.replace(/\n/g, '\r\n');
+      const expected = projectNativeSkill(lf, host, name === 'design');
+      const actual = projectNativeSkill(crlf, host, name === 'design');
+      assert.equal(actual, expected);
+      assert.equal(actual.includes('\r'), false);
+      assert.throws(() => projectNativeSkill(crlf.replace(/^---/, '--'), host, name === 'design'), /frontmatter is missing/);
+    });
+  }
+}

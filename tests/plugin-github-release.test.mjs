@@ -241,7 +241,7 @@ test("release interfaces are explicit-only, no-argument, and source-only", () =>
   const metadata = readFileSync(join(repositoryRoot, ".agents/skills/release-plugin/agents/openai.yaml"), "utf8");
   const commandText = readFileSync(join(repositoryRoot, ".cursor/commands/release-plugin.md"), "utf8");
   const packageJson = JSON.parse(readFileSync(join(repositoryRoot, "package.json"), "utf8"));
-  assert.match(skill, /explicitly invokes \$release-plugin/);
+  assert.match(skill, /^disable-model-invocation: true$/m);
   assert.match(metadata, /allow_implicit_invocation: false/);
   assert.match(commandText, /npm run release:plugin/);
   assert.equal(packageJson.scripts["release:plugin"], "node scripts/plugin-github-release.mjs");

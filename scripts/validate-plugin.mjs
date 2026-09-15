@@ -146,7 +146,7 @@ for (const releaseSurface of [
 }
 const releaseSkill = frontmatter('.agents/skills/release-plugin/SKILL.md');
 check(releaseSkill.name === 'release-plugin', 'Unexpected release skill name.');
-check(/explicitly invokes \$release-plugin/.test(releaseSkill.description), 'Release skill must require explicit invocation.');
+check(releaseSkill['disable-model-invocation'] === true, 'Release skill must require explicit Cursor invocation.');
 const releaseMetadata = YAML.parse(fs.readFileSync(path.join(root, '.agents/skills/release-plugin/agents/openai.yaml'), 'utf8'));
 check(releaseMetadata?.policy?.allow_implicit_invocation === false, 'Release skill metadata must disable implicit invocation.');
 check(/npm run release:plugin/.test(fs.readFileSync(path.join(root, '.cursor/commands/release-plugin.md'), 'utf8')), 'Cursor release command must use the release harness.');
@@ -217,7 +217,7 @@ for (const skillPath of skillPaths) {
   const metadataPath = `${skillPath}/agents/openai.yaml`;
   check(fs.existsSync(path.join(root, metadataPath)), `Missing Codex skill metadata: ${metadataPath}`);
   const metadata = YAML.parse(fs.readFileSync(path.join(root, metadataPath), 'utf8'));
-  check(metadata?.policy?.allow_implicit_invocation === false, `${metadataPath} must require explicit invocation.`);
+  check(metadata?.policy?.allow_implicit_invocation === (skillPath === 'skills/design'), `${metadataPath} has an incorrect invocation policy.`);
   check(typeof metadata?.interface?.display_name === 'string' && metadata.interface.display_name, `${metadataPath} needs a display name.`);
   check(typeof metadata?.interface?.short_description === 'string' && metadata.interface.short_description, `${metadataPath} needs a short description.`);
 }
@@ -337,6 +337,7 @@ const allowedTransformations = new Set([
   'native-engine-launcher',
   'plugin-project-maintenance',
   'agent-skills-frontmatter',
+  'scoped-skill-discovery',
   'portable-dual-host-script-paths',
   'dual-host-provider-routing',
   'codex-generic-subagent-contract',

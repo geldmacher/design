@@ -1,6 +1,6 @@
 ---
 name: design
-description: Use when the user explicitly invokes /design in Cursor or $design in Codex for project setup, status, diagnostics, stakeholder questionnaires, explicit local detector scans, change-scoped interface review, or curated website and web-app design work. Routes general design work to the bundled Impeccable skill and explicit operations to bundled Design capabilities.
+description: Plan, build, critique, or refine website and web-app interfaces, including layout, accessibility, responsive behavior, and UI copy. Use for web UI tasks, not backend-only work or general code reviews. Also handles explicitly requested Design project operations.
 license: MIT
 compatibility: Requires Node.js 22 or newer.
 ---
@@ -12,7 +12,7 @@ This is the stable Geldmacher Design router for websites and web apps. It adds i
 <!-- design-host:start -->
 ## Host contract
 
-Determine the active host from the invocation: Cursor uses `/design` and `/impeccable`; Codex uses `$design` and `$impeccable`. Set `<host>` to `cursor` or `codex` accordingly. On Cursor, configured checks may deny a proposed UI write; Codex reports findings after an edit and through the deduplicated Stop pass. Configuration does not prove fresh host activation. Resolve `<DESIGN_SKILL_ROOT>` to `${CURSOR_PLUGIN_ROOT}/skills/design` on Cursor or `${PLUGIN_ROOT}/skills/design` on Codex; never use the foreign project cwd as the plugin root.
+Use the known active host, including when Design was selected automatically: Cursor uses `cursor`; Codex uses `codex`. Set `<host>` accordingly; an invocation prefix is not required. Keep the bundled launcher's `IMPECCABLE_HOST` consistent with that host. If the host is unknown, report it before running host-dependent commands rather than guessing. On Cursor, configured checks may deny a proposed UI write; Codex reports findings after an edit and through the deduplicated Stop pass. Configuration does not prove fresh host activation. Resolve the skill from its supplied absolute path or the active host's plugin root (`${CURSOR_PLUGIN_ROOT}` on Cursor, `${PLUGIN_ROOT}` on Codex); never use the foreign project cwd as the plugin root.
 
 A project-local Impeccable skill or hook manifest may conflict with the plugin. Report conflicts and preserve those files; setup must never remove or overwrite them. Specialized roles and their invocation follow the bundled Impeccable host contract.
 <!-- design-host:end -->
@@ -20,6 +20,8 @@ A project-local Impeccable skill or hook manifest may conflict with the plugin. 
 Resolve `<DESIGN_SKILL_ROOT>` to the absolute directory containing this `SKILL.md`. Replace all script placeholders before execution and keep cwd at the user's project. Never execute an unresolved placeholder.
 
 ## Routing
+
+Use Design automatically only for a requested web-interface task. Respect an explicit choice of another skill. Selection authorizes work within the user's task, not project setup, hook activation, context migrations, installation, updates, deployment, or publication.
 
 Read [references/capabilities.md](references/capabilities.md) and use it as the sole routing authority. Its command names identify operations after the client loads this skill, not universal client invocation syntax.
 

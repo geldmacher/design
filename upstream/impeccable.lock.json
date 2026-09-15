@@ -23,6 +23,7 @@
       "native-engine-launcher",
       "plugin-project-maintenance",
       "agent-skills-frontmatter",
+      "scoped-skill-discovery",
       "portable-dual-host-script-paths",
       "dual-host-provider-routing",
       "codex-generic-subagent-contract",
@@ -35,7 +36,7 @@
       "evidence-based-usability-guidance"
     ],
     "patch": "upstream/patches/impeccable-plugin.patch",
-    "patchSha256": "9cd4cad609aaa125f9a4a621d5489266d8ff64472b321a7e6aff028e93426bf6",
+    "patchSha256": "e58b7716ae7009dec785403766f8d2fe82638350dca126ea97fead2504b5ef55",
     "files": [
       {
         "source": ".cursor/agents/impeccable-asset-producer.md",
@@ -490,9 +491,10 @@
         "source": ".cursor/skills/impeccable/SKILL.md",
         "destination": "skills/impeccable/SKILL.md",
         "sourceSha256": "015725eeca94f52bffd2132d4cb49bc3eb1ee76e6ac7378c065e629d59f56613",
-        "vendoredSha256": "d1b92e9ea4b0f9a054965a930607db9c4f9e028873c4ebf2b507a85cd8cab115",
+        "vendoredSha256": "562f1d2234e0647adc43d3453545dad872d6562f6f86c66445b3347779489a5a",
         "transformations": [
           "agent-skills-frontmatter",
+          "scoped-skill-discovery",
           "dual-host-provider-routing",
           "codex-generic-subagent-contract",
           "agent-plugin-provider-routing",
