@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.13.1
+
 - Focus installation and update guidance on published releases, with manual ZIP steps, copyable agent prompts, and the existing release installation skill.
 
 ## 0.13.0
