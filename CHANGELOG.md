@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.14.0
+
+- Add bundled Motion animation guidance for CSS, JavaScript, React, Vue and supported UI libraries, with direct Motion invocation and Design routing that preserves Impeccable art direction and the existing project stack.
+- Include the anonymous Motion documentation MCP in Cursor and Codex packages, with free resource reading and local fallback guidance; keep the portable package free of MCP configuration and exclude paid capabilities, automatic installation and migrations.
+- Add pinned Motion source provenance, reproducible imports and source-only update/sync workflows with drift detection and rollback.
+- Preserve all registered modules during Impeccable updates and offline sync, fix Windows overlay-link resolution, and expand integration verification and host-smoke guidance.
+
 ## 0.13.1
 
 - Focus installation and update guidance on published releases, with manual ZIP steps, copyable agent prompts, and the existing release installation skill.
