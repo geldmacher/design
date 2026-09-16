@@ -585,31 +585,41 @@ function validateAgentPlugin(destination, version, sourceRoot) {
 
 function packageReadme(host) {
   const invocation = host === "cursor" ? "/design" : "$design";
+  const editor = host === "cursor" ? "Cursor" : "Codex";
   return [
     "# Design",
     "",
-    "**Ship interfaces that feel intentional.**",
+    `**Build clearer, more consistent websites and web apps with ${editor}.**`,
     "",
-    `Your design partner for websites and web apps in ${host === "cursor" ? "Cursor" : "Codex"}. Plan, build, review, and refine interfaces around your product and visual language.`,
+    "Design helps your AI assistant plan pages, improve layouts, mobile behavior, accessibility, and UI text, and prioritize usability problems. It works with your product goals, components, and visual style.",
     "",
-    "## Start with your interface",
+    "## Install this package",
     "",
-    "Design can be selected automatically for web UI tasks. It forwards ordinary interface work to bundled Impeccable and respects an explicit choice of another skill. Backend-only tasks and general code reviews are outside its scope.",
+    `Follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify your download, then complete the ${editor} installation step. Node.js 22+ is required by the plugin.`,
+    "",
+    host === "cursor"
+      ? "After installation, reload Cursor and review changed hook permissions before granting trust."
+      : "After installation, refresh the Marketplace entry as described in the guide, review any trust request, and start a new Codex task.",
+    "",
+    "## Try it",
     "",
     "Open your project, identify the page or files you want to improve, and try:",
     "",
     "```text",
-    `${invocation} critique this page and prioritize the three most useful improvements`,
-    `${invocation} polish this checkout flow without changing its information architecture`,
+    `${invocation} critique the checkout page and prioritize the three most useful improvements`,
     "```",
     "",
-    `For a read-only review of a branch's interface changes, use \`${invocation} review quick branch\`. Request a follow-up change when you are ready to apply an improvement.`,
+    `Then request the change you want, for example: \`${invocation} polish the checkout form: improve spacing and error messages, keeping our existing components\`.`,
+    "",
+    `For a read-only review of a branch's interface changes, use \`${invocation} review quick branch\`. Findings stay in the task until you request a follow-up change.`,
     "",
     "## Your project, your decisions",
     "",
     `Design uses your existing PRODUCT.md, DESIGN.md, and .impeccable/ context. Run \`${invocation} setup\` to preview project integration, or \`${invocation} status\` to inspect it. Setup requires approval; optional UI checks stay off until enabled.`,
     "",
-    "See [Install Design from GitHub](docs/installation.md) for prerequisites, installation, updates, rollback, and activation steps.",
+    "Design can also be selected automatically for matching web UI requests and respects your explicit choice of another skill.",
+    "",
+    "See the [installation guide](docs/installation.md) for updates and recovery, or the [online usage guide](https://github.com/geldmacher/design/blob/main/docs/usage.md) for examples and project setup. The online guide follows the repository version and may be newer than this package.",
     "",
   ].join("\n");
 }

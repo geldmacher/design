@@ -1,5 +1,9 @@
 # Developing Design
 
+Use this guide when changing the plugin itself or installing a development copy from source. To use a stable release in your website or web-app project, start with [installation](installation.md).
+
+## Make a source change
+
 Repository agents share the concise development contract in [AGENTS.md](../AGENTS.md). It guides repository work and is not a plugin runtime component in any target.
 
 ```bash
@@ -7,6 +11,21 @@ npm ci
 npm run release-check
 git diff --check
 ```
+
+Run these commands from the repository root. `npm ci` installs the pinned development dependencies; `release-check` validates the source, documentation links, generated packages, and tests. `git diff --check` catches whitespace errors.
+
+### Editing documentation
+
+Keep the [main README](../README.md) focused on the benefit, installation, and a first request. Put explanations and examples in the [usage guide](usage.md), and add new guides to the [documentation index](README.md).
+
+Two documentation surfaces are generated:
+
+- For `docs/commands.md`, edit the first-party explanations in `scripts/build-command-reference.mjs`, then run `npm run build:commands`. The command inventory comes from pinned Impeccable; update it only through the maintenance workflow.
+- For Cursor and Codex package READMEs, edit `packageReadme(host)` in `scripts/build-plugin-targets.mjs`, then run `npm run build:targets`.
+
+The release packages include `docs/installation.md`. Keep its local links valid inside the package as well as in this repository.
+
+### Upstream updates and releases
 
 Impeccable is reproducibly pinned; see [upstream provenance](../upstream/README.md) and the [maintainer workflow](impeccable-maintenance.md). Runtime verification is documented separately for [Cursor](runtime-smoke.md) and [Codex](codex-runtime-smoke.md). Repository checks and isolated target simulations do not prove real client discovery, hook trust, Marketplace behavior, or publication.
 

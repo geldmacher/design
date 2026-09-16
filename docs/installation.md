@@ -1,61 +1,163 @@
-# Install Design from GitHub
+# Install and update Design
 
-Design has two independent GitHub distribution paths for Cursor and Codex:
+For a first installation on macOS or Linux, use the **release installer** below. It installs the latest stable GitHub release for Cursor or Codex and also handles updates.
 
-- **Repository or Marketplace source** lets a supported host import `https://github.com/geldmacher/design` and follow the selected Git ref.
-- **GitHub Release archives** provide immutable, host-specific ZIP files for a particular version, with checksums and provenance suitable for download, update, and rollback.
+| Your situation | Installation path |
+| --- | --- |
+| You want the latest stable release on macOS or Linux | [Release installer](#install-the-latest-release) |
+| Your editor or team manages GitHub Marketplace sources | [Git or Marketplace source](#install-from-the-git-or-marketplace-source) |
+| You use Windows, need a specific version, or want to roll back | [Verified release ZIP](#install-from-a-github-release) |
 
-Neither source selection nor archive extraction proves that a host has refreshed its cache, trusted hooks, reloaded the plugin, or activated it in a new task. Marketplace submission, local deployment, host restart, and GitHub publication are separate maintainer or user actions.
+Choose one path. Installing makes the plugin available to your editor; automatic UI checks remain off until you explicitly enable them in a project.
 
-## Install the latest release from your harness
+## Install the latest release
 
-This source-repository workflow supports Cursor and Codex on macOS and Linux. Install Git, Node.js 22 or newer, and npm first. Cursor must be available through its CLI or, on macOS, as `Cursor.app` in `/Applications` or your user's `Applications` folder. Codex requires a CLI with `plugin add --json` and `plugin list --json` support. GitHub and npm registry access are required; no GitHub CLI or token is needed for this public repository.
+### 1. Check the prerequisites
 
-Clone the source repository outside managed plugin directories, then open it as a project in your harness:
+| Requirement | What you need |
+| --- | --- |
+| Operating system | macOS or Linux. Use a release ZIP or supported Marketplace flow on Windows. |
+| Tools | Git, Node.js 22 or newer, and npm. |
+| Cursor installation | The `cursor` CLI, or `Cursor.app` in `/Applications` or your user's `Applications` folder on macOS. |
+| Codex installation | The Codex CLI with `plugin add --json` and `plugin list --json` support. |
+| Network access | GitHub and the npm registry. No GitHub CLI or GitHub token is needed for this public repository. |
+
+You only need the editor you are installing into. Check the common tools in a terminal:
+
+```sh
+git --version
+node --version
+npm --version
+```
+
+### 2. Get the installer
+
+Clone the repository into a normal source directory:
 
 ```sh
 git clone https://github.com/geldmacher/design.git ~/src/geldmacher-design
+cd ~/src/geldmacher-design
 ```
 
-For an existing checkout, protect local work before updating it to a revision containing the new skill. The command is available only in the open source repository; it is not shipped in installed plugin packages. If Codex does not discover a newly added repository skill in an existing task, start a fresh task in that repository.
+Keep this checkout outside `~/.cursor/plugins/local` and `~/.codex/plugins`: the installer replaces managed plugin copies in those locations. If you already have a checkout, use it and protect any local work before updating its source.
 
-| Harness | Install or update | Preview only |
+### 3. Install for one editor
+
+Run the matching command from the repository root. You do not need to run `npm install` first.
+
+**Cursor:**
+
+```sh
+npm run install:release -- --cursor-only
+```
+
+**Codex:**
+
+```sh
+npm run install:release -- --codex-only
+```
+
+To inspect the planned installation first, add `--dry-run`. For example:
+
+```sh
+npm run install:release -- --codex-only --dry-run
+```
+
+A preview still downloads and builds the release in temporary storage. It reads installed state but changes no installed plugin files, Marketplace entries, or Codex cache.
+
+**Prefer asking the assistant?** Open this source checkout as a project in Cursor or Codex and use the matching command below. These are assistant requests, not terminal commands.
+
+| Editor | Install or update | Preview only |
 | --- | --- | --- |
 | Cursor | `/install-new-release-from-repo` | `/install-new-release-from-repo preview` |
 | Codex | `$install-new-release-from-repo` | `$install-new-release-from-repo preview` |
 
-The active harness is the default destination. You can explicitly name Cursor or Codex instead. An unknown harness requires a host choice; the helper requires exactly one host and never defaults to both.
+This skill exists only in the source checkout, not in installed packages. It uses the current editor as the destination unless you explicitly name the other one. If a new Codex task cannot discover it, use the terminal command above.
 
-The equivalent shell commands, from the source repository root, are:
+### 4. Open a fresh task and try Design
 
-```sh
-npm run install:release -- --cursor-only
-npm run install:release -- --codex-only --dry-run
-```
+After installation:
 
-No dependency installation is needed in the open checkout to start this helper. It selects GitHub's latest published stable release, requires a matching `vMAJOR.MINOR.PATCH` tag and manifests, and prepares that exact commit in its own temporary checkout. It runs `npm ci` and the release's `deploy:prepare` checks there. The checkout must remain clean after preparation. Local branches, staged changes, and other work in your open repository are preserved.
+1. Reload Cursor or start a new Codex task in your website or web-app project.
+2. Review any changed hook permissions before granting trust.
+3. Ask for `/design status` in Cursor or `$design status` in Codex to inspect the version and project configuration.
+4. Try a request such as `$design critique the checkout page` (use `/design` in Cursor).
 
-Preview downloads and builds source in temporary storage and reads installed state, but makes no changes to installed plugin files, Marketplace entries, or the Codex plugin cache. A normal install invocation authorizes the displayed installation for that host and proceeds without a second confirmation, subject to the harness's sandbox permissions. Preview and apply in that invocation use the same pinned commit and built files. A later invocation resolves the latest release again.
+The installer reports the release, installed paths, versions, and verification result. Successful installation and cache verification do not establish that the editor has loaded the new plugin; that is why the fresh-task step matters. Status describes configuration, not proof that automatic checks have run.
 
-The existing local installer owns host replacement, rollback, and Codex cache verification. Destinations remain `~/.cursor/plugins/local/geldmacher-design` and `~/.codex/plugins/geldmacher-design`; Codex uses the plugin's entry in the `personal` Marketplace. The installed version has a `+local.<host>.<digest>` suffix. It is built from released source and is not asserted to be byte-identical to the published ZIP.
+### Update an existing installation
 
-The final report includes the release URL, tag, commit, destinations, local versions, content hashes, and installation verification. Successful preparation workspaces are removed; the source path in deployment receipts is historical, while the commit and hashes remain reproducible evidence. An unchanged installation is a verified no-op. After changes, reload Cursor or start a new Codex task and review changed hooks. The helper never restarts a host, grants trust, enables project checks, or publishes anything. Installed/cache verification is not live activation evidence.
+Run the same install command again from the source checkout. Each run resolves the latest stable release. If the installed content already matches, the installer verifies it and makes no changes. Otherwise, repeat the reload or fresh-task step after the update.
 
-Missing prerequisites, release lookup failures, version mismatches, build failures, and deployment errors stop the run. Once preparation has started, the error identifies a retained temporary `installation.json` and source checkout. Inspect its phase, original error, and the local installer's rollback result before explicitly retrying. A verification failure after installation may leave the new version installed; an incomplete rollback requires recovery before another attempt. The helper does not overwrite retained failure evidence or automatically retry. Use the other installation paths below on platforms outside this helper's support boundary.
+For a specific older version, use a separately verified [release ZIP](#install-from-a-github-release) or a pinned [Git source](#install-from-the-git-or-marketplace-source).
+
+## Troubleshooting
+
+| Problem | Next step |
+| --- | --- |
+| Node.js is too old or a tool is missing | Install the required version or make it available on your terminal's `PATH`, then rerun the command. |
+| The repository install skill is missing | Open the source checkout, not your application project. Start a new Codex task or use the terminal command. |
+| Download or build fails | Check GitHub/npm access and read the retained error report before retrying. See [failure recovery](#recover-from-a-failed-installation). |
+| Installation succeeded, but Design is missing or appears outdated | Reload Cursor or start a new Codex task. For a manual Codex install, also refresh or reinstall its Marketplace entry and check the cached manifest version. |
+| Automatic checks do not run | They are off by default. In your application project, request `design setup` with your editor's prefix, review its preview, and confirm if you want to enable them. |
+
+## What the release installer does
+
+This section explains the installer's verification and recovery details. It is useful when inspecting an installation report or investigating a failure.
+
+The helper selects GitHub's latest published stable release, checks its `vMAJOR.MINOR.PATCH` tag and manifest versions, and prepares that exact commit in a temporary checkout. It runs `npm ci` and the release's `deploy:prepare` checks there. Preparation must leave that checkout clean. Your open repository's branches, staged changes, and other local work are preserved.
+
+A normal invocation authorizes installation into the selected editor without a second confirmation, subject to the editor's sandbox permissions. Within one invocation, preview and apply use the same verified commit and built files. A later invocation resolves the latest release again.
+
+| Editor | Installed source location |
+| --- | --- |
+| Cursor | `~/.cursor/plugins/local/geldmacher-design` |
+| Codex | `~/.codex/plugins/geldmacher-design`, registered through this plugin's entry in the `personal` Marketplace |
+
+The local installer handles replacement, rollback, and Codex cache verification. Local versions have a `+local.<host>.<digest>` suffix identifying the editor and a hash of the packaged content. They are built from released source and need not be byte-identical to the published ZIP.
+
+The final report includes the release URL, tag, commit, destinations, local versions, content hashes, and verification result. Successful temporary workspaces are removed: the source path in a deployment receipt records where preparation happened, while the commit and hashes identify its content. The helper does not restart the editor, grant trust, enable project checks, or publish anything.
+
+### Recover from a failed installation
+
+Missing prerequisites, release lookup failures, version mismatches, build failures, and deployment errors stop the run. Once preparation has started, the error points to retained temporary evidence, including `installation.json` and the source checkout.
+
+Before retrying:
+
+1. Read the recorded phase and original error.
+2. Check whether installation had started and whether rollback completed.
+3. Resolve the reported cause; recover an incomplete rollback before another attempt.
+4. Rerun explicitly when recovery is complete.
+
+A verification failure after installation can leave the new version installed. The helper preserves failure evidence and does not retry automatically.
 
 ## Install from the Git or Marketplace source
 
+Use this path when your editor or team manages plugins through a GitHub source. A branch follows its updates; a version tag or commit keeps the selected revision explicit.
+
 The repository contains a Cursor Marketplace manifest at `.cursor-plugin/marketplace.json` and a Codex catalog at `.agents/plugins/marketplace.json`. Both point to this repository's plugin root; generated `.build` directories are never an import source.
+
+### Cursor
 
 For Cursor, add `https://github.com/geldmacher/design` as a team or personal Marketplace source using Cursor's repository-import flow, then select **geldmacher-design**. Reload Cursor after installation or update, inspect the installed manifest version, and review Hook Trust before enabling the plugin's hook.
 
+### Codex
+
 For Codex, import `https://github.com/geldmacher/design` as a GitHub Marketplace source, leave the plugin path at the repository root (`./`), and select a branch, tag, or commit according to the update policy you want. The catalog is named **Geldmacher Design**. Repository import, synchronization, catalog policy, installation, and enablement remain distinct states; follow the [official OpenAI Plugin Management guide](https://learn.chatgpt.com/docs/enterprise/plugin-management). After an import or synchronization, verify the selected source revision and cached manifest, review trust, and start a new Codex task.
+
+### Update or roll back a Git source
 
 Pinning a version tag or commit makes rollback explicit: select the earlier Git ref, synchronize the Marketplace again, verify the refreshed cache, and start a new task. Selecting `main` follows future repository updates and is less suitable for controlled rollback.
 
 ## Install from a GitHub Release
 
-Each Design GitHub Release contains separate packages for Cursor and Codex. Download only the intended host archive plus `SHA256SUMS` and `provenance.json` from the [latest GitHub Release](https://github.com/geldmacher/design/releases/latest). Do not install the archive until both the selected ZIP and `provenance.json` match their exact entries in `SHA256SUMS`.
+Use a ZIP for a specific version or a manual installation, including on Windows. The process has three steps: download the matching package, verify its files, then install it for your editor.
+
+### 1. Download the package and verification files
+
+Each Design GitHub Release contains separate packages for Cursor and Codex. From the [latest GitHub Release](https://github.com/geldmacher/design/releases/latest), download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` into the same directory. For an older version, use that version's release page and matching verification files.
+
+`SHA256SUMS` lists the expected file hashes, which let you check that your downloads match the release. `provenance.json` records which source commit and build produced them. Verify both the ZIP and `provenance.json` before installation.
 
 Release assets use these names:
 
@@ -65,7 +167,9 @@ Release assets use these names:
 - `SHA256SUMS`
 - `provenance.json`
 
-On macOS or Linux, replace the example version and host as needed:
+### 2. Verify the downloads
+
+Run the following from the download directory. On macOS or Linux, replace the example version and editor in the archive name as needed:
 
 ```sh
 archive="geldmacher-design-cursor-v0.12.0.zip"
@@ -118,7 +222,7 @@ Each ZIP expands to exactly one top-level `geldmacher-design/` directory. The ma
 
 The directory also contains a compact `README.md` and this installation guide.
 
-### Cursor archive
+### 3a. Install the Cursor archive
 
 Install the complete extracted directory at:
 
@@ -127,7 +231,7 @@ Install the complete extracted directory at:
 
 For an update, retain the old complete directory and its matching verification files, then replace the directory atomically instead of merging versions. Reload Cursor, verify the installed manifest version, and review Hook Trust. To roll back, restore the retained old directory, reload Cursor, and repeat the same version and trust checks.
 
-### Codex archive
+### 3b. Install the Codex archive
 
 Place the complete extracted directory at:
 

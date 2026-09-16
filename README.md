@@ -2,87 +2,57 @@
 
 # Design
 
-**Ship interfaces that feel intentional.**
+**Build clearer, more consistent websites and web apps with Cursor or Codex.**
 
-A design partner for Cursor and Codex. Plan, build, review, and refine websites and web apps around your product, your visual language, and your decisions.
+Design helps your AI assistant plan new pages, improve existing interfaces, and spot usability problems. It works with your product goals, components, and visual style so changes fit your project.
 
-[Install Design](#install-design) · [Try your first request](#your-first-request) · [Usage guide](docs/usage.md) · [Latest release](https://github.com/geldmacher/design/releases/latest)
+- **Build with direction:** turn an idea into a page or flow that fits your product.
+- **Improve what you have:** refine layouts, mobile behavior, accessibility, and UI text.
+- **Know what to fix first:** review a page or a branch's interface changes and get prioritized findings.
 
-## What would you like to improve?
+## Install
 
-| Your task | Start with a request like this |
-| --- | --- |
-| Find what needs attention | “Critique this dashboard and prioritize the three most useful improvements.” |
-| Build a new interface | “Design a pricing page using our existing components and visual language.” |
-| Refine an existing flow | “Polish this checkout flow without changing its information architecture.” |
-| Review a code change | “Review the interface impact of this branch.” |
-| Clarify stakeholder needs | “Prepare a questionnaire about checkout approval.” |
+On **macOS or Linux**, you need Git, **Node.js 22+**, npm, and either Cursor or the Codex CLI with plugin support. The installer needs access to GitHub and the npm registry. See [exact prerequisites and Windows options](docs/installation.md).
 
-## Built around your project
-
-**Keep the design coherent.** Design uses your existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context to guide work around the product and its visual language.
-
-**Describe the task in your own words.** One entry point selects the relevant bundled capability, from design critique and polish to change reviews and stakeholder questionnaires.
-
-**Keep control of the task.** Cursor and Codex can select Design for a matching web UI request, or you can invoke it directly. Design respects your choice of another skill. Project setup previews changes for approval, and optional UI checks stay off until you enable them.
-
-Design combines the bundled [Impeccable](https://github.com/pbakaus/impeccable) toolkit with project integration, focused review and discovery workflows, and optional checks adapted to each host. See [upstream provenance](upstream/README.md) for the pinned version and maintained adaptations.
-
-## Install Design
-
-On macOS or Linux, install Git, Node.js 22+, and npm. You also need Cursor or the Codex CLI with plugin support. The release installer requires GitHub and npm registry access.
-
-Clone this repository outside managed plugin directories, then open the checkout in Cursor or Codex:
+In a terminal, clone the repository and enter it:
 
 ```sh
 git clone https://github.com/geldmacher/design.git ~/src/geldmacher-design
+cd ~/src/geldmacher-design
 ```
 
-Run the command for your host in that checkout:
+Then run **one** command for your editor:
 
 | Cursor | Codex |
 | --- | --- |
-| `/install-new-release-from-repo` | `$install-new-release-from-repo` |
+| `npm run install:release -- --cursor-only` | `npm run install:release -- --codex-only` |
 
-This repository-local command installs the latest stable GitHub release. Add `preview` to inspect the planned installation without changing installed plugin state. The helper builds the released source in temporary storage and preserves your open checkout.
+This installs the latest stable release. You do not need to run `npm install` first. Add `--dry-run` to preview the installation.
 
-After installation, reload Cursor or start a new Codex task in your website or web-app project. Review changed hooks before granting trust; project checks remain off by default.
+Reload Cursor or start a new Codex task, then open your website or web-app project. Review any changed hook permissions when prompted; automatic UI checks stay off until you enable them.
 
-For exact host prerequisites, Git or Marketplace import, verified ZIP installation, Windows instructions, updates, and recovery, see the [installation guide](docs/installation.md). Maintainers can [deploy from a source checkout](docs/development.md#local-maintainer-deployment).
+Prefer installing through the assistant, a Marketplace source, or a release ZIP? See [installation, updates, and recovery](docs/installation.md).
 
-## Your first request
+## Try it
 
-Open the project and identify the page or files you want to improve. Design can be selected for a request such as “Improve this form on mobile” without a command prefix. To select it explicitly in Codex, start with:
-
-```text
-$design critique this dashboard and prioritize the three most useful improvements
-```
-
-In Cursor, use the same request with `/design`:
+Point the assistant to a page or component, then ask:
 
 ```text
-/design critique this dashboard and prioritize the three most useful improvements
+$design critique the checkout page and prioritize the three most useful improvements
 ```
 
-For a review of the current branch's interface changes, use `$design review quick branch` or `/design review quick branch`. This review is read-only and keeps its findings in the current task. Request a follow-up change when you are ready to apply an improvement.
+In Cursor, replace `$design` with `/design`. Follow up with the change you want:
 
-To prepare project integration, invoke `$design setup` or `/design setup` and review the proposed changes. You can inspect existing setup with `design status` using your host's prefix.
+```text
+$design polish the checkout form: improve spacing and error messages, keeping our existing components
+```
 
-See the [usage guide](docs/usage.md) for detector scans, questionnaires, diagnostics, and direct Impeccable access.
+Design can also be selected automatically for matching interface requests. It uses existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context. Project setup previews changes for your approval; optional checks remain your choice.
 
-## Optional checks, under your control
+## Learn more
 
-When enabled, Cursor can stop a proposed UI write on a known detector issue. Codex reports findings after an edit or at Stop and requests correction. Infrastructure failures stay visible and allow edits to proceed. A detector result is one source of evidence, not a complete design or accessibility assessment.
+- [Usage guide](docs/usage.md) — examples for building, refining, reviewing, and gathering stakeholder input.
+- [Command reference](docs/commands.md) — all commands and when to use them.
+- [Documentation](docs/README.md) — project setup, troubleshooting, and maintainer guides.
 
-A portable Agent Plugins v1 package also provides the `design` and `impeccable` skills. Invocation depends on the client; the portable package does not register hooks or native agents. See the [target guide](docs/agent-plugin-target.md).
-
-## Documentation and development
-
-- [Usage and commands](docs/usage.md)
-- [Complete command reference](docs/commands.md)
-- [Installation, updates, and rollback](docs/installation.md)
-- [Development, package targets, and local deployment](docs/development.md)
-- [Impeccable maintenance](docs/impeccable-maintenance.md)
-- [Release validation](docs/release-validation.md)
-
-Design is MIT licensed. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Design includes the [Impeccable](https://github.com/pbakaus/impeccable) design toolkit. See [upstream provenance](upstream/README.md), [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).

@@ -2,23 +2,41 @@
 
 # Design command reference
 
-Bundled Impeccable **4.3.1**. This describes the repository version, not proof of an installed or active host.
+Use this page to look up a command. For worked examples and expected results, start with the [usage guide](usage.md).
+
+Bundled Impeccable **4.3.1**. This is the version documented in this checkout; an installed copy may differ.
 
 ## Invocation
 
-Use `/design <command> <target or request>` in Cursor and `$design <command> <target or request>` in Codex. A target can be a page, flow, component, or local path. Arguments in brackets are optional. The portable Agent Plugins package exposes skill identities; its client decides invocation syntax.
+Send these requests to your assistant: `/design <command> <target or request>` in Cursor or `$design <command> <target or request>` in Codex. They are not terminal commands.
+
+A target can be a page, flow, component, or local path. Brackets mark optional arguments: `polish [target]` can become `$design polish app/checkout`. Replace placeholders with your own target and omit the brackets.
 
 Describe new interfaces and redesigns in ordinary language, for example:
 
 ```text
-/design Design a pricing page using our existing components and visual language.
+$design Build a pricing page using our existing components and visual language.
 $design polish the checkout without changing its information architecture.
-/design shape an onboarding flow for first-time customers.
+$design shape an onboarding flow for first-time customers.
 ```
 
 Design routes general design work to bundled Impeccable. `/impeccable` in Cursor and `$impeccable` in Codex bypass the Design router.
 
+## Choose a starting point
+
+| Your question | Start with |
+| --- | --- |
+| How should this new flow work? | `shape` to plan it, or describe the interface you want built. |
+| What is confusing on this page? | `critique` for a UX assessment; `audit` for technical quality checks. |
+| How can I improve this page? | `polish` for refinement, or a focused command such as `clarify`, `adapt`, or `layout`. |
+| Did my code changes hurt the interface? | `review quick branch` for a review of the changed interface. |
+| What does the detector find in these files? | `detect -- src/components` for a manual scan. |
+| How do I record product and design context? | `init` for product knowledge; `document` for the existing visual language. |
+| How do I enable automatic checks? | `setup` to preview project integration and confirm it. |
+
 ## Impeccable design commands
+
+The table below follows the bundled toolkit. The reference links open detailed instructions used by the assistant; you do not need to read them to start.
 
 | Command and arguments | Category | Purpose | Reference |
 |---|---|---|---|
@@ -59,7 +77,11 @@ See the bundled [doctor](../skills/impeccable/reference/doctor.md) and [hooks](.
 
 `live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. First-time configuration previews changes for approval. Live injection into deployed production sites is unsupported.
 
-Design targets websites and web apps. Upstream native-platform references in the table do not establish native-app support in this plugin. Cursor can stop proposed UI writes on known detector findings; Codex reports findings after an edit or at Stop. The portable package provides no native hooks or agents. Infrastructure diagnostics remain visible and allow product edits.
+Design targets websites and web apps. Native-platform references in the bundled table do not establish native-app support in this plugin.
+
+When optional checks are enabled, Cursor can stop proposed UI writes on known detector findings. Codex reports findings after an edit or when the assistant finishes (the Stop event). Infrastructure failures stay visible and allow edits to proceed. See [optional checks](usage.md#enable-optional-automatic-checks) for setup and configuration.
+
+The portable Agent Plugins package exposes skill identities; its client decides invocation syntax. It provides no native hooks or agents.
 
 ## Additional Design commands
 
