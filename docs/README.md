@@ -8,6 +8,7 @@ Start with [installation](installation.md), then use the [usage guide](usage.md)
 | --- | --- |
 | Install, update, or recover an installation | [Installation](installation.md) |
 | Build or improve an interface | [Usage guide](usage.md) |
+| Implement animations or use free Motion documentation | [Motion examples](usage.md#animate-with-motion) and [host setup](installation.md#bundled-free-motion-documentation) |
 | Review changes or prepare stakeholder questions | [Usage examples](usage.md#review-interface-changes) |
 | Understand product context and optional checks | [Project setup](usage.md#set-up-your-project) |
 | Find a command, argument, or prerequisite | [Command reference](commands.md) |
@@ -23,6 +24,7 @@ These guides are for working on the plugin itself. You do not need them to use i
 | Understand the portable package and editor differences | [Agent Plugins target](agent-plugin-target.md) |
 | Add a bundled capability | [Extension architecture](extensions.md) |
 | Update the pinned Impeccable toolkit | [Impeccable maintenance](impeccable-maintenance.md) |
+| Update Motion or check its free service boundaries | [Motion maintenance](motion-maintenance.md) |
 | Verify behavior in a real editor | [Cursor smoke test](runtime-smoke.md) or [Codex smoke test](codex-runtime-smoke.md), with [shared test steps](runtime-smoke-common.md) |
 | Prepare and verify a release | [Release checklist](release-checklist.md) and [release validation](release-validation.md) |
 

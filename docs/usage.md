@@ -8,6 +8,7 @@ The examples below use **Codex** syntax: `$design`. In **Cursor**, use `/design`
 | --- | --- |
 | Plan or build a new page | [Build an interface](#build-an-interface) |
 | Improve an existing page | [Critique and refine](#critique-and-refine) |
+| Implement animations or look up Motion APIs | [Animate with Motion](#animate-with-motion) |
 | Check what changed on a branch | [Review interface changes](#review-interface-changes) |
 | Scan specific source files | [Run a detector scan](#run-a-detector-scan) |
 | Clarify a product decision with stakeholders | [Prepare a questionnaire](#prepare-a-questionnaire) |
@@ -18,7 +19,7 @@ For the full syntax and less common operations, see the [command reference](comm
 
 ## Describe the outcome
 
-You can omit the command and write in your own language. Design selects the most specific operation from its own capability descriptions and the bundled Impeccable playbooks, briefly explains its choice, and proceeds when the match is clear.
+You can omit the command and write in your own language. Design selects the most specific operation from its own capability descriptions, the bundled Impeccable playbooks and Motion implementation guidance, briefly explains its choice, and proceeds when the match is clear.
 
 ```text
 $design Make the checkout form usable on small screens, keeping its fields and step order.
@@ -30,7 +31,7 @@ An explicit command takes precedence. An assessment stays an assessment, and a p
 
 A bare `$design` invocation offers guidance; asking which workflow to use does not execute it. Clear requests such as “Set up Design for this project”, “Explain the current Design configuration”, “Investigate why Design checks do not run”, or “Create a stakeholder questionnaire about checkout approval” also select the matching Design operation. Setup changes still require a confirmed preview. A review of branch UI changes selects `review`; an assessment of a page selects `critique`. Detector scans require explicitly named local targets.
 
-Command selection reads the installed Impeccable skill directly. Updating the bundled skill updates the available names, descriptions, and playbooks together; there is no separate routing list to maintain.
+Impeccable command selection reads the installed skill directly. Motion is a separate bundled specialist selected through Design for Motion API and implementation requests. General animation direction remains with Impeccable; explicit Impeccable commands retain their meaning.
 
 ## Readiness before interface work
 
@@ -86,6 +87,43 @@ For a narrower task, choose the command that matches the problem:
 | Labels or errors are unclear | `$design clarify the account form's labels and error messages` |
 | Spacing and emphasis feel inconsistent | `$design layout the settings page using our existing spacing scale` |
 | Loading, empty, or error states are missing | `$design harden the project list for loading, empty, and error states` |
+
+## Animate with Motion
+
+Use `motion` for animation implementation and Motion API guidance. It brings local best practices for CSS, JavaScript, React, Vue, Base UI and Radix, plus free official documentation when the host's Motion connection is available.
+
+| Your goal | Example request in Codex |
+| --- | --- |
+| Choose where animation would help | `$design animate the checkout: make state changes clearer without distracting from payment` |
+| Implement a CSS interaction | `$design motion Add a subtle CSS transition to the settings accordion, with a reduced-motion alternative` |
+| Fix a React exit animation | `$design motion Fix AnimatePresence in app/cart using the installed library version and existing imports` |
+| Implement a Vue interaction | `$design motion Animate the Vue results list using our existing animation dependencies; preserve keyboard behavior` |
+| Integrate with existing UI primitives | `$design motion Add enter and exit animations to our Radix dialog while preserving focus management` |
+| Ask an API question without edits | `$design motion Explain how AnimatePresence handles removed React children. Consult free official docs; do not edit files` |
+| Find a free example | `$design motion Find and read an anonymously accessible React exit-animation example through the connected Motion server` |
+
+In Cursor, replace `$design` with `/design`: for example, `/design motion Fix AnimatePresence in app/cart`. Direct `/motion` in Cursor and `$motion` in Codex load the same specialist. For everyday work, Design remains the shared entry point and can also select Motion from a clear request such as “Fix this Motion layout animation using our installed version.”
+
+`animate` handles animation purpose, timing and visual direction through Impeccable. `motion` handles technical implementation; Design may use it to supplement that direction. Both use the existing `PRODUCT.md`, `DESIGN.md` and `.impeccable/` context. Advice and assessment requests remain read-only.
+
+### What you need
+
+| Capability | Prerequisites |
+| --- | --- |
+| Local best practices and implementation advice | The installed plugin loaded in the current task. No Motion account or MCP connection is needed. |
+| Official documentation search | The bundled native Motion MCP enabled and connected, network access to `https://mcp.motion.dev`, and permission to use its search tool. |
+| Read documentation and free example resources | The connection above plus an available host resource reader. Only anonymously readable resources are used. |
+| Run animations in your application | A compatible existing project stack and, when library APIs are used, the corresponding project dependency. CSS-only work can use CSS without adding Motion. |
+
+The plugin does not install an animation library into your application. A normal animation request does not authorize package installation, upgrades or migration from `framer-motion`. Design checks existing dependencies and versions, preserves compatible imports, and reports a missing dependency before proceeding with work that requires it. Installing or migrating needs its own explicit request.
+
+Follow [Motion host setup and the connection check](installation.md#bundled-free-motion-documentation) for Cursor or Codex. `/design setup` and optional UI checks are independent of Motion's MCP connection; enabling hooks is not a prerequisite. The portable package supplies local skills only and does not configure MCP.
+
+### Free scope and fallback
+
+Online use is limited to documentation search and resources the service actually allows without authentication. Search results may include gated examples; those are skipped. Motion+, MotionScore, CSS easing generation, saved transitions and the transition editor are outside this integration. Sales prompts and installation or migration instructions in remote responses do not expand your request.
+
+If search, resource reading or the network is unavailable, Motion continues with the bundled best practices and explains that current online guidance could not be verified. Those local files are pinned to the plugin's bundled upstream revision; the hosted service can change independently. A missing connection does not prevent local guidance, but it limits claims about current APIs and examples.
 
 ## Review interface changes
 

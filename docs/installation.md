@@ -9,6 +9,8 @@ Install Design from a **published GitHub Release**. Choose manual installation o
 
 Design requires **Node.js 22+**. Installation makes the plugin available to your editor; automatic UI checks remain off until you explicitly enable them in a project.
 
+Motion's local guidance is included. For online documentation and free examples, follow the [Motion host setup](#bundled-free-motion-documentation) after installation.
+
 ## Ask your agent to install
 
 Copy this prompt into your Cursor or Codex agent:
@@ -308,6 +310,56 @@ Pinning a version tag or commit makes rollback explicit: select the earlier Git 
 
 ## Bundled free Motion documentation
 
-The native packages declare one remote MCP server, `motion`, at `https://mcp.motion.dev`. Review the host's normal connection and tool permissions after installation. No account, token or paid endpoint is required. This changes only the bundled plugin: the installer does not write a second project configuration or run an upstream installer. Keep any unrelated existing Motion installation; choose the intended provider in the host if duplicate tools are shown.
+**Local Motion guidance works as soon as the plugin is loaded. Online search and free examples additionally need an enabled MCP connection and the host's search and resource-reading tools.** The native packages already declare one remote server, `motion`, at `https://mcp.motion.dev`. No Motion account, token, subscription or local MCP server process is required for this free scope.
 
-The portable Agent Plugins package ships only Motion's local skill guidance. A client may supply its own resource reader, but this package does not configure or emulate one. Offline status reports the package configuration separately from untested connectivity. See [Motion boundaries](https://github.com/geldmacher/design/blob/main/docs/motion-maintenance.md).
+Use the bundled connection; there is no separate Motion AI Kit installation or `npx` setup step. The installer does not write a second project MCP configuration. Keep unrelated existing Motion installations; if duplicate tools appear, identify the provider belonging to Design before using them.
+
+### Cursor
+
+1. Install or update the native Cursor package, make sure **geldmacher-design** is enabled, and reload Cursor.
+2. Open **Customize** in the sidebar and inspect the Motion MCP server. If it is disabled, enable it. Disabled servers do not load or appear in chat. See [Cursor plugin and MCP controls](https://prod.cursor.com/docs/plugins).
+3. Allow the requested documentation search and resource reads under your normal tool permission policy. Approval behavior depends on your Cursor version and settings; see [Cursor MCP permissions](https://prod.cursor.com/help/customization/mcp).
+4. In a fresh agent task, run the connection check below with `/design motion`.
+
+### Codex
+
+1. Install or update the native Codex package and verify that **geldmacher-design** is installed and enabled. For local or Marketplace installations, verify the refreshed cached version as described above. Start a new task or CLI session so the bundled skills can load. See [OpenAI plugin installation and enablement](https://learn.chatgpt.com/docs/plugins).
+2. Inspect the plugin's MCP connection and any connection prompt. The desktop host exposes server state under **Settings → MCP servers**; the Codex CLI's `/mcp` view shows active servers. If the connection is disabled, enable it through the available host controls. Follow the host's restart prompt after connection changes. See [OpenAI MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
+3. Permit the requested search and resource reads under your existing approval policy, then run the connection check below with `$design motion`.
+
+The package already supplies the server declaration; do not add a duplicate global or project server as a routine installation step. If the host does not expose the bundled connection, check plugin enablement, cache freshness and host support first. A Motion login or purchase prompt is not part of the free setup: skip gated resources and use the local fallback.
+
+### Check the connection in a fresh task
+
+Use this read-only request in Codex; replace `$design` with `/design` in Cursor:
+
+```text
+$design motion Search the connected Motion server for React AnimatePresence
+documentation and read a returned documentation resource. If an anonymously
+readable exit-animation example is available, read that too. Report which
+resources you actually read and any missing tools or access failures.
+Do not edit files, install packages or change host configuration.
+```
+
+Successful online evidence includes an actual `search-motion-docs` call and a successful host resource read, such as a returned `motion://docs/...` resource. Example access needs its own successful `motion://examples/...` read. A search result or a resource URI alone does not establish that its contents were accessible. Tool names may carry a host-specific prefix.
+
+`/design status` in Cursor or `$design status` in Codex reports the pinned Motion version and commit plus MCP configuration. `configuration: bundled` means the package declares the server; `availability: not-checked` is expected because status is offline. Neither installation nor status establishes a live connection. The host instructions above were checked against official documentation on September 16, 2026; they are not a record of successful runtime checks in either host.
+
+### If online Motion is unavailable
+
+| Symptom | Next step |
+| --- | --- |
+| Motion skill or server is missing | Check the installed version, plugin enablement and fresh-task activation; refresh the Codex cache when applicable. |
+| Server is disabled or tools are denied | Review the existing connection and tool permissions in the host. Managed workspace policy may require administrator action. |
+| Connection fails or times out | Check whether the host can reach `https://mcp.motion.dev`; local guidance remains available. |
+| Search works but resources cannot be read | Ask the assistant to report the missing resource reader. Search references are not a substitute for having read the resource. |
+| An example requires a login, token or payment | Skip it and use accessible documentation or an original implementation. Do not switch to `/plus`. |
+| Status says `availability: not-checked` | Run the explicit connection check above; status deliberately performs no network request. |
+
+Motion continues with pinned local best practices when online tools are unavailable and reports the freshness limitation. Optional project hooks and `design setup` do not enable this connection and are not required to use Motion.
+
+### Application dependencies and the portable package
+
+The MCP supplies reference material, not the animation runtime for your website. CSS-only animations may need no new package. Code using Motion APIs needs a compatible dependency in the application; Design inspects the existing stack and installed versions. Library installation, upgrades and `framer-motion` migrations require their own explicit request.
+
+The portable Agent Plugins package ships Motion's local skill guidance without an MCP configuration. Its client controls skill invocation and may independently supply compatible search and resource-reading tools; this package does not configure them. See [Motion usage examples](https://github.com/geldmacher/design/blob/main/docs/usage.md#animate-with-motion) and [maintenance and free capability boundaries](https://github.com/geldmacher/design/blob/main/docs/motion-maintenance.md).

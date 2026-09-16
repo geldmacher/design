@@ -12,7 +12,7 @@ Each module declares:
 - capabilities with skill owner, leading command triggers, and fallback status;
 - every contributed skill, agent, rule, hook, script, or MCP configuration.
 
-The generated `skills/design/references/capabilities.md` is the skill's only routing index. It recognizes `setup`, `status`, `diagnose`, `detect`, `review`, and `questionnaire` only at the beginning, followed by whitespace or the end of the request. Every other request, including `doctor`, goes unchanged to Impeccable.
+The generated `skills/design/references/capabilities.md` is the skill's only routing index. It combines leading commands (`setup`, `status`, `diagnose`, `detect`, `review`, `questionnaire`, and `motion`) with semantic capability descriptions. Motion API and implementation requests select Motion. General animation direction and explicit Impeccable commands such as `animate` or `doctor` remain with Impeccable. Mentions, negations and workflow-advice questions do not authorize execution.
 
 `src/registry.mjs` loads module metadata for status and index generation. The schema is development-only; packaged module files omit `$schema` references.
 
@@ -25,7 +25,7 @@ The generated `skills/design/references/capabilities.md` is the skill's only rou
 5. Vendored code needs source/license notices, a pin, hashes, an explicit transformation allowlist, tests, and a maintainer-only sync.
 6. An MCP module must add the real MCP configuration and manifest entry together. Do not add empty MCP scaffolding.
 
-Build projection narrows contributions per target. Cursor and Codex retain their host adapters and role contracts. The Agent Plugins v1 package contributes only the two skills and their generic runtime; native hooks and root agents are removed from its projected module manifests.
+Build projection narrows contributions per target. Cursor and Codex retain their host adapters, role contracts and the free Motion MCP configuration. The Agent Plugins v1 package contributes the three skills (`design`, `impeccable`, `motion`) and their generic runtime; native hooks, root agents and MCP configuration are removed from its projected module manifests.
 
 ## First-party change review
 

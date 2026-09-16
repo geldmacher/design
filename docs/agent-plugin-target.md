@@ -19,13 +19,13 @@ The source repository is a multi-target build workspace, not an Agent Plugin pac
 The package contains:
 
 - the canonical Agent Plugins v1.0.0 `plugin.json`;
-- immediate `skills/design/SKILL.md` and `skills/impeccable/SKILL.md` components;
+- immediate `skills/design/SKILL.md`, `skills/impeccable/SKILL.md` and `skills/motion/SKILL.md` components;
 - package-contained runtime and pinned provenance used by those skills;
-- the MIT wrapper license and Apache-2.0 third-party notice.
+- the MIT wrapper license and third-party notices for Apache-2.0 Impeccable and MIT Motion.
 
-It intentionally contains no `mcp.json`, extension namespace, Cursor/Codex manifest, Marketplace metadata, hook adapter, root agent prompt, or client-specific skill metadata. No MCP server exists in this product, so an empty placeholder would misrepresent the package.
+It intentionally contains no `mcp.json`, extension namespace, Cursor/Codex manifest, Marketplace metadata, hook adapter, root agent prompt, or client-specific skill metadata. The native packages configure the free Motion MCP; the portable package supplies local Motion guidance only. A client may independently provide compatible search and resource-reading tools, but this package does not configure or emulate them.
 
-Both skills use Agent Skills frontmatter and declare the identities `design` and `impeccable`. The package makes those skills discoverable; each compatible client decides how a user or model sees and loads them. Agent Plugins v1 does not define a universal slash, dollar, or bare-text command syntax.
+All three skills use Agent Skills frontmatter and declare the identities `design`, `impeccable` and `motion`. The package makes those skills discoverable; each compatible client decides how a user or model sees and loads them. Agent Plugins v1 does not define a universal slash, dollar, or bare-text command syntax.
 
 The Design lifecycle, stakeholder questionnaire, and read-only change review remain available after a client loads the skill, but its hook state is `unavailable` and hook mutation is refused. Questionnaire authoring uses host-neutral instructions and requires a post-preview destination through the loaded `design` skill without inventing a universal command syntax. Change review uses the bundled JSON scope resolver and follows the same invocation boundary. Impeccable follows the matching bundled `reference/degraded/` role contract inline for asset production, documentation, finish review, and live manual apply because Agent Plugins v1 does not standardize native subagents.
 
@@ -33,7 +33,9 @@ The Design lifecycle, stakeholder questionnaire, and read-only change review rem
 
 | Capability | Agent Plugins v1 | Cursor | Codex |
 | --- | --- | --- | --- |
-| Skills | Identities `design`, `impeccable`; client-specific exposure | `/design`, `/impeccable` | `$design`, `$impeccable` |
+| Skills | Identities `design`, `impeccable`, `motion`; client-specific exposure | `/design`, `/impeccable`, `/motion` | `$design`, `$impeccable`, `$motion` |
+| Motion through Design | Loaded `design` skill operation | `/design motion` | `$design motion` |
+| Free Motion documentation MCP | Not configured; local guidance included | Bundled remote connection; host enablement and permissions apply | Bundled remote connection; host enablement and permissions apply |
 | Stakeholder questionnaire | Loaded `design` skill operation | `/design questionnaire` | `$design questionnaire` |
 | Change review | Loaded `design` skill operation | `/design review` | `$design review` |
 | Hook | Unavailable | Pre-write | PostToolUse and Stop |
@@ -50,6 +52,6 @@ These repository checks prove package shape and simulated behavior only. They do
 
 ## Shared source and package boundaries
 
-Design uses the generated leading-command index in `skills/design/references/capabilities.md`; other requests, including `doctor`, fall through to Impeccable. The builder projects the explicitly marked host section and portable description from the shared Design skill. It rejects missing or duplicate markers. The vendored Impeccable transformations remain separately controlled.
+Design uses the generated capability index in `skills/design/references/capabilities.md` for explicit commands and semantic selection. Motion API and implementation requests select Motion; general animation direction and Impeccable commands such as `doctor` remain with Impeccable. The builder projects the explicitly marked host section and portable description from the shared Design skill. It rejects missing or duplicate markers. Vendored Impeccable and Motion transformations remain separately controlled.
 
 The module schema stays in the development checkout. Packaged module metadata omits its schema reference. Native branding is limited to `assets/logo.svg`; the portable target has no branding assets. `npm run release-check` runs the complete discovered test suite once through the isolated verifier; standalone `npm test` and the focused engine verifier remain available.
