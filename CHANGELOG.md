@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Focus installation and update guidance on published releases, with manual ZIP steps, copyable agent prompts, and the existing release installation skill.
+
 ## 0.13.0
 
 - Choose Design and Impeccable commands from natural-language requests, including setup, status, diagnosis and stakeholder questionnaires, while preserving explicit commands, task scope and write approvals.

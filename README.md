@@ -10,28 +10,45 @@ Design helps your AI assistant plan new pages, improve existing interfaces, and 
 - **Improve what you have:** refine layouts, mobile behavior, accessibility, and UI text.
 - **Know what to fix first:** review a page or a branch's interface changes and get prioritized findings.
 
-## Install
+## Install from a release
 
-On **macOS or Linux**, you need Git, **Node.js 22+**, npm, and either Cursor or the Codex CLI with plugin support. The installer needs access to GitHub and the npm registry. See [exact prerequisites and Windows options](docs/installation.md).
+Use the [latest stable GitHub Release](https://github.com/geldmacher/design/releases/latest) for Cursor or Codex. Design requires **Node.js 22+**.
 
-In a terminal, clone the repository and enter it:
+### Manually
 
-```sh
-git clone https://github.com/geldmacher/design.git ~/src/geldmacher-design
-cd ~/src/geldmacher-design
+1. Download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` from the release page.
+2. Follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify the files and install the complete package.
+3. Reload Cursor or refresh the Codex Marketplace installation and start a new task. Review changed hook permissions when prompted.
+
+### Ask your agent
+
+Copy this prompt into Cursor or Codex on macOS or Linux:
+
+```text
+Install the latest stable GitHub Release of geldmacher/design for this editor.
+Read https://github.com/geldmacher/design/blob/main/docs/installation.md and follow
+its release installer instructions. Prepare a source checkout if needed and use
+the install-new-release-from-repo skill. Report the installed version, verification
+result, and any reload or new-task steps I need to complete.
 ```
 
-Then run **one** command for your editor:
+The agent-assisted installer needs Git, Node.js 22+, npm, and [the matching editor prerequisites](docs/installation.md#1-check-the-prerequisites). The checkout provides the installer; the installed plugin is built from the selected release. Automatic UI checks stay off until you enable them in a project.
 
-| Cursor | Codex |
-| --- | --- |
-| `npm run install:release -- --cursor-only` | `npm run install:release -- --codex-only` |
+## Update from a release
 
-This installs the latest stable release. You do not need to run `npm install` first. Add `--dry-run` to preview the installation.
+**Manually:** download and verify the latest release ZIP, then [replace the installed version](docs/installation.md#update-an-existing-installation) and repeat the editor activation steps.
 
-Reload Cursor or start a new Codex task, then open your website or web-app project. Review any changed hook permissions when prompted; automatic UI checks stay off until you enable them.
+**Through your agent:** use this prompt:
 
-Prefer installing through the assistant, a Marketplace source, or a release ZIP? See [installation, updates, and recovery](docs/installation.md).
+```text
+Update Design to the latest stable GitHub Release for this editor.
+Use the install-new-release-from-repo skill from the geldmacher/design source
+checkout. If it is not available, follow
+https://github.com/geldmacher/design/blob/main/docs/installation.md to prepare it.
+Report whether anything changed, the installed version, and any remaining activation steps.
+```
+
+With the source checkout open, invoke `/install-new-release-from-repo` in Cursor or `$install-new-release-from-repo` in Codex directly. The same skill handles installation and updates; it is not bundled with the installed plugin. See [updates and recovery](docs/installation.md#update-an-existing-installation).
 
 ## Try it
 
