@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.14.1
+
+- Document Motion usage through Design with practical examples, free capability boundaries and local fallback behavior.
+- Explain Cursor and Codex connection setup, a read-only MCP check and application dependency requirements; correct the portable package and routing documentation.
+
 ## 0.14.0
 
 - Add bundled Motion animation guidance for CSS, JavaScript, React, Vue and supported UI libraries, with direct Motion invocation and Design routing that preserves Impeccable art direction and the existing project stack.
