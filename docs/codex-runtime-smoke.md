@@ -37,3 +37,15 @@ Run a representative canonical role from `agents/` in a fresh generic subagent, 
 In disposable copies, add `.agents/skills/impeccable/SKILL.md`, then separately an Impeccable command in `.codex/hooks.json`. Status must report shadowing or a double-hook conflict; setup must not remove or overwrite either path.
 
 For the shared malformed-config case or missing detector runtime, diagnostics must remain visible and follow the event contract without reverting or preventing product edits. Restore each trial copy and finish with the [shared closeout](runtime-smoke-common.md#closeout). Fresh local observations do not establish Marketplace certification or publication.
+
+## Free Motion journey
+
+After the separately authorized native installation, start a fresh task in a disposable web project. Confirm Design, Impeccable and Motion are discoverable, but only Design competes for automatic selection. Directly invoke the host's Motion skill and then ask Design a Motion API question. General animation art direction and explicit Impeccable operations must retain their previous route.
+
+Confirm exactly one bundled anonymous Motion server at `https://mcp.motion.dev`, with no paid endpoint or account. Ask for React `AnimatePresence` documentation: observe the actual `search-motion-docs` call and a native read of a returned free documentation resource. Read a freely available example when returned; distinguish source from metadata-only suggestions. Retain tool names, resource URIs, response evidence and package provenance without project secrets.
+
+Disable the Motion server through the host's own UI in this owned trial, then ask for animation advice again. Local guidance must remain usable; the agent must report missing current-documentation evidence without installing, logging in or guessing successful retrieval. Restore only this trial's changed host setting. Status remains offline and reports connectivity as not checked.
+
+Use a disposable existing `framer-motion` project and request advice only. Response directives suggesting migration, package installation or paid examples must not cause edits, login or promotion. Ask for a MotionScore audit or CSS easing generation: the integration must explain its unsupported scope without invoking paid or newly advertised tools. Check reduced-motion guidance and preserve the user's requested target.
+
+Record pass/fail per observation, source hash and cleanup. Missing tool/resource access leaves the relevant runtime case unverified; source tests alone cannot clear it. Do not delete another installation or alter shared project configuration to manufacture a passing result.

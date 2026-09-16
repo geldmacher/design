@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "pin": {
+    "schemaVersion": 1,
+    "repository": "https://github.com/motiondivision/ai-kit",
+    "branch": "main",
+    "version": "1.0.0",
+    "commit": "1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+    "license": "MIT",
+    "archive": {
+      "url": "https://codeload.github.com/motiondivision/ai-kit/zip/1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+      "sha256": "a3ebb7de7784266664c1c704032d5b6db8d5695c46d3b9e07ec8717f87bf6448"
+    }
+  },
+  "transformations": [
+    "free-skill-overlay",
+    "free-search-overlay",
+    "preserve-installed-stack"
+  ],
+  "imports": [
+    {
+      "source": "plugins/motion/skills/motion/SKILL.md",
+      "destination": "skills/motion/SKILL.md",
+      "before": "e9e9b884afe14b07c3c71fe707a5fa2407b2d645c75686402927496dd7e596f3",
+      "after": "f9ce55acdd8c614547545493d9f4eabcca6f06fa4ab30db1c99d2005d13609ab"
+    },
+    {
+      "source": "plugins/motion/skills/motion/best-practices/base-ui.md",
+      "destination": "skills/motion/best-practices/base-ui.md",
+      "before": "cf1e79a446965c965a19a07e6c92527c8f661f87e0f16e321d4136fa7f1dd0de",
+      "after": "cf1e79a446965c965a19a07e6c92527c8f661f87e0f16e321d4136fa7f1dd0de"
+    },
+    {
+      "source": "plugins/motion/skills/motion/best-practices/index.md",
+      "destination": "skills/motion/best-practices/index.md",
+      "before": "88f80af1af8e88c0eb9ad85ad70dd5f61c002c3a96055a05eeafc58bb2430bdf",
+      "after": "88f80af1af8e88c0eb9ad85ad70dd5f61c002c3a96055a05eeafc58bb2430bdf"
+    },
+    {
+      "source": "plugins/motion/skills/motion/best-practices/motion.md",
+      "destination": "skills/motion/best-practices/motion.md",
+      "before": "92dee7c7b3d39ed02956102fbc0c9790e4f45a11b80bd5846a8336871b555d8a",
+      "after": "ac2d723524eda48010c7ffb77ab410fb70eb29c8f5011b57b05b1e2bbd02e76e"
+    },
+    {
+      "source": "plugins/motion/skills/motion/best-practices/react.md",
+      "destination": "skills/motion/best-practices/react.md",
+      "before": "bdfbe7810d96e0b6ebfe36db3823027b1cc011285f7e2f60f7ad26c08bf4337f",
+      "after": "89f329c01ea5cb884ca78257f20c0b24c16d65249257f817f96305192968653f"
+    },
+    {
+      "source": "plugins/motion/skills/motion/best-practices/vue.md",
+      "destination": "skills/motion/best-practices/vue.md",
+      "before": "935e462042b5f02d086d680e757f29b5e0d3177781c3aab9cc3838eed88bd292",
+      "after": "935e462042b5f02d086d680e757f29b5e0d3177781c3aab9cc3838eed88bd292"
+    },
+    {
+      "source": "plugins/motion/skills/motion/codex/index.md",
+      "destination": "skills/motion/codex/index.md",
+      "before": "590c1d3891019a501b77389dde78d9cb259e66bcb87746e5c7d06d8414fccaf6",
+      "after": "748804ab5b5549e58b4aca6ad87ff06d97af661194cb79c6dc8a39bdba8bc236"
+    }
+  ],
+  "files": {
+    "modules/motion.json": "68009b1281d83a72d7d2bacb46bcf683761957b9d744454377f2b131cc7760a5",
+    "skills/motion/agents/openai.yaml": "1444492c5b02ecd61a7d486eeecc147e5059dbc3945cfeadbaa9b0c6afbf4528",
+    "skills/motion/best-practices/base-ui.md": "cf1e79a446965c965a19a07e6c92527c8f661f87e0f16e321d4136fa7f1dd0de",
+    "skills/motion/best-practices/index.md": "88f80af1af8e88c0eb9ad85ad70dd5f61c002c3a96055a05eeafc58bb2430bdf",
+    "skills/motion/best-practices/motion.md": "ac2d723524eda48010c7ffb77ab410fb70eb29c8f5011b57b05b1e2bbd02e76e",
+    "skills/motion/best-practices/react.md": "89f329c01ea5cb884ca78257f20c0b24c16d65249257f817f96305192968653f",
+    "skills/motion/best-practices/vue.md": "935e462042b5f02d086d680e757f29b5e0d3177781c3aab9cc3838eed88bd292",
+    "skills/motion/codex/index.md": "748804ab5b5549e58b4aca6ad87ff06d97af661194cb79c6dc8a39bdba8bc236",
+    "skills/motion/SKILL.md": "f9ce55acdd8c614547545493d9f4eabcca6f06fa4ab30db1c99d2005d13609ab",
+    "upstream/motion-license.json": "c3fa7927f2cf6ba62d9bcd44a902903598beda5e3c7ccfe3af10704baf0f51ed",
+    "upstream/motion.pin.json": "eb50f3ac30589d7def953ab20d047409b28a53fa736a0ef6e82ebbd7f38fd48a",
+    "upstream/patches/motion-plugin.patch": "7030bf460bd37a8d7d0959205210d4fa70d5ca3de41a1288f9a38f5c626ee445"
+  }
+}

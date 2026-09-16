@@ -1,0 +1,6 @@
+interface:
+  display_name: "Motion"
+  short_description: "Free Motion guidance and official documentation"
+  default_prompt: "Use $motion to implement the requested animation with the existing stack."
+policy:
+  allow_implicit_invocation: false

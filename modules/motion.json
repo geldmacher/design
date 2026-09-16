@@ -1,0 +1,39 @@
+{
+  "$schema": "./module.schema.json",
+  "schemaVersion": 1,
+  "id": "motion",
+  "version": "1.0.0",
+  "source": {
+    "type": "vendored",
+    "url": "https://github.com/motiondivision/ai-kit",
+    "commit": "1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+    "archiveSha256": "a3ebb7de7784266664c1c704032d5b6db8d5695c46d3b9e07ec8717f87bf6448"
+  },
+  "license": "MIT",
+  "capabilities": [
+    {
+      "id": "animation-implementation",
+      "title": "Motion implementation and free documentation",
+      "skill": "motion",
+      "fallback": false,
+      "triggers": [
+        "motion"
+      ],
+      "intents": {
+        "motion": "Implement or explain Motion APIs and web animations using the existing stack, local best practices and free documentation; excludes paid tools, automatic installation and migrations."
+      }
+    }
+  ],
+  "contributes": {
+    "skills": [
+      "skills/motion"
+    ],
+    "agents": [],
+    "rules": [],
+    "hooks": [],
+    "scripts": [],
+    "mcpServers": [
+      "mcp.json"
+    ]
+  }
+}

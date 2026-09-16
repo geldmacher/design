@@ -2,7 +2,7 @@
 
 # Design routing
 
-Honor an explicit supported operation before any intent matching, whether it belongs to Design or Impeccable. Otherwise compare the requested outcome with the Design descriptions below and the bundled Impeccable descriptions. This also applies when Design itself was selected automatically. Preserve the original request, target, language, constraints, and authorization throughout.
+Honor an explicit supported operation before any intent matching, whether it belongs to Design, Motion or Impeccable. Otherwise compare the requested outcome with the Design descriptions below and the bundled Impeccable descriptions. This also applies when Design itself was selected automatically. Preserve the original request, target, language, constraints, and authorization throughout.
 
 ## Design operations
 
@@ -18,6 +18,13 @@ For example, "Review this checkout page" selects Impeccable critique; a request 
 | `detect` | design-core:detector-scan - Explicit local detector scan | Run the local deterministic detector on explicitly named files or directories. Do not infer targets, enable hooks or fix findings. | design |
 | `questionnaire` | design-core:stakeholder-questionnaire - Stakeholder decision questionnaire | Create a stakeholder questionnaire for a product or interface decision. Preview the complete draft before approval of one exact Markdown destination; never send it or change project context. | design |
 | `review` | design-core:change-interface-review - Change-scoped interface review | Assess the interface impact of Git changes, a branch, commit or pull request. A general review of a page without change scope belongs to Impeccable critique. | design |
+| `motion` | motion:animation-implementation - Motion implementation and free documentation | Implement or explain Motion APIs and web animations using the existing stack, local best practices and free documentation; excludes paid tools, automatic installation and migrations. | motion |
+
+## Motion selection
+
+A leading `motion` operation or a request specifically about Motion APIs or their implementation selects the bundled [Motion skill](../../motion/SKILL.md) (motion:animation-implementation). Load it and preserve the original request. Mere mentions, questions about commands, quotations and negations remain advice rather than execution. Motion is selected through Design rather than competing as an implicit entrypoint.
+
+General animation art direction and an explicit `animate` operation remain with Impeccable. When their implementation needs Motion API guidance, Design may also load Motion as a technical reference without replacing the chosen operation. An explicit Impeccable invocation still bypasses this router. Installation, upgrades, migrations and paid capabilities are never inferred.
 
 ## Impeccable selection
 

@@ -14,6 +14,7 @@ test('the actual skill loads a current index with every leading command and the 
     ['setup', 'design-core:project-integration'], ['status', 'design-core:project-integration'],
     ['diagnose', 'design-core:project-integration'], ['detect', 'design-core:detector-scan'],
     ['questionnaire', 'design-core:stakeholder-questionnaire'], ['review', 'design-core:change-interface-review'],
+    ['motion', 'motion:animation-implementation'],
   ]);
   for (const module of modules) for (const capability of module.capabilities.filter(entry => !entry.fallback)) {
     for (const description of Object.values(capability.intents)) assert.ok(rendered.includes(description));

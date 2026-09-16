@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/motiondivision/ai-kit",
+  "branch": "main",
+  "version": "1.0.0",
+  "commit": "1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+  "license": "MIT",
+  "archive": {
+    "url": "https://codeload.github.com/motiondivision/ai-kit/zip/1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+    "sha256": "a3ebb7de7784266664c1c704032d5b6db8d5695c46d3b9e07ec8717f87bf6448"
+  }
+}

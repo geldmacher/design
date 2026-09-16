@@ -28,9 +28,11 @@ const nativeShared = [
   "LICENSE",
   "modules/design-core.json",
   "modules/impeccable.json",
+  "modules/motion.json",
   "scripts/design-cli.mjs",
   "skills/design",
   "skills/impeccable",
+  "skills/motion",
   "src",
   "THIRD_PARTY_NOTICES.md",
 ];
@@ -38,21 +40,25 @@ const allowed = {
   cursor: [
     ".cursor-plugin/plugin.json",
     ...nativeShared,
+    "mcp.json",
     "hooks/cursor-hooks.json",
     "hooks/impeccable-plugin-hook.mjs",
   ],
   codex: [
     ".codex-plugin",
     ...nativeShared,
+    "mcp.json",
     "hooks/hooks.json",
     "hooks/impeccable-codex-hook.mjs",
   ],
   "agent-plugin": [
     "LICENSE",
     "modules/design-core.json",
-  "modules/impeccable.json",
+    "modules/impeccable.json",
+    "modules/motion.json",
     "skills/design",
     "skills/impeccable",
+    "skills/motion",
     "src",
     "THIRD_PARTY_NOTICES.md",
   ],
@@ -166,6 +172,9 @@ function writeJson(path, value) {
 }
 
 function packageThirdPartyProvenance(destination, sourceRoot, impeccablePin) {
+  const motionPin = JSON.parse(readFileSync(join(sourceRoot, "upstream/motion.pin.json"), "utf8"));
+  copyRegular(join(sourceRoot, "upstream/motion-license.json"), join(destination, "licenses/motion-license.json"), sourceRoot);
+  copyRegular(join(sourceRoot, "upstream/motion.pin.json"), join(destination, "licenses/motion-pin.json"), sourceRoot);
   const licensePath = join(destination, "licenses", "impeccable-apache-2.0.txt");
   copyRegular(join(sourceRoot, "upstream", "LICENSE"), licensePath, sourceRoot);
   copyRegular(join(sourceRoot, "upstream", "impeccable.pin.json"), join(destination, "licenses/impeccable-pin.json"), sourceRoot);
@@ -184,10 +193,22 @@ function packageThirdPartyProvenance(destination, sourceRoot, impeccablePin) {
     "",
     "The MIT license at the package root applies to the Geldmacher wrapper only. It does not replace Impeccable's Apache-2.0 terms.",
     "",
+    "## Motion AI Kit",
+    "",
+    `- Source: ${motionPin.repository}`,
+    `- Pinned commit: ${motionPin.commit}`,
+    "- Upstream declares MIT in its plugin and installer manifests; their original declarations and author information are retained in `licenses/motion-license.json`.",
+    "- No standalone upstream license text was present in the archive. `licenses/motion-pin.json` binds the imported source; the hosted MCP is independently operated and not pinned.",
+    "",
   ].join("\n"));
 }
 
 function narrowModules(destination, host) {
+  const motionPath = join(destination, "modules", "motion.json");
+  const motion = JSON.parse(readFileSync(motionPath, "utf8"));
+  delete motion.$schema;
+  if (host === "agent-plugin") motion.contributes.mcpServers = [];
+  writeJson(motionPath, motion);
   const designPath = join(destination, "modules", "design-core.json");
   const design = JSON.parse(readFileSync(designPath, "utf8"));
   const impeccablePath = join(destination, "modules", "impeccable.json");
@@ -370,7 +391,7 @@ export function projectNativeSkill(text, host, allowImplicit) {
   const match = text.match(/^---\n([\s\S]*?)\n---\n/);
   if (!match) throw new Error("Native skill frontmatter is missing.");
   const metadata = YAML.parse(match[1]);
-  if (!["design", "impeccable"].includes(metadata.name)) throw new Error("Unknown native skill identity.");
+  if (!["design", "impeccable", "motion"].includes(metadata.name)) throw new Error("Unknown native skill identity.");
   if (Object.hasOwn(metadata, "disable-model-invocation")) throw new Error("Shared runtime skill contains Cursor-only invocation metadata.");
   if (host === "cursor") text = text.replace(/^---\n/, `---\ndisable-model-invocation: ${!allowImplicit}\n`);
   if (metadata.name === "design") {
@@ -385,7 +406,7 @@ export function projectNativeSkill(text, host, allowImplicit) {
 }
 
 function adaptNativeSkills(destination, host) {
-  for (const name of ["design", "impeccable"]) {
+  for (const name of ["design", "impeccable", "motion"]) {
     const root = join(destination, "skills", name);
     const policy = YAML.parse(readFileSync(join(root, "agents", "openai.yaml"), "utf8")).policy;
     const path = join(root, "SKILL.md");
@@ -395,11 +416,19 @@ function adaptNativeSkills(destination, host) {
 
 function adaptAgentPluginSkills(destination) {
   const skillsRoot = join(destination, "skills");
-  for (const skillName of ["design", "impeccable"]) rmSync(join(skillsRoot, skillName, "agents"), { recursive: true, force: true });
+  for (const skillName of ["design", "impeccable", "motion"]) rmSync(join(skillsRoot, skillName, "agents"), { recursive: true, force: true });
 
   const designPath = join(skillsRoot, "design", "SKILL.md");
   writeFileSync(designPath, projectDesignSkill(readProjectedText(designPath)));
 
+  const motionPath = join(skillsRoot, "motion", "SKILL.md");
+  const motionText = readProjectedText(motionPath);
+  const motionStart = "<!-- motion-host:start -->";
+  const motionEnd = "<!-- motion-host:end -->";
+  if (motionText.split(motionStart).length !== 2 || motionText.split(motionEnd).length !== 2 || motionText.indexOf(motionEnd) < motionText.indexOf(motionStart)) throw new Error("Motion host markers drifted");
+  writeFileSync(motionPath, motionText.slice(0, motionText.indexOf(motionStart)) + "The client exposes the bare `motion` skill name. Resolve references relative to this loaded skill. This portable package supplies local guidance without an MCP connection; only use a reader independently provided by the client.\n" + motionText.slice(motionText.indexOf(motionEnd) + motionEnd.length));
+  const motionSearch = join(skillsRoot, "motion", "codex", "index.md");
+  writeFileSync(motionSearch, replaceRequired(readProjectedText(motionSearch), "The native Design packages declare the public Motion MCP at `https://mcp.motion.dev`.", "This portable package declares no MCP server. The client may independently provide the public Motion MCP at `https://mcp.motion.dev`.", "portable Motion search contract"));
   const impeccablePath = join(skillsRoot, "impeccable", "SKILL.md");
   // SKILL.md anchors below are LF-authored; normalize CRLF from Windows checkouts.
   let impeccable = readProjectedText(impeccablePath);
@@ -508,7 +537,7 @@ function validateNative(destination, host, version) {
   const module = JSON.parse(readFileSync(join(destination, "modules", "design-core.json"), "utf8"));
   const expectedHook = host === "cursor" ? "hooks/cursor-hooks.json" : "hooks/hooks.json";
   if (JSON.stringify(module.contributes.hooks) !== JSON.stringify([expectedHook])) throw new Error(`${host} target module hooks drifted`);
-  for (const name of ["design", "impeccable"]) {
+  for (const name of ["design", "impeccable", "motion"]) {
     const skillRoot = join(destination, "skills", name);
     const { value } = parseSkillFrontmatter(join(skillRoot, "SKILL.md"), `skills/${name}/SKILL.md`);
     const policy = YAML.parse(readFileSync(join(skillRoot, "agents", "openai.yaml"), "utf8"));
@@ -517,6 +546,7 @@ function validateNative(destination, host, version) {
       throw new Error(`${host} ${name} skill has incorrect Cursor invocation metadata`);
     }
   }
+  if (manifest.mcpServers !== "./mcp.json" || JSON.stringify(JSON.parse(readFileSync(join(destination, "mcp.json"), "utf8"))) !== JSON.stringify({ mcpServers: { motion: { url: "https://mcp.motion.dev" } } })) throw new Error("Native free Motion MCP contract drifted");
   files(destination);
 }
 
@@ -533,8 +563,11 @@ function validateAgentPlugin(destination, version, sourceRoot) {
   if (Object.hasOwn(manifest, "extensions")) throw new Error("agent-plugin manifest must not invent an extension namespace");
   const skillEntries = readdirSync(join(destination, "skills"), { withFileTypes: true });
   const skillNames = skillEntries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
-  if (JSON.stringify(skillNames) !== JSON.stringify(["design", "impeccable"])) throw new Error("agent-plugin target must contain exactly design and impeccable skills");
+  if (JSON.stringify(skillNames) !== JSON.stringify(["design", "impeccable", "motion"])) throw new Error("agent-plugin target must contain exactly design, impeccable and motion skills");
   for (const entry of skillEntries) if (!entry.isDirectory()) throw new Error(`agent-plugin skills root contains non-directory entry ${entry.name}`);
+  const motionText = validateAgentSkill(join(destination, "skills", "motion", "SKILL.md"), "motion");
+  if (/\$(?:motion)|`\/motion|\b(?:Cursor|Codex)\b/.test(motionText)) throw new Error("Portable Motion contains native invocation promises");
+  if (existsSync(join(destination, "mcp.json")) || JSON.parse(readFileSync(join(destination, "modules/motion.json"), "utf8")).contributes.mcpServers.length) throw new Error("Portable Motion contains an MCP contribution");
   const designText = validateAgentSkill(join(destination, "skills", "design", "SKILL.md"), "design");
   const impeccableText = validateAgentSkill(join(destination, "skills", "impeccable", "SKILL.md"), "impeccable");
   if (!designText.includes("bare `design` and `impeccable` skill names")) throw new Error("portable Design contract does not use bare skill names");
@@ -608,6 +641,10 @@ function packageReadme(host) {
     "Download and verify the latest release ZIP, then follow the [manual update steps](docs/installation.md#update-manually) to replace the complete package and repeat activation.",
     "",
     `For agent-assisted updates on macOS or Linux, open the Design source checkout and invoke \`${host === "cursor" ? "/" : "$"}install-new-release-from-repo\`. This skill installs the latest stable release and is available only in the source checkout. Use the [update prompt](docs/installation.md#update-through-your-agent) if you need the agent to prepare that checkout.`,
+    "",
+    "## Free Motion support",
+    "",
+    "Design includes local animation best practices and the anonymous Motion documentation MCP. The host may require enabling the server after installation. Offline guidance remains available. No account, paid tools or automatic migrations are included.",
     "",
     "## Try it",
     "",

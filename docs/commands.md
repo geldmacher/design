@@ -70,6 +70,7 @@ The table below follows the bundled toolkit. The reference links open detailed i
 ### Aliases and special operations
 
 - `teach` aliases `init`. `craft` is deprecated; describe the new interface or redesign directly instead.
+- `motion` selects the bundled free Motion implementation skill; direct native Motion invocations are also available. General animation direction remains with `animate`. See [Motion boundaries](motion-maintenance.md).
 - `doctor` reports drift in canonical Impeccable project context. `/design doctor` and `/impeccable doctor` reach the same Impeccable operation; use `$` in Codex. The bundled doctor reports proposed repairs; it does not accept `--fix`. Authorize project-context changes separately.
 - `hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages optional project checks. Invoke it through Design or directly through Impeccable. Checks stay off until explicitly enabled; hook configuration does not prove fresh host activation.
 - Standalone `pin`/`unpin` shortcut installation is disabled. Runtime code downloads and self-updates are disabled; upstream updates belong to the maintainer workflow.

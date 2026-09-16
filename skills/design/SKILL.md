@@ -29,6 +29,7 @@ Read [references/capabilities.md](references/capabilities.md) and use it as the 
 - For `design-core:detector-scan`, follow the Detect operation below.
 - For `design-core:stakeholder-questionnaire`, read and follow [references/questionnaire.md](references/questionnaire.md).
 - For `design-core:change-interface-review`, read and follow [references/change-review.md](references/change-review.md). The review is read-only and task-local.
+- For `motion:animation-implementation`, load the bundled [Motion skill](../motion/SKILL.md). Reuse this operation's readiness result. Keep Impeccable as the art-direction authority and use Motion only for the requested technical work.
 - When the index selects Impeccable, load the bundled [impeccable skill](../impeccable/SKILL.md) and follow the index's selection procedure: honor an explicit operation, otherwise choose from the loaded skill's current descriptions and playbooks. Keep the user's request unchanged and state an inferred choice briefly before proceeding.
 
 Do not download skills, resolve dynamic URLs, install packages, or invent a module at runtime.

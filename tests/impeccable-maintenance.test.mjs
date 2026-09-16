@@ -7,6 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -41,6 +42,8 @@ import {
   verifyArchiveMatchesSource,
 } from "../scripts/lib/impeccable-vendor.mjs";
 import { buildCommandReference } from "../scripts/build-command-reference.mjs";
+import { renderCapabilityIndex } from "../scripts/build-capability-index.mjs";
+import { loadModules } from "../src/registry.mjs";
 
 test("guidance transformations reproduce locked files and reject upstream anchor drift", () => {
   const workspace = mkdtempSync(join(tmpdir(), "design-guidance-transform-"));
@@ -314,6 +317,7 @@ test("offline sync rejects invalid command data before preview or apply can chan
 test("both update paths expose added, renamed, removed and redefined operations through the shipped selection source", (t) => {
   for (const mode of ['candidate', 'offline']) {
     const f = candidateFixture(t);
+    const motionBefore = readFileSync(join(f.repository, 'modules/motion.json'));
     const skill = transformSkillFile('SKILL.md', f.files.get('.cursor/skills/impeccable/SKILL.md'), f.candidatePin.version).text;
     const metadata = JSON.parse(f.files.get('.cursor/skills/impeccable/scripts/command-metadata.json').toString('utf8'));
     const changed = skill
@@ -336,6 +340,10 @@ test("both update paths expose added, renamed, removed and redefined operations 
     }
     const routerRoot = join(f.repository, 'skills/design/references');
     const routing = readFileSync(join(routerRoot, 'capabilities.md'), 'utf8');
+    assert.match(routing, /\| `motion` \| motion:animation-implementation/);
+    assert.equal(routing, renderCapabilityIndex(loadModules(f.repository)), `${mode} dropped a registered module`);
+    assert.deepEqual(readFileSync(join(f.repository, 'modules/motion.json')), motionBefore);
+    assert.match(execFileSync(process.execPath, [realpathSync(join(f.repository, 'scripts/build-capability-index.mjs')), '--check'], { encoding: 'utf8' }), /Capability index is current/);
     const link = routing.match(/\]\((\.\.\/\.\.\/impeccable\/SKILL\.md)\)/)?.[1];
     assert.ok(link, `${mode} lost the bundled selection source`);
     const selectedSource = readFileSync(join(routerRoot, link), 'utf8');

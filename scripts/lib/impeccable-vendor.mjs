@@ -19,6 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { renderCapabilityIndex } from "../build-capability-index.mjs";
+import { loadModules } from "../../src/registry.mjs";
 import { renderCommandReference } from "../build-command-reference.mjs";
 import { canonicalJson, compareVersions, parseSkillTag, pluginRoot, readPin, sha256Bytes, sha256File, validatePin } from "./impeccable-maintenance.mjs";
 
@@ -524,6 +525,11 @@ function projectedModule(root, pin) {
   return module;
 }
 
+function projectedCapabilityIndex(root, impeccableModule) {
+  return renderCapabilityIndex(loadModules(root).map(module =>
+    module.id === "impeccable" ? impeccableModule : module));
+}
+
 function projectionOutputs(root, projection, pin, vendor) {
   const overlay = join(root, "overlays", "skills", "impeccable");
   const skill = join(projection, "skills", "impeccable");
@@ -542,8 +548,7 @@ function projectionOutputs(root, projection, pin, vendor) {
   writeFileSync(join(projection, "THIRD_PARTY_NOTICES.md"), updateThirdPartyNotice(root, pin));
   const module = projectedModule(root, pin);
   writeJson(join(projection, "modules", "impeccable.json"), module);
-  const design = JSON.parse(readFileSync(join(root, "modules", "design-core.json"), "utf8"));
-  writeFileSync(join(projection, "skills", "design", "references", "capabilities.md"), renderCapabilityIndex([design, module]));
+  writeFileSync(join(projection, "skills", "design", "references", "capabilities.md"), projectedCapabilityIndex(root, module));
   mkdirSync(join(projection, "docs"), { recursive: true });
   writeFileSync(join(projection, "docs", "commands.md"), renderCommandReference({ skillRoot: skill, version: pin.version }));
 }
@@ -743,8 +748,7 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
     const overlay = join(root, "overlays", "skills", "impeccable");
     if (existsSync(overlay)) cpSync(overlay, vendor.transformedDir, { recursive: true });
     const commandReference = renderCommandReference({ skillRoot: vendor.transformedDir, version: pin.version });
-    const design = JSON.parse(readFileSync(join(root, "modules", "design-core.json"), "utf8"));
-    const capabilityIndex = renderCapabilityIndex([design, projectedModule(root, pin)]);
+    const capabilityIndex = projectedCapabilityIndex(root, projectedModule(root, pin));
     if (!apply) return { mode: "verified", pin, files: vendor.inventory.length, transformed: vendor.changed.length };
     const skillTarget = join(root, "skills", "impeccable");
     const agentsTarget = join(root, "agents");

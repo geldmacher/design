@@ -10,6 +10,7 @@ import addFormats from 'ajv-formats';
 import YAML from 'yaml';
 import { flattenCapabilities, loadModules } from '../src/registry.mjs';
 import { readPin } from './lib/impeccable-maintenance.mjs';
+import { validateInstalled as validateMotion } from './lib/motion-vendor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let checks = 0;
@@ -92,7 +93,7 @@ check(packageManifest.version === manifest.version, 'Package and Cursor manifest
 check(manifest.license === 'MIT', 'Wrapper license must be MIT.');
 check(manifest.repository === 'https://github.com/geldmacher/design', 'Manifest repository must reference the public source repository.');
 check(manifest.homepage === 'https://github.com/geldmacher/design#readme', 'Manifest homepage must reference the public README.');
-for (const intentionallyAbsent of ['minClientVersions', 'mcpServers']) {
+for (const intentionallyAbsent of ['minClientVersions']) {
   check(!Object.hasOwn(manifest, intentionallyAbsent), `${intentionallyAbsent} must remain absent until real and verified.`);
 }
 
@@ -105,7 +106,7 @@ check(codexManifest.version === manifest.version, 'Cursor and Codex manifest ver
 check(codexManifest.description === manifest.description, 'Cursor and Codex descriptions differ.');
 check(codexManifest.skills === './skills/', 'Codex manifest must discover the shared skills directory.');
 check(!Object.hasOwn(codexManifest, 'hooks'), 'Codex manifest must use default hooks/hooks.json discovery for the current ingestion contract.');
-for (const intentionallyAbsent of ['apps', 'mcpServers', 'agents']) {
+for (const intentionallyAbsent of ['apps', 'agents']) {
   check(!Object.hasOwn(codexManifest, intentionallyAbsent), `Codex ${intentionallyAbsent} must remain absent.`);
 }
 check(codexManifest.author?.name === manifest.author.name, 'Cursor and Codex author names differ.');
@@ -265,7 +266,10 @@ check(fs.existsSync(path.join(root, 'hooks/impeccable-codex-hook.mjs')), 'Codex 
 const moduleSchema = readJson('modules/module.schema.json');
 const validateModule = ajv.compile(moduleSchema);
 const modules = loadModules(root);
-check(modules.length === 2, `Expected design-core and impeccable modules, found ${modules.length}.`);
+check(modules.length === 3, `Expected design-core, impeccable and motion modules, found ${modules.length}.`);
+validateMotion(root);
+check(manifest.mcpServers === './mcp.json' && codexManifest.mcpServers === './mcp.json', 'Native manifests must load the free Motion MCP.');
+check(JSON.stringify(readJson('mcp.json')) === JSON.stringify({ mcpServers: { motion: { url: 'https://mcp.motion.dev' } } }), 'Only the anonymous Motion MCP is permitted.');
 assertUnique(modules.map((module) => module.id), 'Module ids');
 for (const module of modules) {
   check(validateModule(module), `Module ${module.id} is invalid: ${ajv.errorsText(validateModule.errors)}`);
@@ -303,7 +307,7 @@ for (const module of modules) {
   for (const field of ['skills', 'agents', 'rules', 'hooks', 'scripts']) {
     for (const relative of module.contributes[field]) check(fs.existsSync(path.join(root, relative)), `Orphan ${module.id} ${field} contribution: ${relative}`);
   }
-  check(module.contributes.mcpServers.length === 0, `${module.id} must not contribute MCP.`);
+  check(JSON.stringify(module.contributes.mcpServers) === JSON.stringify(module.id === 'motion' ? ['mcp.json'] : []), `${module.id} MCP contribution differs from the free Motion contract.`);
 }
 const designModule = modules.find((module) => module.id === 'design-core');
 check(designModule?.contributes.scripts.includes('skills/design/scripts/review-scope.mjs'), 'Design module must own the review scope resolver.');

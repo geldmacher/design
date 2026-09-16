@@ -31,7 +31,7 @@ export function renderCapabilityIndex(modules) {
     '',
     '# Design routing',
     '',
-    'Honor an explicit supported operation before any intent matching, whether it belongs to Design or Impeccable. Otherwise compare the requested outcome with the Design descriptions below and the bundled Impeccable descriptions. This also applies when Design itself was selected automatically. Preserve the original request, target, language, constraints, and authorization throughout.',
+    'Honor an explicit supported operation before any intent matching, whether it belongs to Design, Motion or Impeccable. Otherwise compare the requested outcome with the Design descriptions below and the bundled Impeccable descriptions. This also applies when Design itself was selected automatically. Preserve the original request, target, language, constraints, and authorization throughout.',
     '',
     '## Design operations',
     '',
@@ -46,6 +46,12 @@ export function renderCapabilityIndex(modules) {
     for (const command of capability.triggers) lines.push(`| \`${command}\` | ${capability.module}:${capability.id} - ${capability.title} | ${capability.intents[command]} | ${capability.skill} |`);
   }
   lines.push(
+    '',
+    '## Motion selection',
+    '',
+    'A leading `motion` operation or a request specifically about Motion APIs or their implementation selects the bundled [Motion skill](../../motion/SKILL.md) (motion:animation-implementation). Load it and preserve the original request. Mere mentions, questions about commands, quotations and negations remain advice rather than execution. Motion is selected through Design rather than competing as an implicit entrypoint.',
+    '',
+    'General animation art direction and an explicit `animate` operation remain with Impeccable. When their implementation needs Motion API guidance, Design may also load Motion as a technical reference without replacing the chosen operation. An explicit Impeccable invocation still bypasses this router. Installation, upgrades, migrations and paid capabilities are never inferred.',
     '',
     '## Impeccable selection',
     '',

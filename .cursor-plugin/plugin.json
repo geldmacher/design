@@ -19,13 +19,16 @@
     "ux",
     "web-app",
     "website",
-    "impeccable"
+    "impeccable",
+    "motion"
   ],
   "category": "developer-tools",
   "skills": [
     "./skills/design",
-    "./skills/impeccable"
+    "./skills/impeccable",
+    "./skills/motion"
   ],
   "agents": "./agents/*.md",
-  "hooks": "./hooks/cursor-hooks.json"
+  "hooks": "./hooks/cursor-hooks.json",
+  "mcpServers": "./mcp.json"
 }

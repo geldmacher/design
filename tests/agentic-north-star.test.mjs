@@ -29,14 +29,15 @@ test('root AGENTS.md is the concise shared product contract', () => {
   assert.match(content, /npm run release-check/);
 });
 
-test('all seven skills have scoped metadata and matching native invocation policies', () => {
+test('all nine skills have scoped metadata and matching native invocation policies', () => {
   const expected = [
-    ['skills/design', true], ['skills/impeccable', false],
+    ['skills/design', true], ['skills/impeccable', false], ['skills/motion', false],
     ['.agents/skills/verify-impeccable-engine', true],
     ['.agents/skills/deploy-local-plugin', false],
     ['.agents/skills/install-new-release-from-repo', false],
     ['.agents/skills/release-plugin', false],
     ['.agents/skills/update-impeccable', false],
+    ['.agents/skills/update-motion', false],
   ];
   const discovered = ['skills', '.agents/skills'].flatMap(directory =>
     readdirSync(path.join(root, directory)).filter(name => existsSync(path.join(root, directory, name, 'SKILL.md'))).map(name => `${directory}/${name}`));

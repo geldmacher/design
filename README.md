@@ -77,3 +77,9 @@ Before interface work, Design checks the relevant project's context and configur
 - [Documentation](docs/README.md) — project setup, troubleshooting, and maintainer guides.
 
 Design includes the [Impeccable](https://github.com/pbakaus/impeccable) design toolkit. See [upstream provenance](upstream/README.md), [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## Motion implementation
+
+Design includes pinned Motion best practices for CSS, JavaScript, React and Vue. Ask `/design motion ...` in Cursor or `$design motion ...` in Codex for animation implementation and API guidance. Direct `/motion` and `$motion` invocations are also available; Design remains the automatic entrypoint.
+
+Native packages include the anonymous Motion documentation MCP. The host may require enabling it after installation. Search and free example resources need that connection; local guidance works offline. No account, paid tools, automatic package installation or migrations are included. General animation direction stays with Impeccable and your existing product context. See [Motion maintenance and capability boundaries](docs/motion-maintenance.md).

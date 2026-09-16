@@ -305,3 +305,9 @@ For Codex, import `https://github.com/geldmacher/design` as a GitHub Marketplace
 ### Update or roll back a Git source
 
 Pinning a version tag or commit makes rollback explicit: select the earlier Git ref, synchronize the Marketplace again, verify the refreshed cache, and start a new task. Selecting `main` follows future repository updates and is less suitable for controlled rollback.
+
+## Bundled free Motion documentation
+
+The native packages declare one remote MCP server, `motion`, at `https://mcp.motion.dev`. Review the host's normal connection and tool permissions after installation. No account, token or paid endpoint is required. This changes only the bundled plugin: the installer does not write a second project configuration or run an upstream installer. Keep any unrelated existing Motion installation; choose the intended provider in the host if duplicate tools are shown.
+
+The portable Agent Plugins package ships only Motion's local skill guidance. A client may supply its own resource reader, but this package does not configure or emulate one. Offline status reports the package configuration separately from untested connectivity. See [Motion boundaries](https://github.com/geldmacher/design/blob/main/docs/motion-maintenance.md).

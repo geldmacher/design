@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(import.meta.dirname, '../../../..');
-const engineTests = ['impeccable-engine', 'detector-orchestration', 'hook', 'codex-hook', 'host', 'guidance-contract', 'portable-runtime', 'plugin-targets', 'impeccable-maintenance', 'project-state'];
+const engineTests = ['impeccable-engine', 'detector-orchestration', 'hook', 'codex-hook', 'host', 'guidance-contract', 'portable-runtime', 'plugin-targets', 'impeccable-maintenance', 'project-state', 'motion-maintenance', 'motion-contract'];
 const sourceDirectories = ['src', 'hooks', 'scripts', 'tests', 'upstream', 'overlays', 'skills', 'modules', 'manifests', 'schemas', 'assets', 'docs', '.agents', '.cursor', '.cursor-plugin', '.codex-plugin', '.github'];
 
 export function selectTests(sourceRoot, all = false) {
@@ -65,6 +65,7 @@ export function verifyEngine({ sourceRoot = root, all = false, run = spawnSync }
     exitCode: result.status, error: result.error?.message || inspectionError || cleanupError,
     mode: all ? 'all' : 'engine', tests, platform,
     unexecutedPlatforms: Object.keys(pin.engine.assets).filter(key => key !== platform), pin,
+    motionPin: fs.existsSync(path.join(sourceRoot, 'upstream/motion.pin.json')) ? JSON.parse(fs.readFileSync(path.join(sourceRoot, 'upstream/motion.pin.json'))) : null,
     sourceHashes: before, changedDuringTrial: changed, cleanup, evidence,
   };
   fs.writeFileSync(path.join(evidence, 'result.json'), `${JSON.stringify(summary, null, 2)}\n`);

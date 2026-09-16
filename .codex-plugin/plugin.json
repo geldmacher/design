@@ -16,7 +16,8 @@
     "ux",
     "web-app",
     "website",
-    "impeccable"
+    "impeccable",
+    "motion"
   ],
   "skills": "./skills/",
   "interface": {
@@ -35,5 +36,6 @@
       "Use $design to polish this checkout flow without changing its information architecture."
     ],
     "logo": "./assets/logo.svg"
-  }
+  },
+  "mcpServers": "./mcp.json"
 }

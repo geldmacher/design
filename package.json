@@ -34,7 +34,11 @@
     "check:links": "node scripts/check-links.mjs",
     "release:plugin": "node scripts/plugin-github-release.mjs",
     "release-check": "npm run build:capabilities -- --check && npm run check:commands && npm run check:targets && npm run check:english && npm run validate && npm run check:links && npm run verify:impeccable-engine -- --all",
-    "verify:impeccable-engine": "node .agents/skills/verify-impeccable-engine/scripts/verify.mjs"
+    "verify:impeccable-engine": "node .agents/skills/verify-impeccable-engine/scripts/verify.mjs",
+    "check:motion-upstream": "node scripts/check-motion-upstream.mjs",
+    "prepare:motion-update": "node scripts/prepare-motion-update.mjs",
+    "apply:motion-update": "node scripts/apply-motion-update.mjs",
+    "sync:motion": "node scripts/sync-motion.mjs"
   },
   "devDependencies": {
     "ajv": "8.20.0",

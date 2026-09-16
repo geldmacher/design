@@ -20,3 +20,7 @@ The MIT license at the repository root applies to the Geldmacher wrapper only. I
 - License note: the pinned repository commit has no repository-root license file; no license is inferred here.
 
 The schema is included solely as the official validation contract for `.cursor-plugin/plugin.json`.
+
+## Motion AI Kit
+
+The free Motion subset is imported from https://github.com/motiondivision/ai-kit. The exact commit and archive hash are in `upstream/motion.pin.json`; original MIT license declarations and author metadata are retained in `upstream/motion-license.json`. Upstream supplied no standalone license text. The generated adaptation patch and file inventory are retained with the source. Packaged distributions include these declarations and the pin under `licenses/`. The hosted documentation service is independent of the source pin.

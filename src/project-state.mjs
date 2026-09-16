@@ -155,12 +155,30 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
       archiveSha256: impeccableModule?.source?.archiveSha256 || null,
     },
     modules: modules.map((module) => ({ id: module.id, version: module.version, license: module.license })),
+    motion: {
+      version: modules.find(module => module.id === 'motion')?.version || null,
+      commit: modules.find(module => module.id === 'motion')?.source?.commit || null,
+      mcp: readMotionConfiguration(pluginRoot, host, manifest),
+    },
     hook,
     conflicts,
     context,
   };
   state.readiness = assessReadiness(state, diagnosis, configuration, options);
   return state;
+}
+
+function readMotionConfiguration(pluginRoot, host, manifest) {
+  const result = { configuration: 'not-bundled', endpoint: null, availability: 'not-checked' };
+  if (host === 'agent-plugin') return result;
+  if (manifest.mcpServers !== './mcp.json') return { ...result, configuration: 'invalid' };
+  const file = path.join(pluginRoot, 'mcp.json');
+  if (!fs.existsSync(file)) return { ...result, configuration: 'missing' };
+  try {
+    const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (JSON.stringify(config) !== JSON.stringify({ mcpServers: { motion: { url: 'https://mcp.motion.dev' } } })) return { ...result, configuration: 'invalid' };
+    return { ...result, configuration: 'bundled', endpoint: 'https://mcp.motion.dev' };
+  } catch { return { ...result, configuration: 'invalid' }; }
 }
 
 function assessReadiness(state, diagnosis, configuration, options) {

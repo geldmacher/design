@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveMarkdownLink } from './lib/markdown-links.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -25,7 +26,7 @@ for (const file of walk()) {
     let target = match[1].trim().replace(/^<|>$/g, '');
     if (!target || /^(?:https?:|mailto:|#)/i.test(target) || target.includes('${')) continue;
     target = decodeURIComponent(target.split('#')[0]);
-    const absolute = path.resolve(path.dirname(path.join(root, file)), target);
+    const absolute = resolveMarkdownLink(root, file, target);
     checked += 1;
     if (!fs.existsSync(absolute)) failures.push(`${file}: ${match[1]}`);
   }
