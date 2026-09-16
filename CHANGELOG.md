@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.13.0
+
+- Choose Design and Impeccable commands from natural-language requests, including setup, status, diagnosis and stakeholder questionnaires, while preserving explicit commands, task scope and write approvals.
+- Check project readiness before explicit or automatically selected interface work, including change reviews and detector scans. Report missing context or incomplete diagnostics and continue feasible work without activating hooks or migrating context.
+- Share readiness across status, diagnose and setup preview, with optional app targets, inherited monorepo context, local configuration overrides and confirmed setup readback. Preserve partial diagnostic evidence when rule validation is unavailable.
+- Keep command selection current through candidate updates and offline sync, with package checks for Cursor, Codex and portable targets and documented host smoke scenarios.
+- Simplify the README and packaged introduction, expand installation and recovery instructions, and document command selection, readiness and maintenance with practical usage examples.
+
 ## 0.12.0
 
 - Enable automatic Design selection for matching website and web-app UI tasks in Cursor and Codex, while keeping Impeccable routed or explicitly invoked and maintainer operations explicit.
