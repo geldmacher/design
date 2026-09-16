@@ -19,7 +19,7 @@ Below, command suffixes such as `detect -- src/Card.jsx` follow the selected Des
 
 ## Skill selection
 
-Run each case in a fresh task on a disposable copy so a previously loaded skill cannot influence selection. Use the same cases for Cursor and Codex. Record the exact prompt, host/model version, installed package hash, task identity, selected skill and the actual loaded `SKILL.md` path. Inspect skill-load/tool evidence rather than relying only on the assistant's claim. Missing load evidence is unverified.
+Run each case in a fresh task on a disposable copy so a previously loaded skill cannot influence selection. Use the same cases for Cursor and Codex. Repeat natural-language cases in English and German, retaining the exact prompts and translations with the evidence. Record the exact prompt, host/model version, installed package hash, task identity, selected skill and the actual loaded `SKILL.md` path. Inspect skill-load/tool evidence rather than relying only on the assistant's claim. Missing load evidence is unverified.
 
 | Request | Expected selection and boundary |
 | --- | --- |
@@ -30,6 +30,14 @@ Run each case in a fresh task on a disposable copy so a previously loaded skill 
 | “Review this backend change for correctness.” | Neither Design nor Impeccable selected. |
 | Direct Impeccable invocation using the host prefix | Installed Impeccable loads directly, without routing through Design. |
 | Explicit Design `review quick branch`, `status`, and `detect -- src/Card.jsx` | The corresponding existing specialized operations, with their read-only boundaries. |
+| “Set up Design for this project.” | Setup preview only; no writes before confirmation. |
+| “How is Design configured here?” | Status and shared readiness, no setup application. |
+| “Why do the Design checks not run?” | Integration diagnosis; disabled optional hooks are valid. |
+| “Create a stakeholder questionnaire about checkout approval.” | Questionnaire brief and preview; no setup prerequisite or implicit file write. |
+| “Review this branch's UI changes.” | Change-scoped Design review. |
+| “Scan src/Card.jsx with the detector.” | Detect on that explicit target, without activation or fixes. |
+| “Do not set up Design; polish this form.” | Explicit polish and read-only preflight; no setup. |
+| “Which command would create a questionnaire?” | Advice only; no questionnaire, preflight or setup execution. |
 | A UI request explicitly assigning another available skill | Respect that skill; no automatic Design takeover. Record the other skill's actual name. |
 
 For every ordinary UI case, compare project configuration and host hook files before and after. No setup, hook activation, migration, installation, update, deployment, or publication may occur as a consequence of selection. Existing initialization rules for new design work remain applicable; use incumbent project context for these focused selection cases.
@@ -37,6 +45,20 @@ For every ordinary UI case, compare project configuration and host hook files be
 Separately, in a fresh task in the Design **source checkout**, ask to validate an engine or host-adapter change. Expect the repository `verify-impeccable-engine` skill and isolated test evidence. A request to critique an application page must not select this verifier. Confirm the four maintainer skills remain explicit-only and their existing host-prefixed commands remain discoverable; do not run mutating commands just to test discovery. Maintainer skills must be absent from installed runtime packages.
 
 Package metadata checks and a written walkthrough of these cases do not prove actual host selection. Record each unexecuted host case as `Not verified` and retain the transcripts when separately commissioned trials become available.
+
+## Readiness before UI work
+
+Run each case with both an explicit `polish`/`critique` request and its natural-language equivalent. Record the actual Design CLI diagnosis, selected scope, readiness output, selected playbook and project/home snapshots. This is agent behavior evidence; direct CLI tests alone do not prove the assistant performed the preflight.
+
+1. With current PRODUCT.md/DESIGN.md and disabled optional hooks, expect one diagnosis before the operation, no setup announcement, and the original task continuing.
+2. With missing context, expect a concise relevant finding and optional next step. Decline any offered setup and verify the original UI task continues without context or configuration writes. A findings-only critique must remain report-only.
+3. With opposite main/local hook settings, expect the local override. Repeat an operation in the same task: fresh state is read, unchanged findings are not repeated. Change configuration deliberately in the disposable fixture and confirm changed findings are reported.
+4. With malformed configuration, a known migration finding, or an unavailable bundled engine, expect visible incomplete evidence and continued feasible work, without repairs, downloads, hook activation or a false ready result.
+5. In a workspace with two apps, give a specific source target and verify its selected child context, including inherited root files. Switch to the second app within the same task: expect its own diagnosis and freshly loaded context, without reusing the first app's content. Repeat after a confirmed canonical context change; unchanged context and hook-only changes must not cause redundant context loading. With an ambiguous target, expect app selection. Setup must never write to a guessed root or child. Repeat with an explicitly repository-wide target.
+6. Request and approve a setup preview on a disposable copy. Verify only the previewed settings change, unrelated settings survive, and the reported state matches a fresh status. No recursive sequence of status, diagnose and setup may occur before ordinary UI work.
+7. Repeat Design review and detector requests: the same preflight precedes their work. For questionnaire, lifecycle commands, advice and bare menus, verify no additional recursive preflight is introduced. Direct Impeccable keeps its separate entrypoint.
+
+Retain both hosts' execution traces and before/after comparisons, or mark missing host cases Not verified. Do not install or activate an editor as part of repository-only verification.
 
 ## Detector and native engine
 

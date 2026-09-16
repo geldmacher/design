@@ -11,15 +11,18 @@ const designSkill = readFileSync(path.join(root, 'skills/design/SKILL.md'), 'utf
 const questionnaire = readFileSync(path.join(root, 'skills/design/references/questionnaire.md'), 'utf8');
 const openaiMetadata = YAML.parse(readFileSync(path.join(root, 'skills/design/agents/openai.yaml'), 'utf8'));
 
-test('stakeholder questionnaire is an explicit first-party Design capability', () => {
+test('stakeholder questionnaire has a first-party command and semantic selection description', () => {
   const capability = designModule.capabilities.find((entry) => entry.id === 'stakeholder-questionnaire');
-  assert.deepEqual(capability, {
+  const { intents, ...identity } = capability;
+  assert.deepEqual(identity, {
     id: 'stakeholder-questionnaire',
     title: 'Stakeholder decision questionnaire',
     skill: 'design',
     fallback: false,
     triggers: ['questionnaire'],
   });
+  assert.deepEqual(Object.keys(intents), ['questionnaire']);
+  assert.ok(intents.questionnaire.includes('stakeholder questionnaire'));
   assert.match(designSkill, /design-core:stakeholder-questionnaire/);
   assert.match(designSkill, /references\/questionnaire\.md/);
   assert.deepEqual(designModule.source, { type: 'first-party', url: 'urn:geldmacher:design' });

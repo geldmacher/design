@@ -311,6 +311,60 @@ test("offline sync rejects invalid command data before preview or apply can chan
   }
 });
 
+test("both update paths expose added, renamed, removed and redefined operations through the shipped selection source", (t) => {
+  for (const mode of ['candidate', 'offline']) {
+    const f = candidateFixture(t);
+    const skill = transformSkillFile('SKILL.md', f.files.get('.cursor/skills/impeccable/SKILL.md'), f.candidatePin.version).text;
+    const metadata = JSON.parse(f.files.get('.cursor/skills/impeccable/scripts/command-metadata.json').toString('utf8'));
+    const changed = skill
+      .replace('`bolder [target]`', '`reframe [target]`')
+      .replace('Amplify safe or bland designs', 'Reconsider visual emphasis')
+      .replace(/^\| `overdrive[^\n]*\n/m, '')
+      .replace('\nRouting:', '| `focus [target]` | Refine | Reduce competing emphasis | [reference/bolder.md](reference/bolder.md) |\n\nRouting:');
+    metadata.reframe = { ...metadata.bolder, description: 'Reconsider visual emphasis' };
+    metadata.focus = { ...metadata.bolder, description: 'Reduce competing emphasis' };
+    delete metadata.bolder;
+    delete metadata.overdrive;
+    write(join(f.repository, 'overlays/skills/impeccable/SKILL.md'), changed);
+    write(join(f.repository, 'overlays/skills/impeccable/scripts/command-metadata.json'), JSON.stringify(metadata));
+    if (mode === 'candidate') {
+      const candidate = createCandidateFromInputs({ root: f.repository, source: f.source, archive: f.archive, pin: f.candidatePin, engineDirectory: repositoryRoot, createdAt: fixedTime });
+      applyCandidate({ root: f.repository, candidateId: candidate.candidateId });
+    } else {
+      write(join(f.repository, 'upstream/impeccable.pin.json'), JSON.stringify(f.candidatePin));
+      syncPinned({ root: f.repository, source: f.source, archive: f.archive, apply: true, replace: true });
+    }
+    const routerRoot = join(f.repository, 'skills/design/references');
+    const routing = readFileSync(join(routerRoot, 'capabilities.md'), 'utf8');
+    const link = routing.match(/\]\((\.\.\/\.\.\/impeccable\/SKILL\.md)\)/)?.[1];
+    assert.ok(link, `${mode} lost the bundled selection source`);
+    const selectedSource = readFileSync(join(routerRoot, link), 'utf8');
+    const table = selectedSource.match(/^## Commands\n([\s\S]*?)\nRouting:/m)[1];
+    assert.match(table, /`reframe \[target\]` \| Refine \| Reconsider visual emphasis/);
+    assert.match(table, /`focus \[target\]` \| Refine \| Reduce competing emphasis/);
+    assert.doesNotMatch(table, /`(?:bolder|overdrive)\b/);
+    assert.equal(selectedSource, changed, `${mode} did not preserve current selection instructions`);
+    const documented = buildCommandReference({ root: f.repository, check: true });
+    assert.match(documented, /`reframe \[target\]`/);
+    assert.match(documented, /`focus \[target\]`/);
+    assert.doesNotMatch(documented, /\| `(?:bolder|overdrive)\b/);
+  }
+});
+
+test("offline sync validates the routing index before changing any destination", (t) => {
+  const f = candidateFixture(t);
+  write(join(f.repository, 'upstream/impeccable.pin.json'), JSON.stringify(f.candidatePin));
+  const modulePath = join(f.repository, 'modules/design-core.json');
+  const module = JSON.parse(readFileSync(modulePath, 'utf8'));
+  module.capabilities[1].triggers = [module.capabilities[0].triggers[0]];
+  write(modulePath, JSON.stringify(module));
+  const before = hashPath(f.repository);
+  for (const apply of [false, true]) {
+    assert.throws(() => syncPinned({ root: f.repository, source: f.source, archive: f.archive, apply, replace: apply }), /duplicate leading command/);
+    assert.equal(hashPath(f.repository), before, 'invalid routing data changed repository files');
+  }
+});
+
 test("pin validation and projections fail closed on drift", () => {
   const valid = validatePin(pin());
   assert.equal(valid.tag, "skill-v4.0.4");

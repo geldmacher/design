@@ -15,17 +15,32 @@ test('the actual skill loads a current index with every leading command and the 
     ['diagnose', 'design-core:project-integration'], ['detect', 'design-core:detector-scan'],
     ['questionnaire', 'design-core:stakeholder-questionnaire'], ['review', 'design-core:change-interface-review'],
   ]);
-  assert.match(rendered, /Match only the leading command/);
-  assert.match(rendered, /A word inside a design task never selects a command/);
-  assert.match(rendered, /Use the table only when the user explicitly requests a Design operation with its command syntax/);
+  for (const module of modules) for (const capability of module.capabilities.filter(entry => !entry.fallback)) {
+    for (const description of Object.values(capability.intents)) assert.ok(rendered.includes(description));
+  }
   assert.match(rendered, /Review this checkout page/);
-  assert.match(rendered, /An explicit Design invocation alone does not turn an ordinary UI request into an operation/);
   assert.match(rendered, /every other request, including a leading `doctor`/);
   assert.match(rendered, /impeccable:general-web-design/);
   assert.match(rendered, /explicitly addressed to Impeccable bypasses Design/);
   const skill = readFileSync(new URL('../skills/design/SKILL.md', import.meta.url), 'utf8');
   assert.match(skill, /\[references\/capabilities.md\]\(references\/capabilities.md\)/);
+  assert.match(rendered, /\]\(\.\.\/\.\.\/impeccable\/SKILL\.md\)/);
   assert.doesNotMatch(skill, /specificity|combinableWith|routeRequest/);
+});
+
+test('semantic operation descriptions track registry updates and reject missing or stale entries', () => {
+  const changed = structuredClone(modules);
+  const capability = changed.find(module => module.id === 'design-core').capabilities.find(entry => entry.id === 'stakeholder-questionnaire');
+  capability.intents.questionnaire = 'Prepare a decision questionnaire for one audience.';
+  assert.ok(renderCapabilityIndex(changed).includes(capability.intents.questionnaire));
+  capability.triggers = ['interview'];
+  assert.throws(() => renderCapabilityIndex(changed), /one current, single-line intent/);
+  capability.intents = { interview: 'Prepare an interview.' };
+  const rendered = renderCapabilityIndex(changed);
+  assert.match(rendered, /\| `interview` \|/);
+  assert.doesNotMatch(rendered, /\| `questionnaire` \|/);
+  capability.intents.interview = '';
+  assert.throws(() => renderCapabilityIndex(changed), /one current, single-line intent/);
 });
 
 test('index generation rejects ambiguous commands and defaults without a second routing implementation', () => {

@@ -47,7 +47,11 @@ In Cursor, replace `$design` with `/design`. Follow up with the change you want:
 $design polish the checkout form: improve spacing and error messages, keeping our existing components
 ```
 
+You can also omit the command and describe what you want to achieve in your own language, including setup, status, diagnosis, or questionnaire requests. Design chooses a suitable command and briefly explains its choice. Explicit commands take precedence.
+
 Design can also be selected automatically for matching interface requests. It uses existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context. Project setup previews changes for your approval; optional checks remain your choice.
+
+Before interface work, Design checks the relevant project's context and configuration. It reports missing context or proposed adjustments and continues permitted work. Deliberately disabled checks are valid; no setup or migration happens without your confirmation.
 
 ## Learn more
 

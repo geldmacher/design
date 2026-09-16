@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { hashPath } from "../scripts/lib/impeccable-vendor.mjs";
+import { resolveEngine } from '../src/impeccable-engine.mjs';
 import {
   buildPluginTargets,
   createTargetBuildWorkspace,
@@ -137,6 +138,22 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
     assert.equal(status.hook.mode, host === "agent-plugin" ? "none" : host === "cursor" ? "pre-write" : "post-write-stop");
     const preview = runJson(cli, ["--host", host, "setup", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
     assert.equal(preview.applied, false);
+    assert.equal(status.readiness.state, 'attention');
+    assert.equal(status.readiness.context.product.state, 'missing');
+    assert.deepEqual(preview.state.readiness, status.readiness);
+    const enginePath = resolveEngine(target).file;
+    const failureBaseline = [hashPath(project), hashPath(home)];
+    renameSync(enginePath, `${enginePath}.unavailable`);
+    try {
+      const unavailable = runJson(cli, ['--host', host, 'diagnose', '--json'], { cwd: project, env: envFor() });
+      assert.equal(unavailable.readiness.state, 'unverified');
+      assert.equal(unavailable.readiness.continueWork, true);
+      assert.equal(unavailable.readiness.context.product.state, 'unverified');
+      assert.ok(unavailable.findings.some(finding => finding.id === 'context-diagnosis-unavailable'));
+      const refused = runJson(cli, ['--host', host, 'setup', '--apply', '--json'], { cwd: project, env: envFor() });
+      assert.equal(refused.blocked, true);
+      assert.deepEqual([hashPath(project), hashPath(home)], failureBaseline);
+    } finally { renameSync(`${enginePath}.unavailable`, enginePath); }
     const beforeDiagnosis = hashPath(project);
     const diagnosis = runJson(cli, ["--host", host, "diagnose", "--json"], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });
     assert.equal(diagnosis.upstream.skillVersion, impeccableModule.version);
@@ -148,7 +165,7 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
       assert.equal(invalid.status, 1, invalid.stderr);
       assert.equal(invalid.stdout, '');
       assert.match(invalid.stderr, /diagnose is read-only/);
-      assert.match(invalid.stderr, /Usage: diagnose \[--host <host>\] \[--json\]/);
+      assert.match(invalid.stderr, /Usage: diagnose \[--host <host>\] \[--target <path>\] \[--json\]/);
     }
     assert.equal(hashPath(project), beforeDiagnosis, 'diagnose changed the project');
     const directDoctor = run(cli, ['--host', host, 'doctor', '--json'], { cwd: project, env: envFor({ IMPECCABLE_HOST: host }) });

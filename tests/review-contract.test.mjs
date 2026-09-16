@@ -31,13 +31,17 @@ test('review binds every domain to bundled criteria without entering their workf
 
 test('change review is a narrow first-party capability over the Impeccable fallback', () => {
   const capability = moduleDocument.capabilities.find((entry) => entry.id === 'change-interface-review');
-  assert.deepEqual(capability, {
+  const { intents, ...identity } = capability;
+  assert.deepEqual(identity, {
     id: 'change-interface-review',
     title: 'Change-scoped interface review',
     skill: 'design',
     fallback: false,
     triggers: ['review'],
   });
+  assert.deepEqual(Object.keys(intents), ['review']);
+  assert.match(intents.review, /Git changes/);
+  assert.match(intents.review, /page.*Impeccable critique/);
   assert.match(designSkill, /change-interface-review/);
   assert.match(designSkill, /change-review\.md/);
   assert.match(designSkill, /request unchanged/);

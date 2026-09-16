@@ -16,6 +16,32 @@ The examples below use **Codex** syntax: `$design`. In **Cursor**, use `/design`
 
 For the full syntax and less common operations, see the [command reference](commands.md). For installation problems, see the [installation guide](installation.md).
 
+## Describe the outcome
+
+You can omit the command and write in your own language. Design selects the most specific operation from its own capability descriptions and the bundled Impeccable playbooks, briefly explains its choice, and proceeds when the match is clear.
+
+```text
+$design Make the checkout form usable on small screens, keeping its fields and step order.
+$design Improve the account form's labels and error messages.
+$design Assess accessibility and responsive behavior on this page. Report findings without editing it.
+```
+
+An explicit command takes precedence. An assessment stays an assessment, and a planning request stays a plan. If different operations would materially change the outcome or scope, Design asks one focused question. New interfaces and redesigns can use the general design workflow without forcing a specialized command.
+
+A bare `$design` invocation offers guidance; asking which workflow to use does not execute it. Clear requests such as “Set up Design for this project”, “Explain the current Design configuration”, “Investigate why Design checks do not run”, or “Create a stakeholder questionnaire about checkout approval” also select the matching Design operation. Setup changes still require a confirmed preview. A review of branch UI changes selects `review`; an assessment of a page selects `critique`. Detector scans require explicitly named local targets.
+
+Command selection reads the installed Impeccable skill directly. Updating the bundled skill updates the available names, descriptions, and playbooks together; there is no separate routing list to maintain.
+
+## Readiness before interface work
+
+Before planning, implementing or evaluating an interface, Design reads the same project assessment used by `status`, `diagnose` and setup preview. This applies to explicit commands such as `polish` or `critique`, automatically chosen operations, and Design `review` or `detect`. It runs once per commissioned operation, not between every edit. Questionnaire uses available context without needing setup.
+
+A healthy state stays quiet. Missing context, configuration conflicts and proposed migrations are reported briefly, then the requested work continues where feasible. Identical findings are not repeated within the task; changed state is read again. Optional hooks can be deliberately disabled or unavailable without making setup incomplete. Unavailable diagnostics remain unverified, never a positive setup result.
+
+The engine resolves app-local and inherited `PRODUCT.md`/`DESIGN.md`. For a monorepo, identify the app or source path; if several apps remain possible, Design asks which one you mean. The CLI accepts `--target <path>` for `status`, `diagnose` and `setup`, and `--target .` for an explicitly repository-wide scope. Unverified or ambiguous scope prevents setup writes while otherwise feasible UI work may continue.
+
+No readiness check activates hooks, creates context, repairs configuration or migrates files. Those changes need a separate preview and confirmation. Declining setup does not cancel an accompanying UI task. A confirmed change is followed by a readback of the effective state, including local overrides. Configuration still does not prove fresh editor activation.
+
 ## Build an interface
 
 Describe the page, its audience, and the job it needs to do:

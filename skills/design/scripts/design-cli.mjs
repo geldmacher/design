@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { resolveHost } from '../../../src/host.mjs';
 import { blockedDetectionResult, runDetectorScan } from '../../../src/detector-scan.mjs';
 import { diagnoseProject, inspectProject, setProjectHook, setupProject } from '../../../src/project-state.mjs';
+import { readProjectContext } from '../../../src/project-context.mjs';
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
@@ -13,6 +14,7 @@ function parseArgs(argv) {
   const positionals = [];
   const targets = [];
   let host = null;
+  let target;
   let afterSeparator = false;
   let parseError = null;
   for (let index = 0; index < argv.length; index += 1) {
@@ -21,6 +23,12 @@ function parseArgs(argv) {
       targets.push(arg);
     } else if (arg === '--') {
       afterSeparator = true;
+    } else if (arg === '--target') {
+      target = argv[++index];
+      if (!target || target.startsWith('--')) { parseError = '--target requires a project or app path.'; break; }
+    } else if (arg.startsWith('--target=')) {
+      target = arg.slice('--target='.length);
+      if (!target) { parseError = '--target requires a project or app path.'; break; }
     } else if (arg === '--host') {
       host = argv[++index];
       if (!host) {
@@ -41,6 +49,7 @@ function parseArgs(argv) {
     extraPositionals: positionals.slice(2),
     flags,
     host,
+    target,
     targets,
     hasSeparator: afterSeparator,
     parseError,
@@ -57,11 +66,11 @@ function output(value, exitCode = 0) {
 }
 
 export function runDesignCli(argv = process.argv.slice(2), options = {}) {
-  const { command, action, extraPositionals, flags, host: explicitHost, targets, hasSeparator, parseError } = parseArgs(argv);
+  const { command, action, extraPositionals, flags, host: explicitHost, target, targets, hasSeparator, parseError } = parseArgs(argv);
   const projectRoot = process.cwd();
   if (command === 'detect') {
     const unsupportedFlags = [...flags].filter((flag) => flag !== '--json');
-    if (parseError || !hasSeparator || action || extraPositionals.length > 0 || unsupportedFlags.length > 0) {
+    if (parseError || target !== undefined || !hasSeparator || action || extraPositionals.length > 0 || unsupportedFlags.length > 0) {
       const result = blockedDetectionResult({
         host: explicitHost,
         projectRoot,
@@ -88,12 +97,16 @@ export function runDesignCli(argv = process.argv.slice(2), options = {}) {
   if (parseError) throw new Error(parseError);
   const host = resolveHost(explicitHost);
   const lifecycleOptions = { pluginRoot, host };
+  if (['setup', 'status', 'diagnose'].includes(command)) {
+    const allowed = command === 'setup' ? ['--json', '--apply', '--without-hook'] : ['--json'];
+    if ([...flags].some(flag => !allowed.includes(flag)) || action !== undefined || extraPositionals.length || hasSeparator) {
+      throw new Error(`${command}${command === 'setup' ? '' : ' is read-only'}. Usage: ${command} [--host <host>] [--target <path>] [--json]${command === 'setup' ? ' [--apply] [--without-hook]' : ''}.`);
+    }
+    Object.assign(lifecycleOptions, { target, contextReader: options.contextReader || readProjectContext });
+  } else if (target !== undefined) throw new Error('--target is supported only for setup, status and diagnose.');
   if (command === 'status') return output(inspectProject(projectRoot, lifecycleOptions));
   if (command === 'doctor') throw new Error('Use diagnose for Design integration diagnostics. Invoke doctor through the Impeccable skill.');
   if (command === 'diagnose') {
-    if ([...flags].some(flag => flag !== '--json') || action !== undefined || extraPositionals.length || hasSeparator) {
-      throw new Error('diagnose is read-only. Usage: diagnose [--host <host>] [--json].');
-    }
     return output(diagnoseProject(projectRoot, lifecycleOptions));
   }
   if (command === 'setup') {

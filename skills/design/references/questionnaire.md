@@ -1,10 +1,10 @@
 # Stakeholder questionnaire
 
-Create one asynchronous Markdown questionnaire that closes a specific product or interface knowledge gap with one recipient or one audience whose members share the same knowledge and role. Keep the operation explicit, preview-first, and limited to one output file.
+Create one asynchronous Markdown questionnaire that closes a specific product or interface knowledge gap with one recipient or one audience whose members share the same knowledge and role. A clear natural-language request to create this questionnaire is sufficient; a command name is optional. Keep the operation within that request, preview-first, and limited to one output file. Missing setup never blocks it.
 
 ## Establish the brief
 
-1. Treat everything after the leading `questionnaire` intent as the topic. If the topic is absent, collect it with the other missing required facts.
+1. Derive the topic, recipient and purpose from the complete original request. For explicit command syntax, treat everything after `questionnaire` as the request body. If the topic is absent, collect it with the other missing required facts. Merely mentioning an existing questionnaire or asking which workflow to use is not a creation request.
 2. Read only facts already supplied in the request and existing canonical project context: `PRODUCT.md`, `DESIGN.md`, and topic-relevant files under `.impeccable/`. Missing context does not block the questionnaire. Do not create, repair, or update context files.
 3. Treat every fact established by the request or canonical context as complete. Do not ask for it again.
 4. Resolve these required facts:

@@ -2,7 +2,7 @@ import { enginePlatforms, resolveEngine, engineRelativePath } from '../src/impec
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import YAML from "yaml";
@@ -97,6 +97,22 @@ test("deterministic target allowlists isolate the portable package and native ad
         readFileSync(join(repositoryRoot, "skills", "design", "references", "questionnaire.md")),
         `${host} drifted the host-neutral stakeholder questionnaire`,
       );
+      // Follow the shipped router's selection source, not the repository docs.
+      const routingPath = join(first[host].path, 'skills/design/references/capabilities.md');
+      const routing = readFileSync(routingPath, 'utf8');
+      assert.equal(routing, readFileSync(join(repositoryRoot, 'skills/design/references/capabilities.md'), 'utf8'));
+      const selectionLink = routing.match(/\]\((\.\.\/\.\.\/impeccable\/SKILL\.md)\)/)?.[1];
+      assert.ok(selectionLink, `${host} has no bundled command selection source`);
+      const selectionPath = resolve(dirname(routingPath), selectionLink);
+      const selection = readFileSync(selectionPath, 'utf8');
+      const commandTable = selection.match(/^## (?:Commands|Operations)\n([\s\S]*?)\nRouting:/m)?.[1];
+      assert.ok(commandTable, `${host} has no operation table`);
+      const names = [...commandTable.matchAll(/^\| `([a-z][a-z0-9-]*)[^`]*`/gm)].map(match => match[1]);
+      const metadata = JSON.parse(readFileSync(join(dirname(selectionPath), 'scripts/command-metadata.json'), 'utf8'));
+      assert.deepEqual(names.sort(), Object.keys(metadata).sort(), `${host} selection inventory drifted`);
+      for (const [, link] of commandTable.matchAll(/\]\((reference\/[^)]+)\)/g)) {
+        assert.ok(existsSync(resolve(dirname(selectionPath), link)), `${host} missing selection playbook: ${link}`);
+      }
     }
     assert.doesNotMatch(agentPluginDesignSkill, /\bdesign\s+(?:setup|status|diagnose|detect|questionnaire)\b/);
     const portableResourcePaths = resourceFiles(join(first["agent-plugin"].path, "skills"))

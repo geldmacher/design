@@ -743,6 +743,8 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
     const overlay = join(root, "overlays", "skills", "impeccable");
     if (existsSync(overlay)) cpSync(overlay, vendor.transformedDir, { recursive: true });
     const commandReference = renderCommandReference({ skillRoot: vendor.transformedDir, version: pin.version });
+    const design = JSON.parse(readFileSync(join(root, "modules", "design-core.json"), "utf8"));
+    const capabilityIndex = renderCapabilityIndex([design, projectedModule(root, pin)]);
     if (!apply) return { mode: "verified", pin, files: vendor.inventory.length, transformed: vendor.changed.length };
     const skillTarget = join(root, "skills", "impeccable");
     const agentsTarget = join(root, "agents");
@@ -759,6 +761,8 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
     writeJson(join(root, "upstream", "impeccable.lock.json"), vendor.lock);
     mkdirSync(join(root, "docs"), { recursive: true });
     writeFileSync(join(root, "docs", "commands.md"), commandReference);
+    mkdirSync(join(root, "skills", "design", "references"), { recursive: true });
+    writeFileSync(join(root, "skills", "design", "references", "capabilities.md"), capabilityIndex);
     return { mode: "imported", pin, files: vendor.inventory.length, transformed: vendor.changed.length };
   } finally {
     rmSync(workspace, { recursive: true, force: true });

@@ -12,15 +12,18 @@ Send these requests to your assistant: `/design <command> <target or request>` i
 
 A target can be a page, flow, component, or local path. Brackets mark optional arguments: `polish [target]` can become `$design polish app/checkout`. Replace placeholders with your own target and omit the brackets.
 
-Describe new interfaces and redesigns in ordinary language, for example:
+Commands are optional for interface work and Design project operations. Describe the outcome in your own language; Design selects a fitting operation from its capability descriptions and the bundled Impeccable playbooks, briefly explains its choice, and proceeds when the match is clear. An explicit command takes precedence. Assessment and planning requests keep their scope; materially ambiguous choices get a focused question.
+
+For example:
 
 ```text
 $design Build a pricing page using our existing components and visual language.
+$design Make the checkout form usable on small screens without changing its fields.
 $design polish the checkout without changing its information architecture.
 $design shape an onboarding flow for first-time customers.
 ```
 
-Design routes general design work to bundled Impeccable. `/impeccable` in Cursor and `$impeccable` in Codex bypass the Design router.
+Design reads the installed Impeccable command table and linked playbooks directly, so selection follows the bundled version when it is updated. General design work remains available when no specialized operation fits. A bare invocation offers guidance; a workflow-selection question does not execute a command. `/impeccable` in Cursor and `$impeccable` in Codex bypass the Design router.
 
 ## Choose a starting point
 
@@ -94,6 +97,10 @@ The portable Agent Plugins package exposes skill identities; its client decides 
 | `review [quick\|full] [target]` | Review the interface impact of Git changes without modifying the repository. |
 | `questionnaire [topic]` | Prepare a stakeholder questionnaire; preview before any file write. |
 
-These commands are selected only at the start of a Design request. Words inside an ordinary design task do not select integration commands.
+These commands also support clear natural-language requests for their outcomes, such as setting up Design, explaining its current configuration, diagnosing integration problems, creating a stakeholder questionnaire, reviewing branch UI changes, or scanning explicitly named files with the detector. Mentions, negations and workflow-advice questions do not authorize execution. A general page review selects Impeccable critique, not the Git-change review.
+
+Before UI planning, implementation or evaluation, Design reads the same readiness assessment used by status, diagnose and setup preview. It reports relevant gaps or proposed adjustments and continues permitted work. Disabled optional hooks are valid; unknown or failed checks remain unverified. Setup changes, migrations and context writes require a separate confirmed preview. Questionnaire needs no completed setup.
+
+The resolved Design CLI accepts an optional `--target <path>` for status, diagnose and setup to select a project or app through the engine. All retain their existing fields and add `readiness`: state, scope, canonical context, configuration, findings and proposed actions. Use `--target .` for an explicit repository-wide scope. This does not enable checks or establish fresh host activation.
 
 A detector result is limited evidence, not a complete design or accessibility verdict. See [Using Design](usage.md) for examples and [Impeccable maintenance](impeccable-maintenance.md) for updates.

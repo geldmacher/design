@@ -108,8 +108,14 @@ export function projectRootFromEvent(event, fallback = process.cwd()) {
 
 export function inspectProject(projectRoot = process.cwd(), options = {}) {
   const pluginRoot = path.resolve(options.pluginRoot || DEFAULT_PLUGIN_ROOT);
-  const root = path.resolve(projectRoot);
+  const requestedRoot = path.resolve(projectRoot);
   const host = resolveHost(options.host, options.env);
+  let diagnosis = { status: 'not-checked' };
+  if (options.contextReader) {
+    try { diagnosis = options.contextReader({ projectRoot: requestedRoot, pluginRoot, host, target: options.target, env: options.env }); }
+    catch (error) { diagnosis = { status: 'unavailable', error: error.message }; }
+  }
+  const root = diagnosis.status === 'available' ? diagnosis.projectRoot : requestedRoot;
   const manifestPath = host === 'cursor'
     ? path.join(pluginRoot, '.cursor-plugin', 'plugin.json')
     : host === 'codex'
@@ -122,20 +128,21 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
     || skillText.match(/^version:\s*([^\s]+)\s*$/m)?.[1]
     || null;
   const impeccableModule = modules.find((module) => module.id === 'impeccable');
+  const configuration = readHookActivation(root);
   const activation = host === 'agent-plugin'
     ? { state: 'unavailable', enabled: false, explicit: false, path: null }
-    : readHookActivation(root);
+    : configuration;
   const hook = {
     ...activation,
     mode: host === 'cursor' ? 'pre-write' : host === 'codex' ? 'post-write-stop' : 'none',
   };
   const conflicts = detectProjectConflicts(root, { host });
   const context = {
-    product: fs.existsSync(path.join(root, 'PRODUCT.md')),
-    design: fs.existsSync(path.join(root, 'DESIGN.md')),
+    product: diagnosis.status === 'available' ? diagnosis.context.product.state === 'present' : fs.existsSync(path.join(root, 'PRODUCT.md')),
+    design: diagnosis.status === 'available' ? diagnosis.context.design.state === 'present' : fs.existsSync(path.join(root, 'DESIGN.md')),
     impeccableDirectory: fs.existsSync(path.join(root, '.impeccable')),
   };
-  return {
+  const state = {
     host,
     projectRoot: root,
     plugin: { name: manifest.name, version: manifest.version },
@@ -152,10 +159,11 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
     conflicts,
     context,
   };
+  state.readiness = assessReadiness(state, diagnosis, configuration, options);
+  return state;
 }
 
-export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
-  const state = inspectProject(projectRoot, options);
+function assessReadiness(state, diagnosis, configuration, options) {
   const findings = [...state.conflicts];
   if (state.host === 'agent-plugin') {
     findings.push({
@@ -164,7 +172,7 @@ export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
       message: 'Agent Plugins v1 does not standardize plugin hooks; design checks remain unavailable in this target.',
     });
   }
-  const tagVersion = state.upstream.tag.replace(/^skill-v/, '');
+  const tagVersion = state.upstream.tag?.replace(/^skill-v/, '');
   if (new Set([state.upstream.version, state.upstream.skillVersion, tagVersion]).size !== 1) {
     findings.push({
       id: 'upstream-version-drift',
@@ -172,26 +180,65 @@ export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
       message: `Impeccable module=${state.upstream.version}, skill=${state.upstream.skillVersion}, tag=${state.upstream.tag}.`,
     });
   }
-  if (state.hook.state === 'malformed') {
+  if (configuration.state === 'malformed') {
     findings.push({
       id: 'malformed-impeccable-config',
       severity: 'diagnostic',
-      path: path.relative(state.projectRoot, state.hook.path),
-      message: `Hook config is malformed and therefore treated as disabled: ${state.hook.error}`,
+      path: path.relative(state.projectRoot, configuration.path),
+      message: `Configuration is malformed and therefore treated as disabled: ${configuration.error}`,
     });
   }
   const nodeMajor = Number.parseInt(options.nodeVersion || process.versions?.node || '0', 10);
   if (nodeMajor < 22) {
     findings.push({ id: 'node-baseline', severity: 'diagnostic', message: `Node ${nodeMajor} is below the supported baseline 22.` });
   }
-  return { ...state, findings };
+  const context = diagnosis.context || Object.fromEntries(['product', 'design'].map(name => [name, { state: 'unverified', path: null, inherited: false }]));
+  const actions = [];
+  if (diagnosis.status !== 'available') findings.push({ id: 'context-diagnosis-unavailable', severity: 'diagnostic', message: diagnosis.error || 'Context inheritance and maintenance have not been checked.' });
+  const registryUnverified = diagnosis.status === 'available' && diagnosis.ruleRegistryAvailable !== true;
+  if (registryUnverified) findings.push({
+    id: 'rule-registry-unverified', severity: 'diagnostic', source: 'impeccable',
+    message: diagnosis.ruleRegistryAvailable === false
+      ? 'The rule registry is unavailable; ignored rule IDs could not be validated. Other resolved context remains available.'
+      : 'The doctor report does not establish rule registry availability; ignored rule ID validation is unverified. Other resolved context remains available.',
+  });
+  for (const [name, operation] of [['product', 'init'], ['design', 'document']]) {
+    if (context[name].state !== 'missing' || diagnosis.selectionRequired) continue;
+    findings.push({ id: `${name}-context-missing`, severity: 'advisory', message: `${name === 'product' ? 'PRODUCT.md' : 'DESIGN.md'} is not captured for this project. Continue using the available request and incumbent interface.` });
+    actions.push({ operation, requiresConfirmation: true, reason: `Offer ${operation} separately if capturing ${name} context would help the requested work.` });
+  }
+  for (const finding of diagnosis.findings || []) {
+    if (findings.some(item => item.id === finding.id && item.path === finding.path)) continue;
+    findings.push({ ...finding, source: 'impeccable', message: finding.summary ?? finding.message });
+    if (finding.fix) actions.push({ findingId: finding.id, requiresConfirmation: true, reason: finding.fix });
+  }
+  if (diagnosis.selectionRequired) findings.push({ id: 'project-selection-required', severity: 'advisory', message: 'Choose the requested app or explicitly target the repository root before interpreting app readiness or applying setup.' });
+  const configFiles = ['config.json', 'config.local.json'].filter(name => fs.existsSync(path.join(state.projectRoot, '.impeccable', name)));
+  return {
+    state: diagnosis.status !== 'available' || registryUnverified || configuration.state === 'malformed' ? 'unverified'
+      : findings.some(finding => finding.id !== 'hook-unavailable') ? 'attention' : 'ready',
+    continueWork: true,
+    scope: { state: diagnosis.selectionRequired ? 'selection-required' : diagnosis.status === 'available' ? 'resolved' : 'unverified',
+      projectRoot: state.projectRoot, repoRoot: diagnosis.repoRoot || null, candidates: diagnosis.candidates || [] },
+    context,
+    configuration: { state: configuration.state === 'malformed' ? 'malformed' : configFiles.length ? 'present' : 'absent', files: configFiles },
+    findings, actions,
+    policy: 'Report actionable changes once per task and continue permitted UI work. No setup, context writes, migrations or hook activation without a separate confirmed preview. Configuration is not fresh host activation evidence.',
+  };
+}
+
+export function diagnoseProject(projectRoot = process.cwd(), options = {}) {
+  const state = inspectProject(projectRoot, options);
+  return { ...state, findings: state.readiness.findings };
 }
 
 export function setupProject(projectRoot = process.cwd(), options = {}) {
   const state = inspectProject(projectRoot, options);
+  const unresolved = options.contextReader && state.readiness.scope.state !== 'resolved';
+  const malformed = state.readiness.configuration.state === 'malformed';
   const enableHook = state.host !== 'agent-plugin' && options.enableHook !== false;
   const plan = {
-    writes: enableHook && state.hook.state !== 'malformed'
+    writes: enableHook && !malformed && !unresolved
       ? planHookActivation(state.projectRoot, true).map(({ name }) => `.impeccable/${name}: set hook.enabled=true`) : [],
     offers: [
       state.context.product ? 'PRODUCT.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} init; do not create PRODUCT.md without confirmation.`,
@@ -200,10 +247,11 @@ export function setupProject(projectRoot = process.cwd(), options = {}) {
   };
 
   if (!options.apply) return { applied: false, state, plan };
+  if (unresolved) return { applied: false, blocked: true, state, plan, reason: 'Resolve the project scope before applying setup. UI work may continue with available evidence.' };
   if (state.conflicts.some((finding) => finding.severity === 'conflict')) {
     return { applied: false, blocked: true, state, plan, reason: 'Resolve or explicitly retain the shadowing/double-hook conflict before activation.' };
   }
-  if (state.hook.state === 'malformed') {
+  if (malformed) {
     return { applied: false, blocked: true, state, plan, reason: 'Malformed config is never overwritten by setup.' };
   }
   const written = enableHook ? applyHookActivation(state.projectRoot, true) : [];

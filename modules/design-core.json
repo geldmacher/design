@@ -18,7 +18,12 @@
         "setup",
         "status",
         "diagnose"
-      ]
+      ],
+      "intents": {
+        "setup": "Set up or adjust Design project integration. Preview exact writes and require confirmation; optional hooks stay opt-in.",
+        "status": "Explain the current Design configuration, available canonical context and optional hook state without changing anything.",
+        "diagnose": "Investigate Design integration problems, conflicts or configuration drift. Report findings and proposed remedies without applying them."
+      }
     },
     {
       "id": "detector-scan",
@@ -27,7 +32,10 @@
       "fallback": false,
       "triggers": [
         "detect"
-      ]
+      ],
+      "intents": {
+        "detect": "Run the local deterministic detector on explicitly named files or directories. Do not infer targets, enable hooks or fix findings."
+      }
     },
     {
       "id": "stakeholder-questionnaire",
@@ -36,7 +44,10 @@
       "fallback": false,
       "triggers": [
         "questionnaire"
-      ]
+      ],
+      "intents": {
+        "questionnaire": "Create a stakeholder questionnaire for a product or interface decision. Preview the complete draft before approval of one exact Markdown destination; never send it or change project context."
+      }
     },
     {
       "id": "change-interface-review",
@@ -45,7 +56,10 @@
       "fallback": false,
       "triggers": [
         "review"
-      ]
+      ],
+      "intents": {
+        "review": "Assess the interface impact of Git changes, a branch, commit or pull request. A general review of a page without change scope belongs to Impeccable critique."
+      }
     }
   ],
   "contributes": {
