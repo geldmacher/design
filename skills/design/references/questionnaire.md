@@ -57,8 +57,8 @@ Do not expose secrets, private filesystem paths, or internal context that the re
 ## Preview and write
 
 1. Show the complete candidate Markdown in one fenced `markdown` block. State that no file has been written.
-2. Ask the user to name the exact `.md` destination after seeing the preview. A destination supplied before the preview is not write approval; ask the user to confirm it again after the preview.
-3. Treat a post-preview message that names the exact destination as approval for that preview only. Resolve a relative destination from the current project. Treat an exact absolute destination as explicit scope, subject to host permissions.
+2. If the user already named a new `.md` destination, one post-preview yes approves the previewed content and that destination together. Otherwise ask the user to name the exact `.md` destination after seeing the preview. A destination supplied before the preview is not write approval by itself.
+3. Treat a post-preview message that names the exact destination, or a yes to a previously named new `.md` destination, as approval for that preview only. Resolve a relative destination from the current project. Treat an exact absolute destination as explicit scope, subject to host permissions.
 4. When the destination lacks a `.md` suffix, propose the normalized destination and wait for confirmation.
 5. When the destination already exists, read it and report the conflict. Show a diff when practical. Require a new, explicit overwrite confirmation naming the same destination, or accept a different destination. Never infer overwrite approval.
 6. When the user changes the questionnaire, show the complete revised preview and reset write approval.
@@ -74,5 +74,5 @@ Complete only when:
 - every stated knowledge gap maps to a question;
 - the questionnaire contains no more than 12 atomic questions;
 - the full Markdown was previewed before any write;
-- the user approved an exact post-preview destination; and
+- the user approved the previewed content and an exact destination after that preview; a previously named new `.md` path is approved by one yes to both; and
 - exactly one file matches the approved preview while canonical context remains unchanged.

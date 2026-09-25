@@ -35,7 +35,7 @@ Impeccable is pinned vendored upstream. Update it only through the maintainer sy
 
 ## Development gate
 
-Run from the repository root:
+After repository changes, run these gates once from the repository root against the final state. A command that executes and reports both satisfies this requirement. `npm run release-check` does not include `git diff --check`.
 
 ```bash
 npm run release-check

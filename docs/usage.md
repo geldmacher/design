@@ -184,7 +184,7 @@ After reading the preview, give the exact destination, for example:
 Save this questionnaire to docs/checkout-questionnaire.md
 ```
 
-Only then is the file written. An existing file needs separate overwrite confirmation. The questionnaire is not sent to anyone, and this operation does not import answers or change project context.
+Only then is the file written. If the request already named a new `.md` path, one yes after the preview approves the content and that path. A path without a `.md` suffix still needs confirmation of the normalized destination. An existing file needs separate overwrite confirmation. The questionnaire is not sent to anyone, and this operation does not import answers or change project context.
 
 ## Set up your project
 

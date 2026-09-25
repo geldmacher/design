@@ -60,7 +60,8 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(agentPluginImpeccableSkill, /reference\/degraded\//);
     assert.match(agentPluginImpeccableSkill, /`operation: <name>`/);
     assert.match(agentPluginDesignSkill, /references\/capabilities.md/);
-    assert.match(agentPluginDesignSkill, /### Detect/);
+    assert.match(agentPluginDesignSkill, /references\/lifecycle\.md/);
+    assert.match(readFileSync(join(first["agent-plugin"].path, "skills", "design", "references", "lifecycle.md"), "utf8"), /^## Detect$/m);
     assert.match(agentPluginDesignSkill, /change-interface-review/);
     assert.match(agentPluginDesignSkill, /stakeholder-questionnaire/);
     for (const host of ["agent-plugin", "cursor", "codex"]) {

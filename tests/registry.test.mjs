@@ -20,7 +20,8 @@ test('the actual skill loads a current index with every leading command and the 
     for (const description of Object.values(capability.intents)) assert.ok(rendered.includes(description));
   }
   assert.match(rendered, /Review this checkout page/);
-  assert.match(rendered, /every other request, including a leading `doctor`/);
+  assert.match(rendered, /every other in-scope web-interface request, including a leading `doctor`/);
+  assert.match(rendered, /Do not load it for work outside website and web-app interface scope/);
   assert.match(rendered, /impeccable:general-web-design/);
   assert.match(rendered, /explicitly addressed to Impeccable bypasses Design/);
   const skill = readFileSync(new URL('../skills/design/SKILL.md', import.meta.url), 'utf8');

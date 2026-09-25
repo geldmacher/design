@@ -32,6 +32,16 @@ An already-current pin skips application but still runs both gates. After a succ
 
 Missing transformation anchors or changed upstream layout trigger inspection of the exact selected tag, a scoped repair to the owning transformation, overlay or host integration, and focused regression coverage. Preparation then runs again for the same tag; the new candidate receives a full review. Unknown content never becomes an unchecked pass. If the pin is already applied and a locked output needs regeneration, the skill may use the verified offline sync documented below for that same pin and exact archive, after retaining current bytes, reviewing the preview and rechecking local state. This recovery does not authorize bypassing provenance failures or unexplained candidate drift. Ordinary compatibility repairs do not require another invocation.
 
+### Vendored tree changes only with an Impeccable update
+
+`skills/impeccable` and the locked files under `agents/` change only when an Impeccable update is applied through the maintainer sync. Do not edit that tree by hand, and do not add a local transformation that rewrites it between updates.
+
+When an update's transformation changes instruction text, two checks belong in that same update.
+
+Portable projections in `scripts/build-plugin-targets.mjs` search the transformed text and require each search exactly once. If the update changes a sentence used as one of those searches, update that search to the new sentence in the same update. A local edit of the agent-loading sentence made the `new-work finish reviewer` search fail while the search still quoted the previous wording.
+
+A sentence that conditions when to ask does not limit a later sentence in the same section that still orders an ask. Bind every such imperative in that same update. Conditioning only the structured-question lead-in in `reference/new-work.md` left the later "Across modes, ask..." sentence unconditional.
+
 ## Check for a stable release
 
 Run the read-only check explicitly:

@@ -15,7 +15,7 @@ Read `readiness`, not a guessed setup-complete flag:
 - `unverified`: explain what could not be checked, then continue with the supplied brief, existing canonical context and incumbent interface wherever possible. A failed CLI or unknown host is also missing evidence, never a positive readiness result.
 - `scope.state: selection-required`: use the engine-provided candidates and the user's target to select the app. Ask only if the intended scope cannot be established; do not call root context missing when the task belongs to a child app.
 
-Keep the result scoped to the current operation. Re-read for a newly commissioned operation or after a confirmed setup/configuration change; do not poll between edits. Within the same task, suppress repeated identical findings for the same project, but report new or changed findings. Keep this deduplication in the conversation, without a persistent marker or configuration file.
+Reuse the result within the task while the resolved app, canonical configuration, and integration are unchanged. Read it again after a change to any of those, including a confirmed setup or configuration change, and for a different app. Do not poll between edits. Within the same task, suppress repeated identical findings for the same project, but report new or changed findings. Keep this deduplication in the conversation, without a persistent marker or configuration file.
 
 Suggestions in `actions` and upstream findings are proposals, not instructions to execute them. Offer a separate setup or context-maintenance preview only when useful. A declined offer must not stop otherwise feasible UI work. Respect report-only and no-write requests.
 
