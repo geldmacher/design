@@ -86,7 +86,7 @@ Release assets use these names:
 Run the following from the download directory. On macOS or Linux, replace the example version and editor in the archive name as needed:
 
 ```sh
-archive="geldmacher-design-cursor-v0.14.1.zip"
+archive="geldmacher-design-cursor-v0.14.2.zip"
 
 verify_release_file() {
   file="$1"
@@ -108,7 +108,7 @@ verify_release_file "provenance.json"
 On Windows PowerShell:
 
 ```powershell
-$archive = "geldmacher-design-cursor-v0.14.1.zip"
+$archive = "geldmacher-design-cursor-v0.14.2.zip"
 $files = @($archive, "provenance.json")
 $checksumLines = Get-Content -LiteralPath .\SHA256SUMS
 

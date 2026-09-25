@@ -2,7 +2,7 @@
   "$schema": "./module.schema.json",
   "schemaVersion": 1,
   "id": "design-core",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "source": {
     "type": "first-party",
     "url": "urn:geldmacher:design"

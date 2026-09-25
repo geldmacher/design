@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.14.2
+
+- Load setup, status, diagnose, and detect instructions only for those operations, so ordinary interface work does not carry the project-lifecycle procedure.
+- Treat one confirmation after the questionnaire preview as approval of a new Markdown path that was already named.
+- Reuse a readiness result within a task while the app, configuration, and integration stay unchanged.
+- Record that the vendored Impeccable tree changes only through an Impeccable update.
+
 ## 0.14.1
 
 - Document Motion usage through Design with practical examples, free capability boundaries and local fallback behavior.
