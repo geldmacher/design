@@ -5,7 +5,7 @@ Design helps people ship websites and web apps that feel intentional. Act as a f
 ## Product boundaries
 
 - Select Design for requested website and web-app interface work, automatically or by explicit invocation. Respect the user's choice of another skill. Setup, optional checks, migrations and maintainer operations require their own explicit request; automatic selection never authorizes project activation or unrelated work.
-- Preview setup changes and wait for confirmation. Optional checks remain off until the project explicitly enables them.
+- Preview guided setup writes and check configuration, and wait for confirmation before each. Optional checks remain off until the project explicitly enables them.
 - Use only the canonical project context: `PRODUCT.md`, `DESIGN.md`, and `.impeccable/`. Do not invent a second configuration surface.
 - Keep first-party product surfaces in English.
 - Do not download runtime code, load dynamic remote modules, or imply capabilities the active host does not provide.

@@ -12,14 +12,14 @@ Follow the [shared preparation and journeys](runtime-smoke-common.md), with the 
 
 ## Pre-write enforcement
 
-1. Complete the [activation handoff](runtime-smoke-common.md#activation-handoff-to-host-adapter-checks) in this adapter test project, including confirmed setup and an enabled status read-back. Then write a clean UI component. Cursor must allow it.
+1. Complete the [activation handoff](runtime-smoke-common.md#activation-handoff-to-host-adapter-checks) in this adapter test project, including confirmed checks and an enabled status read-back. Then write a clean UI component. Cursor must allow it.
 2. Propose the [shared `side-tab` fixture](runtime-smoke-common.md#detector-and-native-engine) as a new HTML file. Cursor must deny the write before it lands.
 3. Edit `README.md`; it must be unaffected. Follow the shared handoff's deactivation step, verify disabled status in this same project, and confirm the UI fixture can be written.
 4. Repeat activation and deactivation. The original `.cursor/hooks.json` hash or absence must remain unchanged, without a second registration.
 
 ## Host conflicts and infrastructure failures
 
-In disposable copies, add `.cursor/skills/impeccable/SKILL.md`, then separately a legacy Impeccable command in `.cursor/hooks.json`. Status must report shadowing or a double-hook conflict; setup must not remove or overwrite those files.
+In disposable copies, add `.cursor/skills/impeccable/SKILL.md`, then separately a legacy Impeccable command in `.cursor/hooks.json`. Status must report shadowing or a double-hook conflict; checks must not remove or overwrite those files.
 
 For the shared malformed-config case, a broken detector or unavailable Node runtime, expect a visible infrastructure diagnostic that does not deny the product edit. Restore each trial copy before testing the next case. Finish with the [shared closeout](runtime-smoke-common.md#closeout).
 

@@ -43,6 +43,10 @@ for (const host of ['cursor', 'codex']) {
     assert.equal(absent.readiness.state, 'attention');
     assert.equal(absent.readiness.configuration.state, 'absent');
     assert.deepEqual(absent.readiness.actions.map(action => action.operation), ['init', 'document']);
+    const entry = host === 'cursor' ? '/design' : '\\$design';
+    assert.match(absent.readiness.actions[0].reason, new RegExp(`${entry} init`));
+    assert.match(absent.readiness.actions[1].reason, new RegExp(`${entry} document`));
+    assert.match(absent.readiness.actions[1].reason, /no interface yet/);
     assert.deepEqual(f.run(host, ['diagnose']).readiness, absent.readiness);
     assert.deepEqual(f.run(host, ['setup']).state.readiness, absent.readiness);
     assert.deepEqual(snapshot(f.root), before, 'read-only lifecycle changed project or home');
@@ -60,6 +64,7 @@ for (const host of ['cursor', 'codex']) {
     assert.equal(disabled.hook.explicit, true);
     assert.equal(disabled.readiness.state, 'ready', JSON.stringify(disabled.findings));
     const preview = f.run(host, ['setup']);
+    assert.deepEqual(f.run(host, ['checks']).plan, preview.plan);
     assert.deepEqual(preview.plan.writes, ['.impeccable/config.local.json: set hook.enabled=true']);
     assert.deepEqual(snapshot(f.root), before);
     const applied = f.run(host, ['setup', '--apply']);
@@ -257,7 +262,11 @@ test('Codex uses the same strict opt-in without creating project hook manifests'
 
   const preview = setupProject(root, { host: 'codex' });
   assert.equal(preview.applied, false);
-  assert.match(preview.plan.offers[0], /\$impeccable init/);
+  assert.match(preview.plan.offers[0], /\$design init/);
+  assert.match(preview.plan.offers[0], /does not create PRODUCT\.md/);
+  assert.match(preview.plan.offers[1], /\$design document/);
+  assert.match(preview.plan.offers[1], /skip it when there is no interface yet/);
+  assert.doesNotMatch(preview.plan.offers.join('\n'), /\$impeccable (?:init|document)/);
   const applied = setupProject(root, { host: 'codex', apply: true });
   assert.equal(applied.applied, true);
   assert.equal(inspectProject(root, { host: 'codex' }).hook.enabled, true);

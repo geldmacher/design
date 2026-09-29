@@ -660,7 +660,7 @@ function packageReadme(host) {
     "",
     "## Your project, your decisions",
     "",
-    `Design uses your existing PRODUCT.md, DESIGN.md, and .impeccable/ context. Run \`${invocation} setup\` to preview project integration, or \`${invocation} status\` to inspect it. Setup requires approval; optional UI checks stay off until enabled.`,
+    `Design uses your existing PRODUCT.md, DESIGN.md, and .impeccable/ context. Run \`${invocation} setup\` to prepare a project for design work, or \`${invocation} status\` to inspect it. Guided setup confirms each context step. Run \`${invocation} checks\` to preview optional UI checks; they stay off until enabled.`,
     "",
     "Design can also be selected automatically for matching web UI requests and respects your explicit choice of another skill.",
     "",

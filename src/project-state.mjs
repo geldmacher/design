@@ -220,10 +220,17 @@ function assessReadiness(state, diagnosis, configuration, options) {
       ? 'The rule registry is unavailable; ignored rule IDs could not be validated. Other resolved context remains available.'
       : 'The doctor report does not establish rule registry availability; ignored rule ID validation is unverified. Other resolved context remains available.',
   });
+  const designEntry = hostInvocation(state.host, 'design');
   for (const [name, operation] of [['product', 'init'], ['design', 'document']]) {
     if (context[name].state !== 'missing' || diagnosis.selectionRequired) continue;
     findings.push({ id: `${name}-context-missing`, severity: 'advisory', message: `${name === 'product' ? 'PRODUCT.md' : 'DESIGN.md'} is not captured for this project. Continue using the available request and incumbent interface.` });
-    actions.push({ operation, requiresConfirmation: true, reason: `Offer ${operation} separately if capturing ${name} context would help the requested work.` });
+    actions.push({
+      operation,
+      requiresConfirmation: true,
+      reason: name === 'product'
+        ? `Offer ${designEntry} init separately from status and diagnose. It records product knowledge. Status and diagnose do not create PRODUCT.md.`
+        : `Offer ${designEntry} document separately only when an incumbent interface should be captured. Skip it when the project has no interface yet. Status and diagnose do not create DESIGN.md.`,
+    });
   }
   for (const finding of diagnosis.findings || []) {
     if (findings.some(item => item.id === finding.id && item.path === finding.path)) continue;
@@ -259,8 +266,12 @@ export function setupProject(projectRoot = process.cwd(), options = {}) {
     writes: enableHook && !malformed && !unresolved
       ? planHookActivation(state.projectRoot, true).map(({ name }) => `.impeccable/${name}: set hook.enabled=true`) : [],
     offers: [
-      state.context.product ? 'PRODUCT.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} init; do not create PRODUCT.md without confirmation.`,
-      state.context.design ? 'DESIGN.md already exists.' : `Offer ${hostInvocation(state.host, 'impeccable')} document when an incumbent design should be captured.`,
+      state.context.product
+        ? 'PRODUCT.md already exists. This check preview does not update it.'
+        : `This check preview only writes check configuration. It does not create PRODUCT.md, because that file records product knowledge this command does not have. Offer ${hostInvocation(state.host, 'design')} init as a separate confirmed step; do not run it from this preview.`,
+      state.context.design
+        ? 'DESIGN.md already exists. This check preview does not update it.'
+        : `This check preview does not create DESIGN.md. That file records an interface already present in the project. Offer ${hostInvocation(state.host, 'design')} document only when an incumbent design should be captured, and skip it when there is no interface yet. Do not run it from this preview.`,
     ],
   };
 

@@ -16,11 +16,13 @@
       "fallback": false,
       "triggers": [
         "setup",
+        "checks",
         "status",
         "diagnose"
       ],
       "intents": {
-        "setup": "Set up or adjust Design project integration. Preview exact writes and require confirmation; optional hooks stay opt-in.",
+        "setup": "Guide a project into design work: read-only status, confirmed init when PRODUCT.md is missing, a document scan or one seed question when DESIGN.md is missing, then a separate check offer. This command does not enable checks.",
+        "checks": "Preview optional automatic checks and apply only after confirmation. This preview does not create PRODUCT.md or DESIGN.md. Optional hooks stay opt-in.",
         "status": "Explain the current Design configuration, available canonical context and optional hook state without changing anything.",
         "diagnose": "Investigate Design integration problems, conflicts or configuration drift. Report findings and proposed remedies without applying them."
       }

@@ -29,17 +29,17 @@ $design Assess accessibility and responsive behavior on this page. Report findin
 
 An explicit command takes precedence. An assessment stays an assessment, and a planning request stays a plan. If different operations would materially change the outcome or scope, Design asks one focused question. New interfaces and redesigns can use the general design workflow without forcing a specialized command.
 
-A bare `$design` invocation offers guidance; asking which workflow to use does not execute it. Clear requests such as “Set up Design for this project”, “Explain the current Design configuration”, “Investigate why Design checks do not run”, or “Create a stakeholder questionnaire about checkout approval” also select the matching Design operation. Setup changes still require a confirmed preview. A review of branch UI changes selects `review`; an assessment of a page selects `critique`. Detector scans require explicitly named local targets.
+A bare `$design` invocation offers guidance; asking which workflow to use does not execute it. Clear requests such as “Set up Design for this project”, “Enable automatic checks”, “Explain the current Design configuration”, “Investigate why Design checks do not run”, or “Create a stakeholder questionnaire about checkout approval” also select the matching Design operation. “Set up Design” starts the guided setup and does not enable checks. Enabling checks, and each guided context write, still requires its own confirmation. A review of branch UI changes selects `review`; an assessment of a page selects `critique`. Detector scans require explicitly named local targets.
 
 Impeccable command selection reads the installed skill directly. Motion is a separate bundled specialist selected through Design for Motion API and implementation requests. General animation direction remains with Impeccable; explicit Impeccable commands retain their meaning.
 
 ## Readiness before interface work
 
-Before planning, implementing or evaluating an interface, Design reads the same project assessment used by `status`, `diagnose` and setup preview. This applies to explicit commands such as `polish` or `critique`, automatically chosen operations, and Design `review` or `detect`. It runs once per commissioned operation, not between every edit. Questionnaire uses available context without needing setup.
+Before planning, implementing or evaluating an interface, Design reads the same project assessment used by `status`, `diagnose`, guided setup, and the check preview. This applies to explicit commands such as `polish` or `critique`, automatically chosen operations, and Design `review` or `detect`. It runs once per commissioned operation, not between every edit. Questionnaire uses available context without needing setup.
 
 A healthy state stays quiet. Missing context, configuration conflicts and proposed migrations are reported briefly, then the requested work continues where feasible. Identical findings are not repeated within the task; changed state is read again. Optional hooks can be deliberately disabled or unavailable without making setup incomplete. Unavailable diagnostics remain unverified, never a positive setup result.
 
-The engine resolves app-local and inherited `PRODUCT.md`/`DESIGN.md`. For a monorepo, identify the app or source path; if several apps remain possible, Design asks which one you mean. The CLI accepts `--target <path>` for `status`, `diagnose` and `setup`, and `--target .` for an explicitly repository-wide scope. Unverified or ambiguous scope prevents setup writes while otherwise feasible UI work may continue.
+The engine resolves app-local and inherited `PRODUCT.md`/`DESIGN.md`. For a monorepo, identify the app or source path; if several apps remain possible, Design asks which one you mean. The CLI accepts `--target <path>` for `status`, `diagnose`, `setup`, and `checks`, and `--target .` for an explicitly repository-wide scope. Unverified or ambiguous scope prevents guided setup writes and check writes while otherwise feasible UI work may continue.
 
 No readiness check activates hooks, creates context, repairs configuration or migrates files. Those changes need a separate preview and confirmation. Declining setup does not cancel an accompanying UI task. A confirmed change is followed by a readback of the effective state, including local overrides. Configuration still does not prove fresh editor activation.
 
@@ -117,7 +117,7 @@ In Cursor, replace `$design` with `/design`: for example, `/design motion Fix An
 
 The plugin does not install an animation library into your application. A normal animation request does not authorize package installation, upgrades or migration from `framer-motion`. Design checks existing dependencies and versions, preserves compatible imports, and reports a missing dependency before proceeding with work that requires it. Installing or migrating needs its own explicit request.
 
-Follow [Motion host setup and the connection check](installation.md#bundled-free-motion-documentation) for Cursor or Codex. `/design setup` and optional UI checks are independent of Motion's MCP connection; enabling hooks is not a prerequisite. The portable package supplies local skills only and does not configure MCP.
+Follow [Motion host setup and the connection check](installation.md#bundled-free-motion-documentation) for Cursor or Codex. `/design checks` and optional UI checks are independent of Motion's MCP connection; enabling hooks is not a prerequisite. The portable package supplies local skills only and does not configure MCP.
 
 ### Free scope and fallback
 
@@ -202,6 +202,8 @@ Design shares three sources of project context with its bundled Impeccable toolk
 
 Use `$design init` to capture or update product knowledge in `PRODUCT.md`. Use `$design document` to record an existing design in `DESIGN.md`. `init` does not create a visual direction; `document` describes the design already present in the code.
 
+Use `$design setup` to prepare a project for design work. It reads status, then follows `$design init` when `PRODUCT.md` is missing. When an interface already exists and `DESIGN.md` is missing, it offers `$design document` and waits. When there is no interface yet, it asks once whether to lock a visual direction; agreeing requires a named first surface and a design seed, and declining leaves `DESIGN.md` until the first real build. Each of those writes waits for confirmation. Setup does not enable automatic checks.
+
 ### Enable optional automatic checks
 
 Start by inspecting the project:
@@ -212,13 +214,13 @@ $design status
 
 Status reports plugin and module versions, existing context, conflicts, and whether checks are configured. It does not prove the editor has loaded the hooks that run those checks.
 
-When you want to enable checks, request setup:
+When you want to enable checks:
 
 ```text
-$design setup
+$design checks
 ```
 
-Setup previews the exact configuration changes and waits for your confirmation. In Cursor and Codex, applying it enables the project's plugin checks. It preserves unrelated settings and reports the effective state afterward. Missing product or design context is offered as a separate next step.
+Checks previews the exact configuration changes and waits for your confirmation. In Cursor and Codex, applying it enables the project's plugin checks. It preserves unrelated settings and reports the effective state afterward. Checks does not create or update `PRODUCT.md` or `DESIGN.md`. Declining leaves checks off. Guided setup offers this same preview as its last step, and that confirmation is separate from any earlier yes.
 
 You can inspect or change checks directly later:
 
@@ -243,7 +245,7 @@ Infrastructure failures, such as malformed configuration or an unavailable detec
 
 `.impeccable/config.json` holds shared settings. An existing `.impeccable/config.local.json` overrides them for that checkout.
 
-For example, shared `hook.enabled: true` plus local `hook.enabled: false` means checks are off. Explicit `hooks on`, `hooks off`, and confirmed setup update the shared value and any existing local override together. They preserve unrelated settings and do not create a local config just to store an override.
+For example, shared `hook.enabled: true` plus local `hook.enabled: false` means checks are off. Explicit `hooks on`, `hooks off`, and confirmed checks update the shared value and any existing local override together. They preserve unrelated settings and do not create a local config just to store an override.
 
 ## Troubleshoot project setup
 
@@ -257,7 +259,7 @@ For example, shared `hook.enabled: true` plus local `hook.enabled: false` means 
 
 `diagnose` checks Design integration; `doctor` checks Impeccable project context. Both report without applying repairs.
 
-Design selects special operations such as `setup`, `review`, and `questionnaire` only when they lead an explicit command request. “Review this checkout page” remains an ordinary interface request; it does not silently become a Git review. Words such as “setup” inside a page brief do not trigger project setup.
+Clear requests for `setup`, `checks`, `review`, and `questionnaire` select those operations. “Review this checkout page” remains an ordinary interface request; it does not silently become a Git review. Words such as “setup” or “checks” inside a page brief do not trigger project setup or enable checks.
 
 You can also use the bundled toolkit directly with `$impeccable` in Codex or `/impeccable` in Cursor. For everyday work, the single Design entry point covers both the toolkit and the additional project operations.
 

@@ -29,13 +29,13 @@ Read [references/capabilities.md](references/capabilities.md) and use it as the 
 - For `design-core:stakeholder-questionnaire`, read and follow [references/questionnaire.md](references/questionnaire.md).
 - For `design-core:change-interface-review`, read and follow [references/change-review.md](references/change-review.md). The review is read-only and task-local.
 - For `motion:animation-implementation`, load the bundled [Motion skill](../motion/SKILL.md). Reuse this operation's readiness result. Keep Impeccable as the art-direction authority and use Motion only for the requested technical work.
-- When the index selects Impeccable, load the bundled [impeccable skill](../impeccable/SKILL.md) and follow the index's selection procedure: honor an explicit operation, otherwise choose from the loaded skill's current descriptions and playbooks. Keep the user's request unchanged and state an inferred choice briefly before proceeding.
+- When the index selects Impeccable, load the bundled [impeccable skill](../impeccable/SKILL.md) and follow the index's selection procedure: honor an explicit operation, otherwise choose from the loaded skill's current descriptions and playbooks. Keep the user's request unchanged and state an inferred choice briefly before proceeding. When you recommend a follow-up the user can invoke, name it through the active host's Design entry point. Translate bundled playbook command notation into that entry point. A direct Impeccable invocation remains valid only when the user addressed that skill explicitly.
 
 Do not download skills, resolve dynamic URLs, install packages, or invent a module at runtime.
 
 ## Shared readiness preflight
 
-Before commissioned UI planning, implementation, or evaluation, including explicit or inferred Impeccable operations and Design review/detect, follow [references/readiness.md](references/readiness.md). Reuse a readiness result within the task while its app, configuration, and integration are unchanged; run it again when any of those change, not between ordinary edits. Setup, status and diagnose already perform this assessment and must not recurse. Questionnaire reads available canonical context without a setup prerequisite. Advice-only requests and bare menus do not start this preflight.
+Before commissioned UI planning, implementation, or evaluation, including explicit or inferred Impeccable operations and Design review/detect, follow [references/readiness.md](references/readiness.md). Reuse a readiness result within the task while its app, configuration, and integration are unchanged; run it again when any of those change, not between ordinary edits. Setup, status, diagnose, and checks already perform this assessment and must not recurse. Questionnaire reads available canonical context without a setup prerequisite. Advice-only requests and bare menus do not start this preflight.
 
 ## Safety boundary
 

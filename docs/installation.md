@@ -258,7 +258,7 @@ The installer reports the release, installed paths, versions, and verification r
 | The repository install skill is missing | Open the source checkout, not your application project. Start a new Codex task or use the terminal command. |
 | Download or build fails | Check GitHub/npm access and read the retained error report before retrying. See [failure recovery](#recover-from-a-failed-installation). |
 | Installation succeeded, but Design is missing or appears outdated | Reload Cursor or start a new Codex task. For a manual Codex install, also refresh or reinstall its Marketplace entry and check the cached manifest version. |
-| Automatic checks do not run | They are off by default. In your application project, request `design setup` with your editor's prefix, review its preview, and confirm if you want to enable them. |
+| Automatic checks do not run | They are off by default. In your application project, request `/design checks` in Cursor or `$design checks` in Codex, review its preview, and confirm if you want to enable them. |
 
 ## What the release installer does
 
@@ -356,7 +356,7 @@ Successful online evidence includes an actual `search-motion-docs` call and a su
 | An example requires a login, token or payment | Skip it and use accessible documentation or an original implementation. Do not switch to `/plus`. |
 | Status says `availability: not-checked` | Run the explicit connection check above; status deliberately performs no network request. |
 
-Motion continues with pinned local best practices when online tools are unavailable and reports the freshness limitation. Optional project hooks and `design setup` do not enable this connection and are not required to use Motion.
+Motion continues with pinned local best practices when online tools are unavailable and reports the freshness limitation. Optional project hooks and the `checks` command do not enable this connection and are not required to use Motion.
 
 ### Application dependencies and the portable package
 

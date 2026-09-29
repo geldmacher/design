@@ -30,7 +30,7 @@ Run each case in a fresh task on a disposable copy so a previously loaded skill 
 | “Review this backend change for correctness.” | Neither Design nor Impeccable selected. |
 | Direct Impeccable invocation using the host prefix | Installed Impeccable loads directly, without routing through Design. |
 | Explicit Design `review quick branch`, `status`, and `detect -- src/Card.jsx` | The corresponding existing specialized operations, with their read-only boundaries. |
-| “Set up Design for this project.” | Setup preview only; no writes before confirmation. |
+| “Set up Design for this project.” | Guided setup: read-only until each confirmation. It does not enable checks by itself. |
 | “How is Design configured here?” | Status and shared readiness, no setup application. |
 | “Why do the Design checks not run?” | Integration diagnosis; disabled optional hooks are valid. |
 | “Create a stakeholder questionnaire about checkout approval.” | Questionnaire brief and preview; no setup prerequisite or implicit file write. |
@@ -51,11 +51,11 @@ Package metadata checks and a written walkthrough of these cases do not prove ac
 Run each case with both an explicit `polish`/`critique` request and its natural-language equivalent. Record the actual Design CLI diagnosis, selected scope, readiness output, selected playbook and project/home snapshots. This is agent behavior evidence; direct CLI tests alone do not prove the assistant performed the preflight.
 
 1. With current PRODUCT.md/DESIGN.md and disabled optional hooks, expect one diagnosis before the operation, no setup announcement, and the original task continuing.
-2. With missing context, expect a concise relevant finding and optional next step. Decline any offered setup and verify the original UI task continues without context or configuration writes. A findings-only critique must remain report-only.
+2. With missing context, expect a concise relevant finding and optional next step. Decline any offered setup or checks and verify the original UI task continues without context or configuration writes. A findings-only critique must remain report-only.
 3. With opposite main/local hook settings, expect the local override. Repeat an operation in the same task: fresh state is read, unchanged findings are not repeated. Change configuration deliberately in the disposable fixture and confirm changed findings are reported.
 4. With malformed configuration, a known migration finding, or an unavailable bundled engine, expect visible incomplete evidence and continued feasible work, without repairs, downloads, hook activation or a false ready result.
-5. In a workspace with two apps, give a specific source target and verify its selected child context, including inherited root files. Switch to the second app within the same task: expect its own diagnosis and freshly loaded context, without reusing the first app's content. Repeat after a confirmed canonical context change; unchanged context and hook-only changes must not cause redundant context loading. With an ambiguous target, expect app selection. Setup must never write to a guessed root or child. Repeat with an explicitly repository-wide target.
-6. Request and approve a setup preview on a disposable copy. Verify only the previewed settings change, unrelated settings survive, and the reported state matches a fresh status. No recursive sequence of status, diagnose and setup may occur before ordinary UI work.
+5. In a workspace with two apps, give a specific source target and verify its selected child context, including inherited root files. Switch to the second app within the same task: expect its own diagnosis and freshly loaded context, without reusing the first app's content. Repeat after a confirmed canonical context change; unchanged context and hook-only changes must not cause redundant context loading. With an ambiguous target, expect app selection. Guided setup and checks must never write to a guessed root or child. Repeat with an explicitly repository-wide target.
+6. Request and approve a checks preview on a disposable copy. Verify only the previewed settings change, unrelated settings survive, and the reported state matches a fresh status. No recursive sequence of status, diagnose, and checks may occur before ordinary UI work.
 7. Repeat Design review and detector requests: the same preflight precedes their work. For questionnaire, lifecycle commands, advice and bare menus, verify no additional recursive preflight is introduced. Direct Impeccable keeps its separate entrypoint.
 
 Retain both hosts' execution traces and before/after comparisons, or mark missing host cases Not verified. Do not install or activate an editor as part of repository-only verification.
@@ -101,18 +101,18 @@ Use disposable Git history with one committed UI change, one uncommitted UI file
 
 Record foreign configuration settings and host-manifest sentinels before each case. Run each case in its own disposable copy.
 
-1. Without local configuration, invoke `setup`. Before confirmation, no bytes may change. Confirm the preview, then verify the main configuration enables the hook and no local file or host manifest was created.
-2. Create main/local `.impeccable/config.json` and `.impeccable/config.local.json` with opposite `hook.enabled` values. Test both directions, plus both values initially false. `status` must follow the local override. `setup` must preview exactly the files that need changes before confirmation; afterward the main setting and existing local override must both be true, and the reported effective state must match a fresh `status`.
+1. Without local configuration, invoke `checks`. Before confirmation, no bytes may change. Confirm the preview, then verify the main configuration enables the hook and no local file or host manifest was created.
+2. Create main/local `.impeccable/config.json` and `.impeccable/config.local.json` with opposite `hook.enabled` values. Test both directions, plus both values initially false. `status` must follow the local override. `checks` must preview exactly the files that need changes before confirmation; afterward the main setting and existing local override must both be true, and the reported effective state must match a fresh `status`.
 3. Exercise both the resolved Design CLI `hook off`/`hook on` and Impeccable `hooks off`/`hooks on`. Seed an opposite local override before each operation. Explicit on/off must reconcile both settings, preserve unrelated settings and report the reread effective state. It must not create an absent local file.
 4. Repeat an already-applied operation. Expect no changed bytes and no duplicate host-hook registration. Restore disabled state in that case's disposable copy.
-5. Malform either configuration file in a disposable copy. Setup must report the error and leave both files untouched; infrastructure failures must remain visible without preventing product edits. Observe actual host events using the host entry's contract.
+5. Malform either configuration file in a disposable copy. Checks must report the error and leave both files untouched; infrastructure failures must remain visible without preventing product edits. Observe actual host events using the host entry's contract.
 
 ## Activation handoff to host adapter checks
 
 Return to the disposable project used for the host adapter trial, not a malformed-config or conflict copy. Keep this same project throughout the following sequence:
 
 1. Invoke Impeccable `hooks off`, then Design `status`; confirm the effective hook state is disabled.
-2. Invoke Design `setup`, inspect its preview and confirm activation. Read Design `status` again; proceed to the host entry's active adapter checks only when the effective hook state is enabled. A blocked setup or a disabled state leaves those checks unverified.
+2. Invoke Design `checks`, inspect its preview and confirm activation. Read Design `status` again; proceed to the host entry's active adapter checks only when the effective hook state is enabled. A blocked check preview or a disabled state leaves those checks unverified.
 3. At the host entry's deactivation step, invoke Impeccable `hooks off` and read Design `status` again. Confirm the effective state is disabled before exercising the inactive adapter cases.
 
 ## Closeout

@@ -12,7 +12,7 @@ Each module declares:
 - capabilities with skill owner, leading command triggers, and fallback status;
 - every contributed skill, agent, rule, hook, script, or MCP configuration.
 
-The generated `skills/design/references/capabilities.md` is the skill's only routing index. It combines leading commands (`setup`, `status`, `diagnose`, `detect`, `review`, `questionnaire`, and `motion`) with semantic capability descriptions. Motion API and implementation requests select Motion. General animation direction and explicit Impeccable commands such as `animate` or `doctor` remain with Impeccable. Mentions, negations and workflow-advice questions do not authorize execution.
+The generated `skills/design/references/capabilities.md` is the skill's only routing index. It combines leading commands (`setup`, `checks`, `status`, `diagnose`, `detect`, `review`, `questionnaire`, and `motion`) with semantic capability descriptions. Motion API and implementation requests select Motion. General animation direction and explicit Impeccable commands such as `animate` or `doctor` remain with Impeccable. Mentions, negations and workflow-advice questions do not authorize execution.
 
 `src/registry.mjs` loads module metadata for status and index generation. The schema is development-only; packaged module files omit `$schema` references.
 

@@ -97,19 +97,20 @@ export function runDesignCli(argv = process.argv.slice(2), options = {}) {
   if (parseError) throw new Error(parseError);
   const host = resolveHost(explicitHost);
   const lifecycleOptions = { pluginRoot, host };
-  if (['setup', 'status', 'diagnose'].includes(command)) {
-    const allowed = command === 'setup' ? ['--json', '--apply', '--without-hook'] : ['--json'];
+  const checkWriter = command === 'setup' || command === 'checks';
+  if (checkWriter || command === 'status' || command === 'diagnose') {
+    const allowed = checkWriter ? ['--json', '--apply', '--without-hook'] : ['--json'];
     if ([...flags].some(flag => !allowed.includes(flag)) || action !== undefined || extraPositionals.length || hasSeparator) {
-      throw new Error(`${command}${command === 'setup' ? '' : ' is read-only'}. Usage: ${command} [--host <host>] [--target <path>] [--json]${command === 'setup' ? ' [--apply] [--without-hook]' : ''}.`);
+      throw new Error(`${command}${checkWriter ? '' : ' is read-only'}. Usage: ${command} [--host <host>] [--target <path>] [--json]${checkWriter ? ' [--apply] [--without-hook]' : ''}.`);
     }
     Object.assign(lifecycleOptions, { target, contextReader: options.contextReader || readProjectContext });
-  } else if (target !== undefined) throw new Error('--target is supported only for setup, status and diagnose.');
+  } else if (target !== undefined) throw new Error('--target is supported only for setup, checks, status and diagnose.');
   if (command === 'status') return output(inspectProject(projectRoot, lifecycleOptions));
   if (command === 'doctor') throw new Error('Use diagnose for Design integration diagnostics. Invoke doctor through the Impeccable skill.');
   if (command === 'diagnose') {
     return output(diagnoseProject(projectRoot, lifecycleOptions));
   }
-  if (command === 'setup') {
+  if (checkWriter) {
     return output(setupProject(projectRoot, { ...lifecycleOptions, apply: flags.has('--apply'), enableHook: !flags.has('--without-hook') }));
   }
   if (command === 'hook' && ['on', 'off'].includes(action)) {

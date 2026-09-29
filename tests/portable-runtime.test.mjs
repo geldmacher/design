@@ -208,7 +208,10 @@ test("built targets run self-contained lifecycle and hook simulations", (t) => {
   assert.deepEqual(status.hook, { state: "unavailable", enabled: false, explicit: false, path: null, mode: "none" });
   const preview = runJson(cli, ["--host", "agent-plugin", "setup", "--json"], { cwd: project, env: portableEnv });
   assert.deepEqual(preview.plan.writes, []);
-  assert.match(preview.plan.offers[0], /Offer the loaded impeccable skill's init/);
+  assert.deepEqual(runJson(cli, ["--host", "agent-plugin", "checks", "--json"], { cwd: project, env: portableEnv }).plan, preview.plan);
+  assert.match(preview.plan.offers[0], /Offer the loaded design skill's init/);
+  assert.match(preview.plan.offers[1], /Offer the loaded design skill's document/);
+  assert.match(preview.plan.offers[1], /skip it when there is no interface yet/);
   assert.doesNotMatch(preview.plan.offers.join("\n"), /\bimpeccable\s+(?:init|document)\b/);
   const applied = runJson(cli, ["--host", "agent-plugin", "setup", "--apply", "--json"], { cwd: project, env: portableEnv });
   assert.equal(applied.applied, true);

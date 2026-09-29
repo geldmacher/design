@@ -25,16 +25,16 @@ The helper deploys the generated Codex target and updates this plugin's entry in
 
 ## PostToolUse and Stop
 
-1. Complete the [activation handoff](runtime-smoke-common.md#activation-handoff-to-host-adapter-checks) in this adapter test project, including confirmed setup and an enabled status read-back. Then exercise `Edit`, `Write` and `apply_patch`. Events must be silent or return valid PostToolUse `additionalContext`; they must never return a pre-write denial contract.
+1. Complete the [activation handoff](runtime-smoke-common.md#activation-handoff-to-host-adapter-checks) in this adapter test project, including confirmed checks and an enabled status read-back. Then exercise `Edit`, `Write` and `apply_patch`. Events must be silent or return valid PostToolUse `additionalContext`; they must never return a pre-write denial contract.
 2. A clean edit must remain present. A low-contrast UI fixture must initially remain written while PostToolUse requests correction.
 3. Write the [shared `side-tab` fixture](runtime-smoke-common.md#detector-and-native-engine) in a session with a stable session ID. Finish the task: Stop must report the deferred finding once. A repeated Stop must not repeat it.
-4. Follow the shared handoff's deactivation step, verify disabled status in this same project, and confirm UI edits remain silent. Neither `.codex/hooks.json` nor `.agents/skills/impeccable` may have been created by setup.
+4. Follow the shared handoff's deactivation step, verify disabled status in this same project, and confirm UI edits remain silent. Neither `.codex/hooks.json` nor `.agents/skills/impeccable` may have been created by checks.
 
 ## Roles, conflicts and infrastructure failures
 
 Run a representative canonical role from `agents/` in a fresh generic subagent, with the inherited parent model and no conversation fork. If generic subagents are unavailable, the inline fallback must be visibly marked as degraded.
 
-In disposable copies, add `.agents/skills/impeccable/SKILL.md`, then separately an Impeccable command in `.codex/hooks.json`. Status must report shadowing or a double-hook conflict; setup must not remove or overwrite either path.
+In disposable copies, add `.agents/skills/impeccable/SKILL.md`, then separately an Impeccable command in `.codex/hooks.json`. Status must report shadowing or a double-hook conflict; checks must not remove or overwrite either path.
 
 For the shared malformed-config case or missing detector runtime, diagnostics must remain visible and follow the event contract without reverting or preventing product edits. Restore each trial copy and finish with the [shared closeout](runtime-smoke-common.md#closeout). Fresh local observations do not establish Marketplace certification or publication.
 

@@ -11,7 +11,8 @@ test('the actual skill loads a current index with every leading command and the 
   assert.equal(readFileSync(new URL('../skills/design/references/capabilities.md', import.meta.url), 'utf8'), rendered);
   const rows = [...rendered.matchAll(/^\| `([^`]+)` \| ([^ |]+) /gm)].map(([, command, capability]) => [command, capability]);
   assert.deepEqual(rows, [
-    ['setup', 'design-core:project-integration'], ['status', 'design-core:project-integration'],
+    ['setup', 'design-core:project-integration'], ['checks', 'design-core:project-integration'],
+    ['status', 'design-core:project-integration'],
     ['diagnose', 'design-core:project-integration'], ['detect', 'design-core:detector-scan'],
     ['questionnaire', 'design-core:stakeholder-questionnaire'], ['review', 'design-core:change-interface-review'],
     ['motion', 'motion:animation-implementation'],
@@ -19,6 +20,8 @@ test('the actual skill loads a current index with every leading command and the 
   for (const module of modules) for (const capability of module.capabilities.filter(entry => !entry.fallback)) {
     for (const description of Object.values(capability.intents)) assert.ok(rendered.includes(description));
   }
+  assert.match(rendered, /This command does not enable checks/);
+  assert.match(rendered, /This preview does not create PRODUCT\.md/);
   assert.match(rendered, /Review this checkout page/);
   assert.match(rendered, /every other in-scope web-interface request, including a leading `doctor`/);
   assert.match(rendered, /Do not load it for work outside website and web-app interface scope/);
