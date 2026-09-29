@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.15.0
+
+- Guide `setup` through a read-only status, confirmed product context when `PRODUCT.md` is missing, then either a scan of an existing interface or one question about locking a visual direction. The optional check offer stays a separate confirmation.
+- Add `checks` to preview and apply optional automatic UI checks. That preview does not create `PRODUCT.md` or `DESIGN.md`, and declining it leaves checks off. `hooks on` and `hooks off` still change configuration immediately.
+
 ## 0.14.2
 
 - Load setup, status, diagnose, and detect instructions only for those operations, so ordinary interface work does not carry the project-lifecycle procedure.
