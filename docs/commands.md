@@ -4,7 +4,7 @@
 
 Use this page to look up a command. For worked examples and expected results, start with the [usage guide](usage.md).
 
-Bundled Impeccable **4.3.1**. This is the version documented in this checkout; an installed copy may differ.
+Bundled Impeccable **4.5.0**. This is the version documented in this checkout; an installed copy may differ.
 
 ## Invocation
 
@@ -67,7 +67,8 @@ The table below follows the bundled toolkit. The reference links open detailed i
 | `clarify [target]` | Fix | Improve UX copy, labels, and error messages | [reference/clarify.md](../skills/impeccable/reference/clarify.md) |
 | `adapt [target]` | Fix | Adapt for different devices and screen sizes | [reference/adapt.md](../skills/impeccable/reference/adapt.md) · native: [reference/adapt.native.md](../skills/impeccable/reference/adapt.native.md) |
 | `optimize [target]` | Fix | Diagnose and fix UI performance | [reference/optimize.md](../skills/impeccable/reference/optimize.md) |
-| `live` | Iterate | Visual variant mode: pick elements in the browser, generate alternatives | [reference/live.md](../skills/impeccable/reference/live.md) |
+| `live` | Iterate | Visual variant mode: pick elements in the browser, iterate on alternatives | [reference/live.md](../skills/impeccable/reference/live.md) |
+| `generate [n] [action] [element]` | Iterate | Variants, versions, or alternatives of a named element to choose from in the live browser; no manual picking | [reference/generate.md](../skills/impeccable/reference/generate.md) |
 
 ### Aliases and special operations
 
@@ -80,7 +81,9 @@ See the bundled [doctor](../skills/impeccable/reference/doctor.md) and [hooks](.
 
 ### Live prerequisites and host boundaries
 
-`live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. First-time configuration previews changes for approval. Live injection into deployed production sites is unsupported.
+`live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. `generate` enters the same live workflow from a named element and direction, such as `$design generate 3 bolder variants of the pricing cards`, without manual element picking. It defaults to three variants and supports one to eight; an unspecified direction needs clarification. Reuse the current development server and browser tab. Use the active host's available browser tool, or the system browser when no browser tool is available. First-time configuration previews changes for approval. Live injection into deployed production sites is unsupported.
+
+`generate` uses existing product and design context or the current page when context is missing; it does not start init or document. The user cycles through the variants and accepts or discards them. After acceptance, finish source cleanup and stop the live helper while keeping the development server running.
 
 Design targets websites and web apps. Native-platform references in the bundled table do not establish native-app support in this plugin.
 

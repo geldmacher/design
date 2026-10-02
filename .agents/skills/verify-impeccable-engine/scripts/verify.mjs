@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(import.meta.dirname, '../../../..');
-const engineTests = ['impeccable-engine', 'detector-orchestration', 'hook', 'codex-hook', 'host', 'guidance-contract', 'portable-runtime', 'plugin-targets', 'impeccable-maintenance', 'project-state', 'motion-maintenance', 'motion-contract'];
+const engineTests = ['impeccable-engine', 'live-output', 'component-review', 'detector-orchestration', 'hook', 'codex-hook', 'host', 'guidance-contract', 'portable-runtime', 'plugin-targets', 'impeccable-maintenance', 'project-state', 'motion-maintenance', 'motion-contract'];
 const sourceDirectories = ['src', 'hooks', 'scripts', 'tests', 'upstream', 'overlays', 'skills', 'modules', 'manifests', 'schemas', 'assets', 'docs', '.agents', '.cursor', '.cursor-plugin', '.codex-plugin', '.github'];
 
 export function selectTests(sourceRoot, all = false) {

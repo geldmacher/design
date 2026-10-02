@@ -74,6 +74,11 @@ test("deterministic target allowlists isolate the portable package and native ad
       const doctorGuide = readFileSync(join(first[host].path, 'skills/impeccable/reference/doctor.md'), 'utf8');
       assert.doesNotMatch(hooksGuide, /npx impeccable|remove the hook's entries from every provider manifest/);
       assert.match(hooksGuide, /preserve other settings and every host manifest/);
+      assert.doesNotMatch(hooksGuide, /Gemini installs|\.gemini\/settings\.json/);
+      const generateGuide = readFileSync(join(first[host].path, 'skills/impeccable/reference/generate.md'), 'utf8');
+      assert.match(generateGuide, /Browser tools available in this session/);
+      assert.match(generateGuide, /No browser tool available in this session/);
+      assert.doesNotMatch(generateGuide, /No browser tool\*\* \(Codex/);
       assert.doesNotMatch(doctorGuide, /doctor --fix|Do not ask permission first|UPDATE_AVAILABLE/);
       assert.match(doctorGuide, /explicit user authorization before editing/);
       assert.match(readFileSync(join(first[host].path, "THIRD_PARTY_NOTICES.md"), "utf8"), /https:\/\/github\.com\/pbakaus\/impeccable/);
@@ -142,6 +147,11 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(documentationFinish, /Ordinary extensions compare the finished build against the incumbent system, preserve its files/);
     assert.match(documentationFinish, /report pre-existing drift without repairing it unasked/);
     assert.match(documentationFinish, /Recheck after later edits/);
+    assert.match(documentationFinish, /\[visualize\.md\]\(visualize\.md\).*COMPS section of the MODE RULES block/);
+    const planReview = readFileSync(join(portableImpeccableRoot, 'reference/component-review.md'), 'utf8');
+    assert.match(planReview, /produce the new plates inline with its role contract/);
+    assert.doesNotMatch(planReview, /subagents are available/);
+    assert.match(planReview, /Never submit the page or write a receipt on the user's behalf/);
 
     for (const host of ['agent-plugin', 'cursor', 'codex']) {
       const target = first[host].path;

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.16.0
+
+- Update bundled Impeccable to 4.5.0 and native engine 0.1.11, with pinned binaries for all five platforms and refreshed product-mode and comp-planning guidance.
+- Add the Generate entry point for one to eight live variants, with shared Cursor/Codex smoke scenarios for server and tab reuse, human Accept/Discard, resumption and helper cleanup.
+- Preserve project text in portable live JSON while adapting only engine-owned instruction fields; handle split and multiline output and report unsupported roles or incomplete records visibly.
+- Extend change reviews with applicable touch, scroll-conflict and interrupted-gesture checks, and distinguish layout, synthesized-input and physical-device evidence.
+- Explain plan/asset checkpoints and first-viewport approval boundaries; verify current schema-3 review packets, native capture evidence, pending/stale gate refusals and browserless/idle exits through isolated CLI and endpoint trials.
+
 ## 0.15.0
 
 - Guide `setup` through a read-only status, confirmed product context when `PRODUCT.md` is missing, then either a scan of an existing interface or one question about locking a visual direction. The optional check offer stays a separate confirmation.

@@ -254,8 +254,22 @@ export function transformSkillFile(relativePath, original, version) {
   ]
 ];
     for (const [before, after] of replacements) text = mustReplace(text, before, after, `plugin maintenance contract: ${before}`);
+    if (relativePath === "reference/hooks.md" && compareVersions(version, "4.5.0") >= 0) {
+      text = mustReplace(text,
+        "Gemini installs session and completion hooks in `.gemini/settings.json`, merged into the settings already there (comments are tolerated; a commented file is backed up to `settings.json.bak` before the rewrite, and a file that is not valid JSON is left alone). It does not install a per-edit detector hook. The `BeforeTool` hook only rewrites shell commands that run `build-phase`, and only on macOS and Linux; on Windows (where Gemini runs hooks through PowerShell) no session id reaches the shell, so a comp build is not tied to the session and the completion reminder stays silent.\n\n",
+        "",
+        "standalone Gemini hooks");
+    }
     text = text.replaceAll("npx impeccable detect", ".cursor/skills/impeccable/scripts/impeccable detect").replaceAll("npx impeccable ignores", ".cursor/skills/impeccable/scripts/impeccable ignores");
     operations.push("plugin-project-maintenance");
+  }
+  if (relativePath === "reference/generate.md") {
+    text = mustReplace(text,
+      "**Cursor** (`browser_navigate`) and **Claude Code** (`navigate`, which opens the Browser pane when it is closed and takes the `tabId` from `tabs_context` when a tab is already on that origin): open the URL, then run the start command with `--dev-url <url> --wait-for-browser 60000`. The boot injects the overlay and the page reloads into it while the command waits. Your browser tool is the only opener on these harnesses; the engine ignores `--open` there.",
+      "**Browser tools available in this session**, including Cursor or Codex when provided: use the active host's available browser tool to reuse the existing tab or open the URL, then run the start command with `--dev-url <url> --wait-for-browser 60000`. The boot injects the overlay and the page reloads into it while the command waits. Use that browser tool to open the page; do not also request `--open`.",
+      "generate browser tools");
+    text = mustReplace(text, "**No browser tool** (Codex, others):", "**No browser tool available in this session**:", "generate system browser fallback");
+    operations.push("dual-host-provider-routing");
   }
   if (relativePath.endsWith(".md")) {
     if (relativePath === "SKILL.md") {

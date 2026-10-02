@@ -104,7 +104,9 @@ Repository tests simulate release metadata, archive validation, candidates, roll
 
 ## Native runtime and verification
 
-The current import is skill 4.3.1 with engine 0.1.5. `src/impeccable-runtime.mjs` selects a physical in-package engine, verifies its hash and size, and invokes it without a shell. `overlays/skills/impeccable/scripts/impeccable` and `impeccable.cmd` are thin Node.js 22+ entrypoints. Native engines remain byte-identical to upstream; no Rust fork is shipped.
+The current import is skill 4.5.0 with engine 0.1.11. `src/impeccable-runtime.mjs` selects a physical in-package engine, verifies its hash and size, and invokes it without a shell. `overlays/skills/impeccable/scripts/impeccable` and `impeccable.cmd` are thin Node.js 22+ entrypoints. Native engines remain byte-identical to upstream; no Rust fork is shipped.
+
+The 4.5.0 projection preserves the mode-specific COMPS rules in portable decision-comp production and uses the inline asset role for plan-review revisions. The plan and asset review remains a human checkpoint; no portable substitution approves it. `generate` selects browser tools from the active session, including Codex when available, and uses the system-browser fallback only when none are provided. The hook guide excludes standalone Gemini installation instructions because plugin hook administration is limited to the supported Cursor and Codex adapters.
 
 The package includes an exact copy of the source pin at `licenses/impeccable-pin.json`. This is packaged provenance, not a second configuration surface. POSIX execute permissions and the complete platform matrix are checked. Missing or unsupported engines remain visible diagnostics; there is no PATH, user-cache or external binary fallback.
 

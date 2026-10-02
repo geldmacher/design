@@ -60,6 +60,26 @@ Run each case with both an explicit `polish`/`critique` request and its natural-
 
 Retain both hosts' execution traces and before/after comparisons, or mark missing host cases Not verified. Do not install or activate an editor as part of repository-only verification.
 
+## Generate and live choices
+
+Use a disposable web page with a uniquely selectable pricing-card container, a local development server and one browser tab already showing it. Prepare its live configuration through the separately authorized setup, or seed the disposable fixture with the configuration from the bundled `live-setup.md`. Record the server URL, process identity, tab and original source. Include literal Impeccable command examples and ordinary subagent descriptions in the fixture's PRODUCT.md and DESIGN.md.
+
+1. Invoke the host's Design entry point with `generate 3 bolder variants of the pricing cards`. Confirm the existing server and tab are reused, exactly three variants appear and the boot preserves the fixture context. No init/document interview may interrupt this lane; repeat without context files and expect the available page identity to guide it.
+2. Cycle and tune the variants as the human reviewer, then Accept. Verify the chosen design persists in source, live attributes/styles/markers are cleaned up, and `live-complete` reports `phase: "completed"` when carbonize cleanup is required. Confirm the helper stops and the development server still serves the accepted design.
+3. In a fresh disposable copy, generate variants and Discard as the human reviewer. Verify the original element is restored, no variant wrapper remains, the helper stops and the development server remains reachable.
+4. Interrupt an owned session while the choice is pending. Use the bundled launcher's `live-status` and `live-resume`; recover the canonical journal and wait for the user's decision without inventing a session ID or an acceptance. Finish with a real Accept or Discard and record cleanup.
+5. Record browser/tool availability, the session and event IDs, source comparisons, helper termination and the unchanged development-server identity. Missing browser or preview access leaves the affected case `Not verified`. Local CLI tests do not establish these assistant/browser interactions.
+
+## Human plan and asset review
+
+Use a disposable comp-led build with a locally supplied comp, production plates and measured regions that require review. Follow the bundled `component-review.md`; retain the generated schema-3 manifest, current spec digest and session ID. No image-provider call is needed for this fixture.
+
+1. Before page implementation, generate the plan with `component-review plan`. Use the host's `component_review` tool only if it is actually available; otherwise capture and serve the generated manifest and open its printed URL. Confirm pending review is reported as pending and page work waits.
+2. Request a revision as the human reviewer. Confirm feedback changes the relevant region/asset, a new plan/capture round presents the current inputs, and the build remains blocked until those inputs are accepted. Never write a receipt or submit a favorable decision as the assistant.
+3. Accept the current plan as the human reviewer. Verify the manifest through the bundled CLI and observe the build gate advancing. Replace a plate or change the spec before first-viewport acceptance; the stale review must not authorize the changed inputs.
+4. Observe a suspended host review, or the fallback's no-browser/idle exit when reachable. Exit `2` and exit `4` mean pending work with a resumable session, not approval or a completed build. The isolated repository tests exercise both exit codes with controlled conditions.
+5. When a first-viewport review is required, use the actual assembled page and its declared dependencies. Human acceptance establishes that viewport's direction; current-capture integrity remains required, numeric readings become advisory only while it matches, and the rest of the page still needs finishing. Record this case `Not verified` if native page capture is unavailable; the schema-3 plan tests do not prove assembled-page capture.
+
 ## Detector and native engine
 
 1. Invoke `detect -- src/Card.jsx`. Expect `no-findings`, exit `0`, and bundled Impeccable provenance, including `engineVersion` and `platform`. This proves only the absence of deterministic findings.

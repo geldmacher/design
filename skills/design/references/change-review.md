@@ -81,8 +81,8 @@ Read the listed sections of every bundled reference before judging its domain. T
 
 | Domain | Required bundled criteria | Review focus |
 |---|---|---|
-| Accessibility and interaction | [Audit](../../impeccable/reference/audit.md#1-accessibility-a11y): Accessibility; [Animate](../../impeccable/reference/animate.md#accessibility-and-control): Accessibility and control | Semantics, names, keyboard, focus, zoom, motion, states |
-| Layout and responsiveness | [Layout](../../impeccable/reference/layout.md#two-isolated-assessments): Layout assessment, Apply, Verify | Hierarchy, grouping, overflow, breakpoints, directionality |
+| Accessibility and interaction | [Audit](../../impeccable/reference/audit.md#1-accessibility-a11y): Accessibility; [Animate](../../impeccable/reference/animate.md#accessibility-and-control): Accessibility and control; [Harden](../../impeccable/reference/harden.md#edge-cases--boundary-conditions): Interrupted gestures when custom controls are affected | Semantics, names, keyboard, focus, zoom, motion, states, gesture recovery |
+| Layout and responsiveness | [Layout](../../impeccable/reference/layout.md#two-isolated-assessments): Layout assessment, Apply, Verify; [Audit](../../impeccable/reference/audit.md#4-responsive-design): Responsive design; [Adapt](../../impeccable/reference/adapt.md#verify-adaptations): Verify adaptations when custom controls are affected | Hierarchy, grouping, overflow, breakpoints, directionality, touch and scroll conflicts |
 | Copy and information architecture | [Clarify](../../impeccable/reference/clarify.md#audit-the-language): Audit the language, Rewrite by function, Voice/accessibility/localization, Verify | Labels, recovery, empty/error content, stated intent |
 | Typography | [Typeset](../../impeccable/reference/typeset.md#two-isolated-assessments): Typographic assessment, Apply, Verify | Hierarchy, measure, wrapping, font behavior, localization pressure |
 | Color and theming | [Colorize](../../impeccable/reference/colorize.md#audit-before-choosing): Audit before choosing, Apply at system scale, Contrast and perception, Verify | Semantic tokens, rendered contrast, dark/light behavior |
@@ -112,6 +112,8 @@ In full mode, prefer an existing preview. Otherwise inspect project documentatio
 For a PR or head ref outside the active checkout, rendered verification is permitted only in a uniquely owned temporary directory created with `mktemp -d` and populated through `git worktree add --detach <temp> <head-ref>`. Stop the server, remove that worktree, and report both Git writes. If dependencies are absent or cleanup cannot be guaranteed, stay source-only and mark rendering `Not verified`.
 
 Inspect representative desktop and mobile widths and only the states the reviewed scope can credibly reach. A screenshot is evidence for appearance, not source behavior; source is evidence for implementation, not rendered quality.
+
+For affected custom sliders, drag surfaces and scrollable control strips, exercise a complete tap/drag and scrolling across the control. Check a second pointer, `pointercancel`, `lostpointercapture`, release outside the control and `blur`; the next tap or drag must work without reloading. Derive applicable cases from the changed control, rather than requiring gestures for static content. Use available browser input tools within the mode's existing preview limits. Name the browser engine and whether evidence came from synthesized touch or a physical device; resized viewports and screenshots establish layout only. Record unavailable gesture or device checks as `Not verified`, and continue the scoped review without turning missing hardware into a blocker.
 
 ## Report contract
 

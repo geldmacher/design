@@ -49,7 +49,7 @@ test("guidance transformations reproduce locked files and reject upstream anchor
   const workspace = mkdtempSync(join(tmpdir(), "design-guidance-transform-"));
   const lock = JSON.parse(readFileSync(new URL("../upstream/impeccable.lock.json", import.meta.url), "utf8"));
   const version = readPin().version;
-  const paths = ["reference/document.md", "reference/critique.md", "reference/hooks.md", "reference/doctor.md"];
+  const paths = ["reference/document.md", "reference/critique.md", "reference/hooks.md", "reference/doctor.md", "reference/generate.md"];
   try {
     mkdirSync(join(workspace, "skills/impeccable/reference"), { recursive: true });
     for (const path of paths) cpSync(new URL(`../skills/impeccable/${path}`, import.meta.url), join(workspace, "skills/impeccable", path));
@@ -65,7 +65,7 @@ test("guidance transformations reproduce locked files and reject upstream anchor
       assert.equal(first.text, readFileSync(new URL(`../skills/impeccable/${path}`, import.meta.url), "utf8"));
       assert.deepEqual(first.operations, entry.transformations);
       assert.deepEqual(transformSkillFile(path, original, version), first);
-      const anchor = { "reference/document.md": "Rules that matter:", "reference/critique.md": "#### The Working Memory Rule", "reference/hooks.md": "Supported harnesses:", "reference/doctor.md": "- **`auto`**" }[path];
+      const anchor = { "reference/document.md": "Rules that matter:", "reference/critique.md": "#### The Working Memory Rule", "reference/hooks.md": "Supported harnesses:", "reference/doctor.md": "- **`auto`**", "reference/generate.md": "**No browser tool** (Codex, others):" }[path];
       assert.ok(original.includes(anchor));
       assert.throws(() => transformSkillFile(path, original.replace(anchor, "Changed upstream section"), version), /Upstream structure drift/);
     }

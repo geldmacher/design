@@ -247,8 +247,8 @@ const portableImpeccableTransforms = [
   {
     path: "reference/new-work.md",
     label: "new-work asset producer",
-    search: "With parallel subagents, fan out one agent per card: each spawn is the shipped asset producer with a single-comp packet, that card's fields, PRODUCT.md, the shared frame, and the card's declared path, up to four in flight. Regenerate inline any slot still empty when its agent returns; drop without ceremony any slot still empty when the user answers. No other supervision is owed. Without parallel subagents, generate in the main thread after serving, same order, and let the harness's own generation display carry the progress; the wait for the answer follows the last file.",
-    replacement: "Generate every comp inline after serving, in the same reading order. Load [degraded/asset-producer.md](degraded/asset-producer.md) and follow that bundled role contract for each card; the wait for the answer follows the last file. A slot still empty when the user answers is dropped without ceremony.",
+    search: "With parallel subagents, fan out one agent per card: each spawn is the shipped asset producer with a single-comp packet, that card's fields, PRODUCT.md, the shared frame, the path to visualize.md for its comp discipline, the COMPS section of the MODE RULES block copied verbatim (the subagent never sees the roll's output), and the card's declared path, up to four in flight. Regenerate inline any slot still empty when its agent returns; drop without ceremony any slot still empty when the user answers. No other supervision is owed. Without parallel subagents, generate in the main thread after serving, same order, and let the harness's own generation display carry the progress; the wait for the answer follows the last file.",
+    replacement: "Generate every comp inline after serving, in the same reading order. Load [degraded/asset-producer.md](degraded/asset-producer.md) and [visualize.md](visualize.md), then follow that bundled role contract for each card using its fields, PRODUCT.md, the shared frame, the COMPS section of the MODE RULES block, and the card's declared path; the wait for the answer follows the last file. A slot still empty when the user answers is dropped without ceremony.",
   },
   {
     path: "reference/new-work.md",
@@ -273,6 +273,12 @@ const portableImpeccableTransforms = [
     label: "new-work degraded verdict pass",
     search: "A recapture measures positions, loading, and overflow; it cannot measure whether a fix reached the quality the finding named, so send the recaptured screenshots back to the same reviewer for a verdict scoring every material fix resolved, partial, or unresolved (through the harness's agent continuation; without one, run the scoring fresh from [degraded/finish-reviewer.md](degraded/finish-reviewer.md)'s Verdict Pass).",
     replacement: "A recapture measures positions, loading, and overflow; it cannot measure whether a fix reached the quality the finding named, so load [degraded/finish-reviewer.md](degraded/finish-reviewer.md) again and run its Verdict Pass inline against the recaptured screenshots, scoring every material fix resolved, partial, or unresolved.",
+  },
+  {
+    path: "reference/component-review.md",
+    label: "component review asset producer",
+    search: "then produce the new plates, with the asset producer when subagents are available.",
+    replacement: "then load [degraded/asset-producer.md](degraded/asset-producer.md) and produce the new plates inline with its role contract.",
   },
   {
     path: "reference/visualize.md",
@@ -302,6 +308,7 @@ const portableOperationNames = [
   "doctor",
   "document",
   "extract",
+  "generate",
   "harden",
   "hooks",
   "init",

@@ -86,6 +86,66 @@ function portableInstruction(text) {
   return text;
 }
 
+function portableLiveRecord(stdout) {
+  if (!/^\s*[{[]/.test(stdout)) {
+    // Legacy plain role directives are still guarded; progress/help is not data
+    // to rewrite. Current live verdicts carry their instructions in JSON.
+    return /^\s*(?:SUBAGENT_AUTHORIZATION:|(?:spawn|delegate)[^\n]*subagent)/i.test(stdout)
+      ? portableInstruction(stdout) : stdout;
+  }
+  let report;
+  try { report = JSON.parse(stdout); }
+  catch { throw new Error('Engine emitted invalid or incomplete live JSON.'); }
+  // live/live-poll own the root field; live-generate also owns event._instructions.
+  // Never recurse into project context, source snippets or browser/user payloads.
+  for (const record of [report, report?.event]) {
+    if (!record || !Object.hasOwn(record, '_instructions')) continue;
+    if (typeof record._instructions !== 'string') throw new Error('Unknown engine live instruction format.');
+    record._instructions = portableInstruction(record._instructions);
+  }
+  return JSON.stringify(report) + (stdout.endsWith('\n') ? '\n' : '');
+}
+
+// Frame pretty JSON and newline-delimited events before projecting instructions.
+// Native hosts retain the existing line-streaming behavior.
+export function createEngineOutputStream({ command, host, cwd, write, passthrough = false }) {
+  const portableLive = host === 'agent-plugin' && /^live(?:-|$)/.test(command);
+  let pending = '', record = '', depth = 0, quoted = false, escaped = false;
+  const emit = (line) => {
+    if (passthrough) { write(line.replace(/\r\n/g, '\n')); return; }
+    if (!portableLive) { write(projectEngineOutput({ command, host, cwd, stdout: line })); return; }
+    if (!record && !/^\s*[{[]/.test(line)) { write(portableLiveRecord(line)); return; }
+    record += line;
+    for (const char of line) {
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (char === '\\') escaped = true;
+        else if (char === '"') quoted = false;
+      } else if (char === '"') quoted = true;
+      else if (char === '{' || char === '[') depth++;
+      else if (char === '}' || char === ']') depth--;
+    }
+    if (depth <= 0 && !quoted) {
+      write(portableLiveRecord(record));
+      record = ''; depth = 0;
+    }
+  };
+  return {
+    push(chunk) {
+      pending += chunk;
+      let end;
+      while ((end = pending.indexOf('\n')) >= 0) {
+        emit(pending.slice(0, end + 1));
+        pending = pending.slice(end + 1);
+      }
+    },
+    finish() {
+      if (pending) { emit(pending); pending = ''; }
+      if (record) throw new Error('Engine emitted invalid or incomplete live JSON.');
+    },
+  };
+}
+
 // The engine embeds these files verbatim (trimmed) before its resolution record.
 // Protect complete byte spans, including Markdown separators or directive examples.
 function protectProjectContext(stdout, cwd) {
@@ -165,6 +225,12 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
     report.migrationPolicy = 'Report proposed migrations; obtain explicit user authorization before editing project context. Plugin doctor never applies migrations.';
     stdout = `${JSON.stringify(report, null, 2)}\n`;
   }
-  if (host === 'agent-plugin' && /^live(?:-|$)/.test(command)) return portableInstruction(stdout);
+  if (host === 'agent-plugin' && /^live(?:-|$)/.test(command)) {
+    const chunks = [];
+    const output = createEngineOutputStream({ command, host, cwd, write: chunk => chunks.push(chunk) });
+    output.push(stdout);
+    output.finish();
+    return chunks.join('');
+  }
   return stdout;
 }

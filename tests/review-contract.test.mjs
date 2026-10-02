@@ -11,7 +11,12 @@ const moduleDocument = JSON.parse(readFileSync(join(root, 'modules', 'design-cor
 
 test('review binds every domain to bundled criteria without entering their workflows', () => {
   const references = [...review.matchAll(/\]\((\.\.\/\.\.\/impeccable\/reference\/[^)]+)\)/g)];
-  assert.equal(references.length, 8);
+  const required = ['audit.md#1-accessibility-a11y', 'animate.md#accessibility-and-control',
+    'harden.md#edge-cases--boundary-conditions', 'layout.md#two-isolated-assessments',
+    'audit.md#4-responsive-design', 'adapt.md#verify-adaptations', 'clarify.md#audit-the-language',
+    'typeset.md#two-isolated-assessments', 'colorize.md#audit-before-choosing',
+    'polish.md#4-polish-the-whole-path', 'animate.md#find-the-job'];
+  for (const target of required) assert.ok(references.some(([, reference]) => reference.endsWith(`/${target}`)), target);
   for (const [, target] of references) {
     const [file, anchor] = target.split('#');
     const body = readFileSync(join(root, 'skills/design/references', file), 'utf8');
@@ -97,4 +102,6 @@ test('rendering policy is opportunistic for quick and bounded for full', () => {
   assert.match(review, /git worktree add --detach/);
   assert.match(review, /stop it before reporting/i);
   assert.match(review, /`Not verified`/);
+  for (const behavior of ['pointercancel', 'lostpointercapture', 'second pointer', 'release outside', 'blur', 'without reloading', 'synthesized touch', 'physical device']) assert.ok(review.includes(behavior), behavior);
+  assert.match(review, /resized viewports and screenshots establish layout only/);
 });

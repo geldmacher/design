@@ -35,7 +35,7 @@ For `$release-plugin` or `/release-plugin`, follow the [Release Plugin skill](..
 
 ## Bundled native Impeccable engine
 
-Impeccable 4.3.1 uses pinned engine 0.1.5. All three plugin packages include macOS ARM64/x64, Linux ARM64/x64 and Windows x64 binaries. Node.js 22+ remains required by the Design integration. Execution uses only the verified in-package binary; no runtime installation or self-update occurs.
+Impeccable 4.5.0 uses pinned engine 0.1.11. All three plugin packages include macOS ARM64/x64, Linux ARM64/x64 and Windows x64 binaries. Node.js 22+ remains required by the Design integration. Execution uses only the verified in-package binary; no runtime installation or self-update occurs.
 
 Maintainers run `npm run verify:impeccable-engine` for isolated engine, detector, hook and package checks. `npm run release-check` uses the same verifier with `--all`, discovering every test file and running it once; `npm test` and the focused verifier remain independently available. The [verifier](../.agents/skills/verify-impeccable-engine/SKILL.md) reports the native platform exercised and preserves evidence outside the repository. Fresh editor smoke is a separate acceptance step.
 

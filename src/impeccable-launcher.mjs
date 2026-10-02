@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { runBundledImpeccable } from './impeccable-runtime.mjs';
 import { impeccableRuntimeEnvironment } from './impeccable-runtime.mjs';
 import { resolveEngine } from './impeccable-engine.mjs';
-import { projectEngineOutput } from './impeccable-plugin-commands.mjs';
+import { createEngineOutputStream } from './impeccable-plugin-commands.mjs';
 import { resolvePluginHost } from './host.mjs';
 import { spawn } from 'node:child_process';
 
@@ -17,24 +17,23 @@ if (!managed.includes(command)) {
     const runtime = resolveEngine(pluginRoot);
     const host = resolvePluginHost(undefined, pluginRoot);
     const child = spawn(runtime.file, [command, ...args], { cwd: process.cwd(), shell: false, env: impeccableRuntimeEnvironment(host, pluginRoot), stdio: ['inherit', 'pipe', 'inherit'] });
-    let pending = '';
     let failed = false;
-    const emit = (line) => {
-      try { process.stdout.write(projectEngineOutput({ command, stdout: line, host, cwd: process.cwd() })); }
-      catch (error) { failed = true; process.stderr.write(`[geldmacher-design] ${error.message}\n`); child.kill(); }
+    const output = createEngineOutputStream({ command, host, cwd: process.cwd(), write: chunk => process.stdout.write(chunk), passthrough: args.includes('--help') || args.includes('-h') });
+    const fail = (error) => {
+      if (failed) return;
+      failed = true; process.stderr.write(`[geldmacher-design] ${error.message}\n`); child.kill();
     };
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (chunk) => {
-      pending += chunk;
-      let end;
-      while ((end = pending.indexOf('\n')) >= 0) { emit(pending.slice(0, end + 1)); pending = pending.slice(end + 1); }
+      if (failed) return;
+      try { output.push(chunk); } catch (error) { fail(error); }
     });
     const forward = (signal) => child.kill(signal);
     const handlers = Object.fromEntries(['SIGINT', 'SIGTERM'].map((signal) => [signal, () => forward(signal)]));
     for (const [signal, handler] of Object.entries(handlers)) process.on(signal, handler);
     child.on('error', (error) => { failed = true; process.stderr.write(`${error.message}\n`); });
     child.on('close', (code, signal) => {
-      if (pending) emit(pending);
+      if (!failed) try { output.finish(); } catch (error) { fail(error); }
       for (const [name, handler] of Object.entries(handlers)) process.removeListener(name, handler);
       if (signal && !failed) process.kill(process.pid, signal);
       else process.exitCode = failed ? 1 : code ?? 1;

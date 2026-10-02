@@ -3,6 +3,7 @@
 - [Engine and package boundaries](engine.md): provenance, all five platforms, local execution, overrides and corrupted artifacts.
 - [Motion integration](motion.md): controlled import, free MCP packaging, scope boundaries and offline guidance.
 - [Design and hook journeys](journeys.md): detector results, Cursor pre-write denial, Codex post-write and Stop deduplication, configuration and portable behavior.
+- [Live output and plan review](live-review.md): packaged live boot, instruction/data separation, streamed JSON, native schema-3 review and build gates.
 
 The executable entrypoint is `npm run verify:impeccable-engine` at the repository root. It runs the complete map on the available native platform; other platforms need CI evidence. Editor activation, browser sessions, image-provider calls and production projects are outside this verifier.
 

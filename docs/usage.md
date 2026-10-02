@@ -8,6 +8,7 @@ The examples below use **Codex** syntax: `$design`. In **Cursor**, use `/design`
 | --- | --- |
 | Plan or build a new page | [Build an interface](#build-an-interface) |
 | Improve an existing page | [Critique and refine](#critique-and-refine) |
+| Compare live alternatives for an element | [Generate live variants](#generate-live-variants) |
 | Implement animations or look up Motion APIs | [Animate with Motion](#animate-with-motion) |
 | Check what changed on a branch | [Review interface changes](#review-interface-changes) |
 | Scan specific source files | [Run a detector scan](#run-a-detector-scan) |
@@ -53,6 +54,10 @@ $design Build a pricing page for small teams. Use our existing components and he
 
 Design uses the project context, asks about material gaps, and works toward the requested interface. New design work may first need your input on product facts or design direction. You do not need to memorize a build command.
 
+For a build based on an approved visual comp, the measured plan may require a **plan and asset review** before page implementation. You review the image assets that will ship and the regions planned as code. Design prepares this review from the current spec and assets, then waits for your decisions. A pending review, requested revision or changed spec/asset keeps that checkpoint open; Design never approves it on your behalf. If a browser is unavailable or the review closes without a decision, Design reports the pending session so you can resume it.
+
+The assembled first viewport may need a later review when automated fidelity checks cannot settle the result. Accepting it establishes that viewport's visual direction. Numeric readings become advisory while it still matches the accepted capture; material integrity checks continue to apply. The rest of the page, responsive behavior and finish checks still need completion. This acceptance does not claim you reviewed the entire page.
+
 If you want to plan the experience before implementation, use `shape`:
 
 ```text
@@ -87,6 +92,20 @@ For a narrower task, choose the command that matches the problem:
 | Labels or errors are unclear | `$design clarify the account form's labels and error messages` |
 | Spacing and emphasis feel inconsistent | `$design layout the settings page using our existing spacing scale` |
 | Loading, empty, or error states are missing | `$design harden the project list for loading, empty, and error states` |
+
+## Generate live variants
+
+Name the element, direction, and optional count:
+
+```text
+$design generate 3 bolder variants of the pricing cards
+```
+
+Design reuses your local development server and browser tab, selects the named element, and presents variants for you to cycle through, adjust, and accept or discard. With no count, it generates three; the supported range is one to eight. If the direction is unclear, it asks for that direction before starting.
+
+This uses the same web-only live workflow as `live`, with the active host's available browser tools or a system browser when none are available. It requires a local checkout and a running development server; first-time configuration is previewed for your approval. Missing PRODUCT.md or DESIGN.md does not start a setup interview: the current page supplies the available identity.
+
+After acceptance, Design finishes source cleanup and stops the live helper while keeping your development server running. For manual element selection and continued browser iteration, use `$design live`.
 
 ## Animate with Motion
 
