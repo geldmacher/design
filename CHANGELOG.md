@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.16.1
+
+- Put the quick start and four recommended workflows before installation, with matching Cursor and Codex package READMEs.
+- Add focused request templates, expected results, next steps, and guidance for choosing relevant checks while preserving project setup and optional-check approval boundaries.
+
 ## 0.16.0
 
 - Update bundled Impeccable to 4.5.0 and native engine 0.1.11, with pinned binaries for all five platforms and refreshed product-mode and comp-planning guidance.
