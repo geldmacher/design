@@ -1,15 +1,18 @@
 # Design documentation
 
-Start with [installation](installation.md), then use the [usage guide](usage.md) for examples you can try in your project. The [main README](../README.md) gives a short overview of what Design does.
+Start with the [main README](../README.md) for a quick start, then choose a [recommended workflow](usage.md#recommended-workflows) and learn to [work efficiently](usage.md#work-efficiently). If Design is not installed yet, follow [installation](installation.md).
 
 ## Use Design
 
 | You need to… | Read |
 | --- | --- |
+| Choose a useful starting point and next step | [Recommended workflows](usage.md#recommended-workflows) |
+| Write a focused request and choose relevant checks | [Work efficiently](usage.md#work-efficiently) |
 | Install, update, or recover an installation | [Installation](installation.md) |
 | Build or improve an interface | [Usage guide](usage.md) |
 | Implement animations or use free Motion documentation | [Motion examples](usage.md#animate-with-motion) and [host setup](installation.md#bundled-free-motion-documentation) |
-| Review changes or prepare stakeholder questions | [Usage examples](usage.md#review-interface-changes) |
+| Review interface changes | [Review examples](usage.md#review-interface-changes) |
+| Prepare stakeholder questions | [Questionnaire examples](usage.md#prepare-a-questionnaire) |
 | Understand product context and optional checks | [Project setup](usage.md#set-up-your-project) |
 | Find a command, argument, or prerequisite | [Command reference](commands.md) |
 | Investigate setup problems | [Troubleshooting](usage.md#troubleshoot-project-setup) |

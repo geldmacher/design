@@ -2,7 +2,92 @@
 
 Open your website or web-app project, point the assistant to the relevant page or files, and describe the result you want. Include what should stay the same, such as existing components, branding, or the order of a checkout flow.
 
-The examples below use **Codex** syntax: `$design`. In **Cursor**, use `/design` with the same request. These are messages to your assistant, not terminal commands. Design can also be selected automatically for matching interface requests; an explicit choice of another skill takes precedence.
+The examples below use **Codex** syntax: `$design`. In **Cursor**, use `/design` with the same request. These are messages to your assistant, not terminal commands. You can describe the outcome in your own language, including German; command names are optional. Design can also be selected automatically for matching interface requests; an explicit choice of another skill takes precedence.
+
+## Recommended workflows
+
+Choose the starting point that matches what you already know. Replace example paths and product details with your own.
+
+### Fix a known problem
+
+Give Design a concrete implementation task:
+
+```text
+$design Improve the labels and error messages in app/checkout so customers can complete the form. Keep the existing components, fields, and step order. Verify keyboard use and mobile error states.
+```
+
+Expect focused code changes and a report of the checks performed. Check the result in the affected flow; request a specific follow-up if something still needs attention.
+
+### Find out what to improve
+
+Start with an assessment when the problem is unclear:
+
+```text
+$design critique app/checkout and prioritize the three most useful improvements. Report findings without editing files.
+```
+
+Expect prioritized findings with reasons and suggested changes. Choose the findings you want implemented, then send a separate instruction:
+
+```text
+$design Implement critique findings 1 and 2 in app/checkout. Keep the existing components, fields, and step order. Verify the affected form states.
+```
+
+Check the implemented changes against those findings before commissioning further refinement.
+
+### Plan a new flow
+
+Use `shape` when you need to decide how the experience should work:
+
+```text
+$design shape an onboarding flow that helps a new team create its first project. Use our existing components. Plan the experience without implementing it.
+```
+
+Expect a UX/UI plan and any product decisions you need to make. Resolve those decisions and approve the plan before requesting implementation:
+
+```text
+$design Build the onboarding flow from the approved plan. Keep our existing components and visual language. Verify mobile layouts and the relevant loading, empty, and error states.
+```
+
+If the design and scope are already decided, [request the build directly](#build-an-interface).
+
+### Review a branch's interface changes
+
+Use a change-scoped review for UI work on your branch:
+
+```text
+$design review quick branch
+```
+
+Expect up to five main findings about the changed interface, with available evidence and recommended actions. The review stays read-only. Choose any findings that need a fix and explicitly request those changes, for example:
+
+```text
+$design Address review findings 1 and 2 in app/checkout. Keep changes limited to those findings and verify the affected interaction states.
+```
+
+See [review scope and modes](#review-interface-changes) when you need working-tree, staged, or pull-request coverage.
+
+## Work efficiently
+
+- **Name the target and goal.** Give a page, component, or app path, who uses it, and what they need to accomplish. In a monorepo, identify the app.
+- **State what to preserve.** Name existing components, branding, fields, behavior, and any limits on the change.
+- **Bundle related changes.** Request labels, error messages, and error-state spacing in the same form together, with a shared goal and scope.
+- **Use analysis to resolve an open question.** Request a critique when priorities are unclear or a plan when the flow needs a decision. A known, bounded problem can go straight to implementation.
+- **Match verification to the change.** For a form, name keyboard use, mobile layouts, and affected error states. For broader accessibility, performance, or responsive concerns, request an `audit` of the affected interface. Keep required project checks.
+
+Use this template, replacing the brackets with your own details:
+
+```text
+$design Improve [page or path] for [audience] so they can [goal].
+Preserve [components, branding, and behavior].
+Implement [specific changes] within [scope and constraints].
+Verify [affected states and devices] and run required project checks.
+```
+
+For an assessment or a plan, replace the implementation line with the result you want and state that files should not be edited. Keep findings-only requests in the conversation.
+
+Design reuses existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context. Request [setup](#set-up-your-project) when you need to establish that context; missing context does not start setup automatically. Optional automatic checks are a separate choice and stay off until enabled.
+
+For more examples, choose a topic:
 
 | I want to… | Start here |
 | --- | --- |
@@ -34,16 +119,6 @@ A bare `$design` invocation offers guidance; asking which workflow to use does n
 
 Impeccable command selection reads the installed skill directly. Motion is a separate bundled specialist selected through Design for Motion API and implementation requests. General animation direction remains with Impeccable; explicit Impeccable commands retain their meaning.
 
-## Readiness before interface work
-
-Before planning, implementing or evaluating an interface, Design reads the same project assessment used by `status`, `diagnose`, guided setup, and the check preview. This applies to explicit commands such as `polish` or `critique`, automatically chosen operations, and Design `review` or `detect`. It runs once per commissioned operation, not between every edit. Questionnaire uses available context without needing setup.
-
-A healthy state stays quiet. Missing context, configuration conflicts and proposed migrations are reported briefly, then the requested work continues where feasible. Identical findings are not repeated within the task; changed state is read again. Optional hooks can be deliberately disabled or unavailable without making setup incomplete. Unavailable diagnostics remain unverified, never a positive setup result.
-
-The engine resolves app-local and inherited `PRODUCT.md`/`DESIGN.md`. For a monorepo, identify the app or source path; if several apps remain possible, Design asks which one you mean. The CLI accepts `--target <path>` for `status`, `diagnose`, `setup`, and `checks`, and `--target .` for an explicitly repository-wide scope. Unverified or ambiguous scope prevents guided setup writes and check writes while otherwise feasible UI work may continue.
-
-No readiness check activates hooks, creates context, repairs configuration or migrates files. Those changes need a separate preview and confirmation. Declining setup does not cancel an accompanying UI task. A confirmed change is followed by a readback of the effective state, including local overrides. Configuration still does not prove fresh editor activation.
-
 ## Build an interface
 
 Describe the page, its audience, and the job it needs to do:
@@ -54,10 +129,6 @@ $design Build a pricing page for small teams. Use our existing components and he
 
 Design uses the project context, asks about material gaps, and works toward the requested interface. New design work may first need your input on product facts or design direction. You do not need to memorize a build command.
 
-For a build based on an approved visual comp, the measured plan may require a **plan and asset review** before page implementation. You review the image assets that will ship and the regions planned as code. Design prepares this review from the current spec and assets, then waits for your decisions. A pending review, requested revision or changed spec/asset keeps that checkpoint open; Design never approves it on your behalf. If a browser is unavailable or the review closes without a decision, Design reports the pending session so you can resume it.
-
-The assembled first viewport may need a later review when automated fidelity checks cannot settle the result. Accepting it establishes that viewport's visual direction. Numeric readings become advisory while it still matches the accepted capture; material integrity checks continue to apply. The rest of the page, responsive behavior and finish checks still need completion. This acceptance does not claim you reviewed the entire page.
-
 If you want to plan the experience before implementation, use `shape`:
 
 ```text
@@ -65,6 +136,12 @@ $design shape an onboarding flow that helps a new team create its first project
 ```
 
 This starts a UX/UI planning workflow before writing interface code.
+
+### Builds from an approved visual reference
+
+For a build based on an approved visual comp, the measured plan may require a **plan and asset review** before page implementation. You review the image assets that will ship and the regions planned as code. Design prepares this review from the current spec and assets, then waits for your decisions. A pending review, requested revision or changed spec/asset keeps that checkpoint open; Design never approves it on your behalf. If a browser is unavailable or the review closes without a decision, Design reports the pending session so you can resume it.
+
+The assembled first viewport may need a later review when automated fidelity checks cannot settle the result. Accepting it establishes that viewport's visual direction. Numeric readings become advisory while it still matches the accepted capture; material integrity checks continue to apply. The rest of the page, responsive behavior and finish checks still need completion. This acceptance does not claim you reviewed the entire page.
 
 ## Critique and refine
 
@@ -222,6 +299,16 @@ Design shares three sources of project context with its bundled Impeccable toolk
 Use `$design init` to capture or update product knowledge in `PRODUCT.md`. Use `$design document` to record an existing design in `DESIGN.md`. `init` does not create a visual direction; `document` describes the design already present in the code.
 
 Use `$design setup` to prepare a project for design work. It reads status, then follows `$design init` when `PRODUCT.md` is missing. When an interface already exists and `DESIGN.md` is missing, it offers `$design document` and waits. When there is no interface yet, it asks once whether to lock a visual direction; agreeing requires a named first surface and a design seed, and declining leaves `DESIGN.md` until the first real build. Each of those writes waits for confirmation. Setup does not enable automatic checks.
+
+### Readiness before interface work
+
+Before planning, implementing or evaluating an interface, Design reads the same project assessment used by `status`, `diagnose`, guided setup, and the check preview. This applies to explicit commands such as `polish` or `critique`, automatically chosen operations, and Design `review` or `detect`. It runs once per commissioned operation, not between every edit. Questionnaire uses available context without needing setup.
+
+A healthy state stays quiet. Missing context, configuration conflicts and proposed migrations are reported briefly, then the requested work continues where feasible. Identical findings are not repeated within the task; changed state is read again. Optional hooks can be deliberately disabled or unavailable without making setup incomplete. Unavailable diagnostics remain unverified, never a positive setup result.
+
+The engine resolves app-local and inherited `PRODUCT.md`/`DESIGN.md`. For a monorepo, identify the app or source path; if several apps remain possible, Design asks which one you mean. The CLI accepts `--target <path>` for `status`, `diagnose`, `setup`, and `checks`, and `--target .` for an explicitly repository-wide scope. Unverified or ambiguous scope prevents guided setup writes and check writes while otherwise feasible UI work may continue.
+
+No readiness check activates hooks, creates context, repairs configuration or migrates files. Those changes need a separate preview and confirmation. Declining setup does not cancel an accompanying UI task. A confirmed change is followed by a readback of the effective state, including local overrides. Configuration still does not prove fresh editor activation.
 
 ### Enable optional automatic checks
 

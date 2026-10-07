@@ -10,76 +10,47 @@ Design helps your AI assistant plan new pages, improve existing interfaces, and 
 - **Improve what you have:** refine layouts, mobile behavior, accessibility, and UI text.
 - **Know what to fix first:** review a page or a branch's interface changes and get prioritized findings.
 
+## Quick start
+
+With Design installed, open your website or web-app project and name the page or files you want to change. Replace `app/checkout` with your own target:
+
+```text
+$design Improve the labels and error messages in app/checkout so customers can complete the form. Keep the existing components, fields, and step order. Verify keyboard use and mobile error states.
+```
+
+In **Cursor**, replace `$design` with `/design`. Send this as a message to your assistant. Commands are optional: describe the outcome in your own language, including German, and Design selects a suitable operation. It can also be selected automatically for matching interface requests; an explicit choice of another skill takes precedence.
+
+## Recommended workflows
+
+| Your situation | Start here | Next step |
+| --- | --- | --- |
+| You know the problem | Request a specific change, as in the example above | Check the affected behavior and states |
+| You are unsure what needs improvement | `$design critique app/checkout` | Choose the most useful findings, then request their implementation |
+| A new flow needs a plan | `$design shape an onboarding flow for new teams` | Decide on the plan, then explicitly request the build |
+| You want to check a branch's UI changes | `$design review quick branch` | Read the findings, then request any follow-up changes |
+
+Critique and review report findings; shape produces a plan. Implementation needs an explicit request. See [worked examples](docs/usage.md#recommended-workflows) and [how to work efficiently](docs/usage.md#work-efficiently) for prompts, expected results, and focused checks.
+
+Design uses existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context. Use [project setup](docs/usage.md#set-up-your-project) when you need to establish that context. Guided writes require confirmation; automatic checks stay off until you enable them. Missing context is reported and permitted interface work continues where feasible.
+
 ## Install from a release
 
 Use the [latest stable GitHub Release](https://github.com/geldmacher/design/releases/latest) for Cursor or Codex. Design requires **Node.js 22+**.
 
-### Manually
+- **Manually:** follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify and install the complete package.
+- **Through your agent:** copy the [installation prompt](docs/installation.md#ask-your-agent-to-install) and check the listed prerequisites. This route uses the source checkout's installer on macOS or Linux.
 
-1. Download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` from the release page.
-2. Follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify the files and install the complete package.
-3. Reload Cursor or refresh the Codex Marketplace installation and start a new task. Review changed hook permissions when prompted.
-
-### Ask your agent
-
-Copy this prompt into Cursor or Codex on macOS or Linux:
-
-```text
-Install the latest stable GitHub Release of geldmacher/design for this editor.
-Read https://github.com/geldmacher/design/blob/main/docs/installation.md and follow
-its release installer instructions. Prepare a source checkout if needed and use
-the install-new-release-from-repo skill. Report the installed version, verification
-result, and any reload or new-task steps I need to complete.
-```
-
-The agent-assisted installer needs Git, Node.js 22+, npm, and [the matching editor prerequisites](docs/installation.md#1-check-the-prerequisites). The checkout provides the installer; the installed plugin is built from the selected release. Automatic UI checks stay off until you enable them in a project.
+Complete the guide's activation steps: reload Cursor, or refresh the Codex Marketplace installation and start a new task. Review changed hook permissions or trust requests when prompted.
 
 ## Update from a release
 
-**Manually:** download and verify the latest release ZIP, then [replace the installed version](docs/installation.md#update-an-existing-installation) and repeat the editor activation steps.
-
-**Through your agent:** use this prompt:
-
-```text
-Update Design to the latest stable GitHub Release for this editor.
-Use the install-new-release-from-repo skill from the geldmacher/design source
-checkout. If it is not available, follow
-https://github.com/geldmacher/design/blob/main/docs/installation.md to prepare it.
-Report whether anything changed, the installed version, and any remaining activation steps.
-```
-
-With the source checkout open, invoke `/install-new-release-from-repo` in Cursor or `$install-new-release-from-repo` in Codex directly. The same skill handles installation and updates; it is not bundled with the installed plugin. See [updates and recovery](docs/installation.md#update-an-existing-installation).
-
-## Try it
-
-Point the assistant to a page or component, then ask:
-
-```text
-$design critique the checkout page and prioritize the three most useful improvements
-```
-
-In Cursor, replace `$design` with `/design`. Follow up with the change you want:
-
-```text
-$design polish the checkout form: improve spacing and error messages, keeping our existing components
-```
-
-You can also omit the command and describe what you want to achieve in your own language, including setup, status, diagnosis, or questionnaire requests. Design chooses a suitable command and briefly explains its choice. Explicit commands take precedence.
-
-Design can also be selected automatically for matching interface requests. It uses existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context. Project setup previews changes for your approval; optional checks remain your choice.
-
-Before interface work, Design checks the relevant project's context and configuration. It reports missing context or proposed adjustments and continues permitted work. Deliberately disabled checks are valid; no setup or migration happens without your confirmation.
+Follow [updates and recovery](docs/installation.md#update-an-existing-installation) for manual updates or an agent-assisted update prompt.
 
 ## Learn more
 
-- [Usage guide](docs/usage.md) — examples for building, refining, reviewing, and gathering stakeholder input.
+- [Usage guide](docs/usage.md) — recommended workflows, efficient requests, and examples for each operation.
+- [Motion examples](docs/usage.md#animate-with-motion) — animation direction, implementation, and free documentation prerequisites.
 - [Command reference](docs/commands.md) — all commands and when to use them.
 - [Documentation](docs/README.md) — project setup, troubleshooting, and maintainer guides.
 
 Design includes the [Impeccable](https://github.com/pbakaus/impeccable) design toolkit. See [upstream provenance](upstream/README.md), [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
-
-## Motion implementation
-
-Design includes pinned Motion best practices for CSS, JavaScript, React and Vue. Ask `/design motion ...` in Cursor or `$design motion ...` in Codex for animation implementation and API guidance. Direct `/motion` and `$motion` invocations are also available; Design remains the automatic entrypoint.
-
-Native packages include the anonymous Motion documentation MCP. The host may require enabling it after installation. Search and free example resources need that connection; local guidance works offline. No account, paid tools, automatic package installation or migrations are included. General animation direction stays with Impeccable and your existing product context. Start with [Motion usage examples](docs/usage.md#animate-with-motion) and [Cursor/Codex prerequisites and connection checks](docs/installation.md#bundled-free-motion-documentation). For upstream updates, see [Motion maintenance](docs/motion-maintenance.md).
