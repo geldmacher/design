@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update bundled Impeccable to 4.5.2 and native engine 0.1.14. Operate and Read surfaces are code-led, code-led decision cards use HTML skeleton sketches, and comp prompts are shorter. The layout-transition detector rule is retired.
+
 ## 0.16.1
 
 - Put the quick start and four recommended workflows before installation, with matching Cursor and Codex package READMEs.
