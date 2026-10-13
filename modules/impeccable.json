@@ -2,13 +2,13 @@
   "$schema": "./module.schema.json",
   "schemaVersion": 1,
   "id": "impeccable",
-  "version": "4.5.0",
+  "version": "4.5.2",
   "source": {
     "type": "vendored",
     "url": "https://github.com/pbakaus/impeccable",
-    "tag": "skill-v4.5.0",
-    "commit": "508d7e8955de3b3caf2d8676e85206723d41a887",
-    "archiveSha256": "a6877c158ec90c63560728553d2e737081afa8a79b86c507fa8d15a81fffd475"
+    "tag": "skill-v4.5.2",
+    "commit": "d631a8827f99414d2b6daba4ef08b7f8701751d7",
+    "archiveSha256": "8b445a7529581a36626b328c3077e3d3dd7fbf247521e20ec8759ca939f77470"
   },
   "license": "Apache-2.0",
   "capabilities": [

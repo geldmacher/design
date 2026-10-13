@@ -4,7 +4,7 @@
 
 Use this page to look up a command. For worked examples and expected results, start with the [usage guide](usage.md).
 
-Bundled Impeccable **4.5.0**. This is the version documented in this checkout; an installed copy may differ.
+Bundled Impeccable **4.5.2**. This is the version documented in this checkout; an installed copy may differ.
 
 ## Invocation
 
