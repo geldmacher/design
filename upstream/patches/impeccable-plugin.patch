@@ -1,18 +1,18 @@
 diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
-index 5e63eee..fe38e42 100644
+index 43e1253..e9e2b4d 100644
 --- a/skills/impeccable/SKILL.md
 +++ b/skills/impeccable/SKILL.md
 @@ -1,10 +1,18 @@
  ---
  name: impeccable
--description: Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.
--version: 4.6.0
+-description: "Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, settings, onboarding, empty states, and native iOS or Android screens. Handles UX review, hierarchy, layout, typography, color, motion, UX copy, accessibility, responsive behavior, edge cases, and capturing or documenting design systems (DESIGN.md, tokens). Also for making bland UI bolder, loud UI quieter, or ambitious visual effects. Not for backend-only or non-UI tasks."
+-version: 4.7.0
 -license: Apache 2.0
 +description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.
 +license: Apache-2.0
 +compatibility: Requires Node.js 22 or newer.
 +metadata:
-+  version: "4.6.0"
++  version: "4.7.0"
  ---
  
 +## Geldmacher Design host contract
@@ -21,7 +21,7 @@ index 5e63eee..fe38e42 100644
 +
 +Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. Agent Plugins v1 does not standardize native agents; use the corresponding `reference/degraded/` fallback there. If any other host exposes no subagent capability, use the same fallback and disclose the degradation.
 +
- This skill gives you the tools and permission to create design that earns to be called out-of-distribution craft: Whereas before, your design work would have been safe, timid and measured, you now approach every design task as an award-winning design director with impeccable understanding for what makes exceptional design work: production-grade code, peak creativity, a clear POV, deep understanding of the needs of the client and users, and exceptional craft.
+ This skill gives you the tools and permission to make design that earns the name out-of-distribution craft. Work as an award-winning design director would: production-grade code, a clear POV, a deep grasp of what the client and its users need, and exceptional craft.
  
  Core principles:
 @@ -14,7 +22,7 @@ Core principles:
@@ -41,6 +41,19 @@ index 5e63eee..fe38e42 100644
 +**Pin / Unpin:** Standalone shortcut installation is disabled in Geldmacher Design. Use the host-native Design or Impeccable skill invocation; update the vendored skill only through the plugin maintainer sync.
  
  **Hooks:** `/impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project (auto-runs the detector after UI file edits and surfaces findings). Load [reference/hooks.md](reference/hooks.md) when the user invokes it with any argument.
+ 
+diff --git a/skills/impeccable/reference/audit.md b/skills/impeccable/reference/audit.md
+index c1e1506..bb2676a 100644
+--- a/skills/impeccable/reference/audit.md
++++ b/skills/impeccable/reference/audit.md
+@@ -59,7 +59,7 @@ Run comprehensive checks across 5 dimensions. Score each dimension 0-4 using the
+ 
+ Run the bundled detector and verify each finding in context. Look for repeated implementation shortcuts, design-system drift, misleading or decorative content, and structure that is interchangeable with an unrelated product. Keep deterministic findings separate from visual judgment and call out false positives.
+ 
+-**Desktop apps** (Electron, NW.js, CEF, WebView2): launch the app with a local DevTools port (`--remote-debugging-port=9222`, or `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` for WebView2; keep it on 127.0.0.1, never exposed), seed the state to audit, keep the window on screen (a hidden one skips the pixel contrast reads), then run `.cursor/skills/impeccable/scripts/impeccable detect --cdp 9222 --target <part of the page URL or title> --json`. It returns the same JSON as a URL scan and leaves the window as found. Take screenshots through the harness's CDP tooling, and leave the window as you found it too. Tauri on macOS (WKWebView) and on Linux (WebKitGTK) expose no CDP: scan the source and say the rendered check did not run.
++**Desktop apps** (Electron, NW.js, CEF, WebView2): launch the app with a local DevTools port (`--remote-debugging-port=9222`, or `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` for WebView2; keep it on 127.0.0.1, never exposed), seed the state to audit, keep the window on screen (a hidden one skips the pixel contrast reads), then run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect --cdp 9222 --target <part of the page URL or title> --json`. It returns the same JSON as a URL scan and leaves the window as found. Take screenshots through the harness's CDP tooling, and leave the window as you found it too. Tauri on macOS (WKWebView) and on Linux (WebKitGTK) expose no CDP: scan the source and say the rendered check did not run.
+ 
+ **Score 0-4**: 0=systemic drift, 1=major repeated failures, 2=several verified issues, 3=minor isolated issues, 4=coherent and intentional
  
 diff --git a/skills/impeccable/reference/component-review.md b/skills/impeccable/reference/component-review.md
 index b927078..fe0552c 100644
@@ -76,7 +89,7 @@ index b927078..fe0552c 100644
  Then run `plan`, `capture` and `serve` again. Unchanged decisions carry over, so the user sees only what changed. Any spec change, or a plate replaced after acceptance, needs a new round; the build-phase gate stays closed until the review of the current spec is accepted.
  
 diff --git a/skills/impeccable/reference/critique.md b/skills/impeccable/reference/critique.md
-index ba3b403..f99cb1c 100644
+index 61c8f6a..81a4ec7 100644
 --- a/skills/impeccable/reference/critique.md
 +++ b/skills/impeccable/reference/critique.md
 @@ -23,7 +23,7 @@ Resolve one stable target, run two independent assessments, synthesize a design
@@ -88,7 +101,7 @@ index ba3b403..f99cb1c 100644
     ```
     Every later command also accepts the resolved target directly and derives the same slug internally; never hand-write a slug. If this exits non-zero, skip persistence and trend for this run, but continue the critique.
  3. **Read `.impeccable/critique/ignore.md`** if it exists. Drop matching findings silently; it is the only prior-run input critique consumes.
-@@ -49,9 +49,9 @@ Read relevant source files and visually inspect the live page when browser autom
+@@ -50,9 +50,9 @@ Read relevant source files and visually inspect the live page when browser autom
  Evaluate:
  - **Design specificity**: Is the composition, interaction, and visual language grounded in this product, or could an unrelated product use it unchanged? Make this judgment before seeing detector output.
  - **Holistic design**: hierarchy, IA, emotional fit, discoverability, composition, typography, color, accessibility, states, copy, and edge cases.
@@ -100,7 +113,7 @@ index ba3b403..f99cb1c 100644
  
  Return: design-specificity verdict, heuristic scores, cognitive load, emotional journey, 2-3 strengths, 3-5 priority issues, persona red flags, minor observations, and provocative questions.
  
-@@ -61,7 +61,7 @@ Run the bundled detector and browser visualization evidence. On web, Assessment
+@@ -62,7 +62,7 @@ Run the bundled detector and browser visualization evidence. On web, Assessment
  
  CLI scan:
  ```bash
@@ -109,16 +122,24 @@ index ba3b403..f99cb1c 100644
  ```
  
  - Pass markup files/directories as `[target]`; do not pass CSS-only files.
-@@ -75,7 +75,7 @@ Browser visualization is required for a viewable target when browser automation
+@@ -76,14 +76,14 @@ Browser visualization is required for a viewable target when browser automation
  1. Create a fresh tab and navigate. Prefer the harness's native/browser-canvas screenshot path before hand-rolling a Playwright/Puppeteer script; only fall back to a custom script when no native browser tool is exposed.
  2. Preflight mutable injection by setting `document.title` and appending a `<script>` tag. Read-only evaluate APIs do not count.
  3. If mutation is unavailable, skip live server, browser presentation, and injection; report fallback signal.
--4. If mutation is available, start `.cursor/skills/impeccable/scripts/impeccable live-server --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then stop the live server.
-+4. If mutation is available, start `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable live-server --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then stop the live server.
+-4. If mutation is available, start `.cursor/skills/impeccable/scripts/impeccable live-server --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then run `.cursor/skills/impeccable/scripts/impeccable live-server stop --keep-inject`. The overlay went in through the browser, so the project's HTML has no script tag to strip; a bare `stop` also runs `live-inject --remove` against the project's entry file, an edit a read-only critique should not make.
++4. If mutation is available, start `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable live-server --background`, present the browser if supported, label `[Human]`, scroll top, inject `http://localhost:PORT/detect.js`, wait 2-3 seconds, read `impeccable` console messages, then run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable live-server stop --keep-inject`. The overlay went in through the browser, so the project's HTML has no script tag to strip; a bare `stop` also runs `live-inject --remove` against the project's entry file, an edit a read-only critique should not make.
  5. For multi-view targets, inject on 3-5 representative pages.
  
- Return: CLI findings JSON/counts, browser console findings if applicable, false positives, and skipped/failed browser steps with concrete reasons.
-@@ -100,7 +100,7 @@ The report's first line MUST declare how the assessments were run, so a degraded
+ **Desktop apps** (Electron, NW.js, CEF, WebView2): there is no URL to open, so Assessment B attaches to the running app instead.
+ 
+ 1. Launch the app with a local DevTools port: `--remote-debugging-port=9222` (Electron, NW.js, CEF), or `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` for WebView2. Keep the port on 127.0.0.1 and never expose it beyond this machine; prefer a test profile and test data.
+ 2. Seed the state under review (route, open panel, theme, data). The scan reads the window as it stands. Keep the window on screen: a minimized or hidden window scans without the pixel contrast reads.
+-3. Run `.cursor/skills/impeccable/scripts/impeccable detect --cdp 9222 --target <part of the page URL or title> --json`. It returns the same JSON as a URL scan and leaves the page as found. With several pages open it fails and lists them; rerun with a `--target` that names one.
++3. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect --cdp 9222 --target <part of the page URL or title> --json`. It returns the same JSON as a URL scan and leaves the page as found. With several pages open it fails and lists them; rerun with a `--target` that names one.
+ 4. Take screenshots through the harness's CDP tooling (`Page.captureScreenshot` on the same target). Skip the live-server overlay: there is no `[Human]` tab.
+ 
+ The app has one window, so the assessments take turns in it instead of opening tabs (A, then B; see the sub-agent gate), and each must leave it as found: put back any route, scroll, theme, or panel it changed. Tauri on macOS (WKWebView) and on Linux (WebKitGTK) expose no CDP: run Assessment A and the source scan only, and say so in Run Notes.
+@@ -110,7 +110,7 @@ The report's first line MUST declare how the assessments were run, so a degraded
  #### Design Health Score
  > *Consult the [Heuristics Scoring Guide](#heuristics-scoring-guide) section below.*
  
@@ -127,7 +148,7 @@ index ba3b403..f99cb1c 100644
  
  | # | Heuristic | Score | Key Issue |
  |---|-----------|-------|-----------|
-@@ -198,7 +198,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
+@@ -208,7 +208,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
  2. **Pass the structured metadata** through `IMPECCABLE_CRITIQUE_META` (JSON), then run the write command:
     ```bash
     IMPECCABLE_CRITIQUE_META='{"target":"<user phrasing>","total_score":<n>,"max_score":<n>,"na_heuristics":"<comma-separated numbers, or empty>","p0_count":<n>,"p1_count":<n>}' \
@@ -136,7 +157,7 @@ index ba3b403..f99cb1c 100644
     ```
     `max_score` is the applicable maximum from the heuristic table (40 when every heuristic applied), so a later run can tell a renormalized total from a full one. For a local file target, the helper also records an exact content fingerprint so polish can distinguish the assessed bytes from later edits without relying on Git state or timestamps. The helper prints the absolute path it wrote. Leave that file on disk. Polish closes it; this run does not.
  
-@@ -206,7 +206,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
+@@ -216,7 +216,7 @@ Skip this step if the Setup slug was null (vague or root-level target).
  
  4. **Read the trend** for context:
     ```bash
@@ -145,7 +166,7 @@ index ba3b403..f99cb1c 100644
     ```
     This returns a JSON array of the last 5 frontmatter entries (including the one you just wrote).
  
-@@ -279,7 +279,7 @@ After presenting the summary, tell the user:
+@@ -289,7 +289,7 @@ After presenting the summary, tell the user:
  
  ## Reference Material
  
@@ -154,7 +175,7 @@ index ba3b403..f99cb1c 100644
  
  ### Cognitive Load Assessment
  
-@@ -324,40 +324,36 @@ Mental effort spent building understanding. This is *good* cognitive load; it le
+@@ -334,40 +334,36 @@ Mental effort spent building understanding. This is *good* cognitive load; it le
  Evaluate the interface against these 8 items:
  
  - [ ] **Single focus**: Can the user complete their primary task without distraction from competing elements?
@@ -207,7 +228,7 @@ index ba3b403..f99cb1c 100644
  **Fix**: Group into categories, highlight recommended, use progressive disclosure.
  
  ##### 2. The Memory Bridge
-@@ -392,9 +388,9 @@ At any decision point, count the number of distinct options, actions, or pieces
+@@ -402,9 +398,9 @@ At any decision point, count the number of distinct options, actions, or pieces
  
  ### Heuristics Scoring Guide
  
@@ -495,7 +516,7 @@ index bedfa84..30847f6 100644
  
  Done when the helper is stopped and the dev site still answers with the accepted design.
 diff --git a/skills/impeccable/reference/hooks.md b/skills/impeccable/reference/hooks.md
-index 67cc649..ab6307a 100644
+index 71c4d44..ab6307a 100644
 --- a/skills/impeccable/reference/hooks.md
 +++ b/skills/impeccable/reference/hooks.md
 @@ -1,5 +1,7 @@
@@ -515,7 +536,7 @@ index 67cc649..ab6307a 100644
  
  Declare server-side template extensions under **`detector.extensions`** when the project uses Blade, Twig, ERB, or Handlebars files; the hook skips them otherwise because they sit outside the built-in extension list. One entry per extension, `{ "ext": ".blade.php", "engine": "html" }`. `engine` picks the analyzer (`html` for markup templates, `text` for JS/TS/CSS-like files) and defaults to `html`. Match against the end of the filename, so double extensions like `.blade.php` and `.html.erb` work. Config only adds extensions; the built-in list always applies.
  
--Manual `npx impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `npx impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `npx impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
+-Manual `.cursor/skills/impeccable/scripts/impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `.cursor/skills/impeccable/scripts/impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `.cursor/skills/impeccable/scripts/impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
 +Manual `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
  
 -Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `~/.claude/settings.json` for a user-scope install; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.
@@ -558,7 +579,7 @@ index 67cc649..ab6307a 100644
  
  - If the finding line shows an `ignore-value <rule> <value>` pair, pass it to `impeccable hooks ignore-value` with your `--reason`. This writes shared `.impeccable/config.json` by default.
  - For value-specific findings such as `overused-font` and `bounce-easing`, use `ignore-value` for the specific value. Do not use `ignore-rule overused-font` for a specific font.
--- If the finding has no value-specific command, such as `side-tab`, scope that one rule to the file: `ignore-value <id> "*" --file <path>`. Run `npx impeccable detect <path>` first to see what actually fires there.
+-- If the finding has no value-specific command, such as `side-tab`, scope that one rule to the file: `ignore-value <id> "*" --file <path>`. Run `.cursor/skills/impeccable/scripts/impeccable detect <path>` first to see what actually fires there.
 +- If the finding has no value-specific command, such as `side-tab`, scope that one rule to the file: `ignore-value <id> "*" --file <path>`. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect <path>` first to see what actually fires there.
  - Reach for `ignore-file <path>` only when the whole file is out of scope for design review: a fixture, a generated artifact, a deliberate slop demo. It silences every rule for that file permanently, including rules that have not been written yet. A real UI surface with one noisy rule wants the file-scoped value ignore above.
  - Use `ignore-rule <id>` only when the user asks to suppress that whole rule across the project. For broad overused-font suppression, use `ignore-rule overused-font --all-values` only when the user asks to ignore overused fonts generally.
@@ -641,7 +662,7 @@ index 1f3b581..7a3095e 100644
  
  Output `{ shape, signals }`; the shape names the *patch mechanism*, so one template covers many frameworks:
 diff --git a/skills/impeccable/reference/live.md b/skills/impeccable/reference/live.md
-index a25d87b..040b299 100644
+index 54d8974..ee61498 100644
 --- a/skills/impeccable/reference/live.md
 +++ b/skills/impeccable/reference/live.md
 @@ -4,13 +4,13 @@ Interactive live variant mode: select elements in the browser, pick a design act
@@ -754,7 +775,7 @@ index a25d87b..040b299 100644
  
  Stops the helper and runs `impeccable live-inject --remove` to strip the injected script (use `stop --keep-inject` to keep it for a quick restart; `.impeccable/live/config.json` persists as project config). Then search for and remove any leftover `impeccable-variants-start` wrappers and `impeccable-carbonize-start` blocks.
 diff --git a/skills/impeccable/reference/new-work.md b/skills/impeccable/reference/new-work.md
-index ff2ebb2..ea015a6 100644
+index 85862f9..23f0192 100644
 --- a/skills/impeccable/reference/new-work.md
 +++ b/skills/impeccable/reference/new-work.md
 @@ -36,7 +36,7 @@ Inherit its world and composition. Resolve only the new purpose, content, hierar
@@ -807,8 +828,8 @@ index ff2ebb2..ea015a6 100644
  
  ## 7. Inspect and finish
  
--Inspect the surface's target sizes in one batched screenshot round: desktop and mobile on the web; on a native platform (`ios` / `android` / `adaptive`), the shipped device classes per OS, captured from the simulator or emulator the way the platform reference's Verifying the build section describes. When the harness reports the user's actual viewport (an in-app browser's size, a named resolution), add that width to the set: the width that breaks is the one the user sees first. Critique the render against the user's request and the direction contract, fix material gaps, and confirm with one final round; two rounds is the ceiling, and fixes batch between them rather than earning per-tweak screenshots. The ceiling bounds inspection and never closes an open build-phase gate: a gate stays open until it passes or the route it names is taken. On a comp-led build, run `.cursor/skills/impeccable/scripts/impeccable comp-diff --comp <approved comp> --build .impeccable/review/desktop.png --spec .impeccable/build/spec.json --out-dir .impeccable/review/diff/final` and read its region rows and paired crops as the critique: the side-by-side is the view the build thread never has on its own, and a region it scores missing or contradicted is a fix whatever the page looks like from memory. Never judge fidelity from one full-page thumbnail; it hides exactly the failures that matter. On a Persuade surface, verify the mode did its job: a first-time visitor should know what this is, why it matters, and what to do within seconds, in the form's own vocabulary.
-+Inspect the surface's target sizes in one batched screenshot round: desktop and mobile on the web; on a native platform (`ios` / `android` / `adaptive`), the shipped device classes per OS, captured from the simulator or emulator the way the platform reference's Verifying the build section describes. When the harness reports the user's actual viewport (an in-app browser's size, a named resolution), add that width to the set: the width that breaks is the one the user sees first. Critique the render against the user's request and the direction contract, fix material gaps, and confirm with one final round; two rounds is the ceiling, and fixes batch between them rather than earning per-tweak screenshots. The ceiling bounds inspection and never closes an open build-phase gate: a gate stays open until it passes or the route it names is taken. On a comp-led build, run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable comp-diff --comp <approved comp> --build .impeccable/review/desktop.png --spec .impeccable/build/spec.json --out-dir .impeccable/review/diff/final` and read its region rows and paired crops as the critique: the side-by-side is the view the build thread never has on its own, and a region it scores missing or contradicted is a fix whatever the page looks like from memory. Never judge fidelity from one full-page thumbnail; it hides exactly the failures that matter. On a Persuade surface, verify the mode did its job: a first-time visitor should know what this is, why it matters, and what to do within seconds, in the form's own vocabulary.
+-Inspect the surface's target sizes in one batched screenshot round: desktop and mobile on the web; on a native platform (`ios` / `android` / `adaptive`), the shipped device classes per OS, captured from the simulator or emulator the way the platform reference's Verifying the build section describes. When the harness reports the user's actual viewport (an in-app browser's size, a named resolution), add that width to the set: the width that breaks is the one the user sees first. On anything interactive, the round drives every interaction and reachable state (open, closed, hover, focus, error, empty, overlong content) and checks each for overlap and clipping, not only the resting screen. Critique the render against the user's request and the direction contract, fix material gaps, and confirm with one final round; two rounds is the ceiling, and fixes batch between them rather than earning per-tweak screenshots. The ceiling bounds inspection and never closes an open build-phase gate: a gate stays open until it passes or the route it names is taken. On a comp-led build, run `.cursor/skills/impeccable/scripts/impeccable comp-diff --comp <approved comp> --build .impeccable/review/desktop.png --spec .impeccable/build/spec.json --out-dir .impeccable/review/diff/final` and read its region rows and paired crops as the critique: the side-by-side is the view the build thread never has on its own, and a region it scores missing or contradicted is a fix whatever the page looks like from memory. Never judge fidelity from one full-page thumbnail; it hides exactly the failures that matter. On a Persuade surface, verify the mode did its job: a first-time visitor should know what this is, why it matters, and what to do within seconds, in the form's own vocabulary.
++Inspect the surface's target sizes in one batched screenshot round: desktop and mobile on the web; on a native platform (`ios` / `android` / `adaptive`), the shipped device classes per OS, captured from the simulator or emulator the way the platform reference's Verifying the build section describes. When the harness reports the user's actual viewport (an in-app browser's size, a named resolution), add that width to the set: the width that breaks is the one the user sees first. On anything interactive, the round drives every interaction and reachable state (open, closed, hover, focus, error, empty, overlong content) and checks each for overlap and clipping, not only the resting screen. Critique the render against the user's request and the direction contract, fix material gaps, and confirm with one final round; two rounds is the ceiling, and fixes batch between them rather than earning per-tweak screenshots. The ceiling bounds inspection and never closes an open build-phase gate: a gate stays open until it passes or the route it names is taken. On a comp-led build, run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable comp-diff --comp <approved comp> --build .impeccable/review/desktop.png --spec .impeccable/build/spec.json --out-dir .impeccable/review/diff/final` and read its region rows and paired crops as the critique: the side-by-side is the view the build thread never has on its own, and a region it scores missing or contradicted is a fix whatever the page looks like from memory. Never judge fidelity from one full-page thumbnail; it hides exactly the failures that matter. On a Persuade surface, verify the mode did its job: a first-time visitor should know what this is, why it matters, and what to do within seconds, in the form's own vocabulary.
  
  A capture is evidence only when it is valid, and you validate before you send. Settle or disable entrance motion first: an element hidden by animation timing reads as a missing element and gets fixed into a regression. Capture full-page shots from the document top. Capture the comp comparison at the comp's own pixel dimensions. Then open every file once and confirm it shows what its name claims: no black or blank regions, no wrong section behind a right filename, no half-loaded state. A malformed capture sent onward costs the whole round; the reviewer answers it with `disposition: recapture` and nothing it reviewed binds.
  
@@ -890,7 +911,7 @@ index 1d52cb6..b2a8925 100644
  
  Keep it to 2-3 pointed picks with the exact command to type. The menu stays the fallback; the recommendation is the lede.
 diff --git a/skills/impeccable/reference/typeset.md b/skills/impeccable/reference/typeset.md
-index 9802aa8..26ab2e1 100644
+index e03cb05..140c0a4 100644
 --- a/skills/impeccable/reference/typeset.md
 +++ b/skills/impeccable/reference/typeset.md
 @@ -24,7 +24,7 @@ When a sub-agent tool is available and permitted, run these independently; other
@@ -916,10 +937,10 @@ index 48c2681..ff96964 100644
  Convert images with a converter `impeccable context` reported at boot (the IMAGE_TOOLS line); probe only when it reported none, at most once per session, never per image.
  
 diff --git a/skills/impeccable/scripts/impeccable b/skills/impeccable/scripts/impeccable
-index eb60f86..26b0f9c 100755
+index 224028c..26b0f9c 100755
 --- a/skills/impeccable/scripts/impeccable
 +++ b/skills/impeccable/scripts/impeccable
-@@ -1,206 +1,4 @@
+@@ -1,212 +1,4 @@
  #!/bin/sh
 -# Impeccable launcher. Runs the platform binary shipped next to this script:
 -#   <this dir>/bin/<os>-<arch>/impeccable
@@ -1046,6 +1067,12 @@ index eb60f86..26b0f9c 100755
 -  [ "$os" = windows ] && asset="$asset.exe"
 -  url="$base/engine-v$version/$asset"
 -  tmp="$cache_root/bin/$version/.impeccable.part.$$"
+-  # An interrupted download (Ctrl-C, a hook timeout) would otherwise leave the
+-  # PID-named staging file behind for good. The handlers must exit explicitly.
+-  cleanup() { rm -f "$tmp" "$tmp.sha256" 2>/dev/null || :; }
+-  trap 'cleanup; exit 129' HUP
+-  trap 'cleanup; exit 130' INT
+-  trap 'cleanup; exit 143' TERM
 -  if ! mkdir -p "$cache_root/bin/$version" 2>/dev/null; then
 -    echo "impeccable: engine $version is not installed; cannot create cache directory: $cache_root/bin/$version" >&2
 -    setup_help
@@ -1128,10 +1155,10 @@ index eb60f86..26b0f9c 100755
 -exit 127
 +exec node "$dir/../../../src/impeccable-launcher.mjs" "$@"
 diff --git a/skills/impeccable/scripts/impeccable.cmd b/skills/impeccable/scripts/impeccable.cmd
-index dc0fd33..ec5768f 100644
+index 789a96f..ec5768f 100644
 --- a/skills/impeccable/scripts/impeccable.cmd
 +++ b/skills/impeccable/scripts/impeccable.cmd
-@@ -1,214 +1,6 @@
+@@ -1,239 +1,6 @@
  @echo off
 -setlocal
 -rem Impeccable launcher (Windows). Runs bin\windows-<arch>\impeccable.exe next
@@ -1212,20 +1239,37 @@ index dc0fd33..ec5768f 100644
 -mkdir "%IMPECCABLE_HOME%\bin\%version%" >nul 2>nul
 -if errorlevel 1 goto cache_directory_failed
 -:cache_ready
--rem Check the staging file too: an existing directory may be read-only.
+-rem Stage the download in a directory only this run owns, as the sh launcher
+-rem does with .impeccable.part.$$: concurrent first runs (parallel hooks, two
+-rem agents) must never write, hash or move each other's files. mkdir fails
+-rem when the name exists, so it claims the name atomically. RANDOM alone is
+-rem not enough because cmd seeds it from the clock in whole seconds; the
+-rem timestamp and the retry on collision keep same-second runs apart. A cache
+-rem directory that refuses every mkdir is reported as unwritable.
+-set "attempt=0"
+-:claim_staging
+-set /a attempt+=1
+-if %attempt% GTR 20 goto cache_write_failed
+-set "stamp=%TIME: =0%"
+-set "stamp=%stamp::=%"
+-set "stamp=%stamp:.=%"
+-set "stamp=%stamp:,=%"
+-set "staging=%IMPECCABLE_HOME%\bin\%version%\.impeccable.part.%stamp%-%RANDOM%%RANDOM%"
+-mkdir "%staging%" >nul 2>nul
+-if errorlevel 1 goto claim_staging
+-set "part=%staging%\impeccable.exe"
+-set "sidecar=%staging%\impeccable.sha256"
 -rem Redirection failures do not reliably update ERRORLEVEL in cmd.exe;
--rem branch on the command's failure directly. Never treat a directory as a
--rem staging file (later del cleanup would prompt to delete its contents).
--if exist "%cached%.part\" goto cache_write_failed
--(type nul >"%cached%.part") 2>nul || goto cache_write_failed
+-rem branch on the command's failure directly.
+-(type nul >"%part%") 2>nul || goto staging_write_failed
 -set "asset=impeccable-windows-%arch%.exe"
 -set "url=%IMPECCABLE_DOWNLOAD_BASE%/engine-v%version%/%asset%"
--curl.exe -fsSL -o "%cached%.part" "%url%" >nul 2>nul
+-curl.exe -fsSL -o "%part%" "%url%" >nul 2>nul
 -if not errorlevel 1 goto verify
 -if not "%arch%"=="arm64" goto download_failed
 -set "asset=impeccable-windows-x64.exe"
 -set "url=%IMPECCABLE_DOWNLOAD_BASE%/engine-v%version%/%asset%"
--curl.exe -fsSL -o "%cached%.part" "%url%" >nul 2>nul
+-curl.exe -fsSL -o "%part%" "%url%" >nul 2>nul
 -if errorlevel 1 goto download_failed
 -
 -:verify
@@ -1235,61 +1279,67 @@ index dc0fd33..ec5768f 100644
 -rem runs only after verifying against its .sha256 sidecar. A sidecar that
 -rem cannot be fetched, or an empty certutil result, refuses the download
 -rem instead of running an unverified binary.
--curl.exe -fsSL -o "%cached%.sha256" "%url%.sha256" >nul 2>nul
+-curl.exe -fsSL -o "%sidecar%" "%url%.sha256" >nul 2>nul
 -if errorlevel 1 goto verify_refuse
 -set "expected="
--set /p expected=<"%cached%.sha256"
+-set /p expected=<"%sidecar%"
 -for /f "tokens=1" %%h in ("%expected%") do set "expected=%%h"
 -call :check_download
 -if errorlevel 1 exit /b 127
 -set "actual="
 -rem Reuse the sidecar staging file after reading expected. Check certutil's
 -rem status before parsing: its error text on stdout is not a digest.
--certutil -hashfile "%cached%.part" SHA256 >"%cached%.sha256" 2>nul
+-certutil -hashfile "%part%" SHA256 >"%sidecar%" 2>nul
 -if errorlevel 1 goto verify_refuse
 -call :check_download
 -if errorlevel 1 exit /b 127
--for /f "usebackq skip=1 delims=" %%h in ("%cached%.sha256") do if not defined actual set "actual=%%h"
--del "%cached%.sha256" >nul 2>nul
+-for /f "usebackq skip=1 delims=" %%h in ("%sidecar%") do if not defined actual set "actual=%%h"
+-del "%sidecar%" >nul 2>nul
 -if not defined expected goto verify_refuse
 -if not defined actual goto verify_refuse
 -set "actual=%actual: =%"
 -if /I "%actual%"=="%expected%" goto place
--del "%cached%.part" >nul 2>nul
+-call :discard_staging
 -echo impeccable: checksum mismatch downloading %url% 1>&2
 -exit /b 127
 -
 -:verify_refuse
 -call :check_download
 -if errorlevel 1 exit /b 127
--del "%cached%.part" >nul 2>nul
--del "%cached%.sha256" >nul 2>nul
+-call :discard_staging
 -echo impeccable: cannot verify %url% against %url%.sha256; refusing the unverified download 1>&2
 -exit /b 127
 -
 -:check_download
 -set "download_file=%~1"
--if not defined download_file set "download_file=%cached%.part"
+-if not defined download_file set "download_file=%part%"
 -if not exist "%download_file%" goto download_missing
 -for %%f in ("%download_file%") do if %%~zf==0 goto download_empty
 -exit /b 0
 -
 -:download_missing
--del "%cached%.sha256" >nul 2>nul
+-call :discard_staging
 -echo impeccable: download completed but the file was removed before execution: %url%; check your antivirus quarantine or logs. Refusing to continue; do not disable protection. 1>&2
 -exit /b 127
 -
 -:download_empty
 -del "%download_file%" >nul 2>nul
--del "%cached%.sha256" >nul 2>nul
+-call :discard_staging
 -echo impeccable: downloaded file is empty: %url%; refusing the unverified download 1>&2
 -exit /b 127
+-
+-:discard_staging
+-rem Removes this run's staging directory and whatever is left in it. Never
+-rem touches another run's staging directory or the cached binary.
+-if defined staging rd /s /q "%staging%" >nul 2>nul
+-exit /b 0
 -
 -:place
 -call :check_download
 -if errorlevel 1 exit /b 127
--move /y "%cached%.part" "%cached%" >nul 2>nul
+-move /y "%part%" "%cached%" >nul 2>nul
 -if errorlevel 1 goto place_failed
+-call :discard_staging
 -call :check_download "%cached%"
 -if errorlevel 1 exit /b 127
 -set "run=%cached%"
@@ -1298,7 +1348,7 @@ index dc0fd33..ec5768f 100644
 -:place_failed
 -call :check_download
 -if errorlevel 1 exit /b 127
--del "%cached%.part" >nul 2>nul
+-call :discard_staging
 -echo impeccable: could not cache the verified download: %url% 1>&2
 -exit /b 127
 -
@@ -1327,6 +1377,9 @@ index dc0fd33..ec5768f 100644
 -echo impeccable: engine %version% is not installed; cannot create cache directory: "%IMPECCABLE_HOME%\bin\%version%" 1>&2
 -goto setup_failed
 -
+-:staging_write_failed
+-call :discard_staging
+-
 -:cache_write_failed
 -echo impeccable: engine %version% is not installed; cannot write to cache directory: "%IMPECCABLE_HOME%\bin\%version%" 1>&2
 -goto setup_failed
@@ -1336,7 +1389,7 @@ index dc0fd33..ec5768f 100644
 -goto setup_failed
 -
 -:download_failed
--del "%cached%.part" >nul 2>nul
+-call :discard_staging
 -echo impeccable: could not download engine %version% from %url%; check network access and the release URL. 1>&2
 -
 -:setup_failed
@@ -1346,7 +1399,6 @@ index dc0fd33..ec5768f 100644
 -exit /b 127
 -
 -:fail
--del "%cached%.part" >nul 2>nul
 -echo impeccable: no engine binary found (looked in %bin%, %cached%, PATH). 1>&2
 -echo Download impeccable-windows-%arch%.exe from https://github.com/pbakaus/impeccable/releases (tag engine-v%version%) and save it as %cached%, or set IMPECCABLE_BIN to a preinstalled engine binary. Docs: https://impeccable.style 1>&2
 -exit /b 127

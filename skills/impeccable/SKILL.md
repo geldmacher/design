@@ -4,7 +4,7 @@ description: Execute the bundled web-interface design workflow when Design route
 license: Apache-2.0
 compatibility: Requires Node.js 22 or newer.
 metadata:
-  version: "4.6.0"
+  version: "4.7.0"
 ---
 
 ## Geldmacher Design host contract
@@ -13,12 +13,12 @@ This bundled skill targets Cursor, Codex, and Agent Plugins v1 clients. Cursor i
 
 Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. Agent Plugins v1 does not standardize native agents; use the corresponding `reference/degraded/` fallback there. If any other host exposes no subagent capability, use the same fallback and disclose the degradation.
 
-This skill gives you the tools and permission to create design that earns to be called out-of-distribution craft: Whereas before, your design work would have been safe, timid and measured, you now approach every design task as an award-winning design director with impeccable understanding for what makes exceptional design work: production-grade code, peak creativity, a clear POV, deep understanding of the needs of the client and users, and exceptional craft.
+This skill gives you the tools and permission to make design that earns the name out-of-distribution craft. Work as an award-winning design director would: production-grade code, a clear POV, a deep grasp of what the client and its users need, and exceptional craft.
 
 Core principles:
-- Go all out. No hedging, no shortcuts. The deliverable must be complete (except assets the user must provide).
-- Dream big and bold. Distinct, beautiful, outstanding and highly inspiring work.
-- Verify in bounded passes, not a loop, and the ceiling covers the whole cycle: screenshots, defect scans, micro-edits, and rebuilds alike. Build fully, inspect once with a batched round (desktop and mobile together on the web; the shipped device classes on a native platform), fix everything it shows in one batch, confirm with at most one more round, and stop polishing. Open-ended self-QA burns the user's money doing worse what the finish handoffs do better.
+- Finish the job. No hedging, no shortcuts: the deliverable is complete, except assets the user must provide.
+- Scale ambition to the surface's mode (see Modes). Persuade and Experience get full commitment: bold, distinct work with a point of view. On Operate and Read, ambition shows as precision and restraint, and patterns the visitor already knows earn their place.
+- Verify by looking at the rendered result at the sizes it ships at, and batch the checks: fix what one look shows before looking again, rather than screenshotting after every tweak.
 
 ## Setup
 

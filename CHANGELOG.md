@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Update bundled Impeccable to 4.6.0 and native engine 0.1.15. Native critiques review the interface itself and no longer treat an empty web scan as a clean result. Direction contracts record a seed reference instead of the raw roll key, and decision cards name their kind. Detector findings skip screen-reader-only headings, turned-away cards, slivers, and hidden forms, and contrast is read from the painted surface.
+- Update bundled Impeccable to 4.7.0 and native engine 0.1.16. Native critiques review the interface itself, and desktop apps can be scanned through a local debugging port. Direction contracts record a seed reference instead of the raw roll key, and decision cards name their kind. Detector findings skip non-visible content, read contrast from the painted surface, and add advisory checks for a lonely last word and a stub heading line. Refine commands outside a full build are no longer capped at two rounds.
 
 ## 0.17.0 - 2026-10-13
 
