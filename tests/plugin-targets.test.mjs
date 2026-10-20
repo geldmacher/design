@@ -74,7 +74,7 @@ test("deterministic target allowlists isolate the portable package and native ad
       const doctorGuide = readFileSync(join(first[host].path, 'skills/impeccable/reference/doctor.md'), 'utf8');
       assert.doesNotMatch(hooksGuide, /npx impeccable|remove the hook's entries from every provider manifest/);
       assert.match(hooksGuide, /preserve other settings and every host manifest/);
-      assert.doesNotMatch(hooksGuide, /Gemini installs|\.gemini\/settings\.json/);
+      assert.doesNotMatch(hooksGuide, /Gemini installs|\.gemini\/settings\.json|~\/\.claude\/settings\.json/);
       const generateGuide = readFileSync(join(first[host].path, 'skills/impeccable/reference/generate.md'), 'utf8');
       assert.match(generateGuide, /Browser tools available in this session/);
       assert.match(generateGuide, /No browser tool available in this session/);
