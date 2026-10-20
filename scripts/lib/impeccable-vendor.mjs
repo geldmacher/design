@@ -212,7 +212,7 @@ export function transformSkillFile(relativePath, original, version) {
     "This command toggles plugin hooks per project through `.impeccable/config.json`. `.impeccable/config.local.json` overrides shared values. Hook administration never writes host manifests or records standalone installation consent. `hook.enabled` must be explicitly true; malformed configuration produces a visible diagnostic and skips enforcement."
   ],
   [
-    "Supported harnesses: Claude Code (`.claude/settings.local.json` in the project, which is gitignored so the hook stays machine-local; a hook you move into the shared `settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
+    "Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `~/.claude/settings.json` for a user-scope install; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
     "Geldmacher Design provides Cursor pre-write and Codex post-write/Stop adapters registered by the plugin. Project-local Impeccable installations and hook manifests are conflicts to diagnose. Agent Plugins v1 has no native hook integration."
   ],
   [
@@ -280,7 +280,7 @@ export function transformSkillFile(relativePath, original, version) {
         "Agent Skills frontmatter",
       );
       operations.push("agent-skills-frontmatter");
-      text = mustReplace(text, "description: Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.", "description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.", "scoped Impeccable discovery");
+      text = mustReplace(text, "description: \"Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, settings, onboarding, empty states, and native iOS or Android screens. Handles UX review, hierarchy, layout, typography, color, motion, UX copy, accessibility, responsive behavior, edge cases, and capturing or documenting design systems (DESIGN.md, tokens). Also for making bland UI bolder, loud UI quieter, or ambitious visual effects. Not for backend-only or non-UI tasks.\"", "description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.", "scoped Impeccable discovery");
       operations.push("scoped-skill-discovery");
       text = mustReplace(text,
         "The launcher runs a self-contained binary that ships next to it or is downloaded once on first run; no Node or other runtime is required.",
@@ -288,7 +288,7 @@ export function transformSkillFile(relativePath, original, version) {
         "native engine launcher contract");
       text = mustReplace(
         text,
-        "This skill gives you the tools and permission to create design",
+        "This skill gives you the tools and permission to make design",
         [
           "## Geldmacher Design host contract",
           "",
@@ -296,7 +296,7 @@ export function transformSkillFile(relativePath, original, version) {
           "",
           "Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. Agent Plugins v1 does not standardize native agents; use the corresponding `reference/degraded/` fallback there. If any other host exposes no subagent capability, use the same fallback and disclose the degradation.",
           "",
-          "This skill gives you the tools and permission to create design",
+          "This skill gives you the tools and permission to make design",
         ].join("\n"),
         "SKILL dual-host contract",
       );
@@ -321,9 +321,11 @@ export function transformSkillFile(relativePath, original, version) {
         "record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed.",
         "record local hook consent as accepted, and use the already registered Geldmacher Design host adapter without writing provider hook manifests.",
       );
-      text = text.replace(
-        /- The hook is bundled with the Impeccable skill and installed through project-local manifests:[^\n]*\n/,
+      text = mustReplace(
+        text,
+        "- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses `~/.claude/settings.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.\n",
         "- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.\n",
+        "standalone hook install paths",
       );
       operations.push("replace-project-hook-installation-with-plugin-hook");
     }

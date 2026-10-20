@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update bundled Impeccable to 4.7.0 and native engine 0.1.16. Native critiques review the interface itself, and desktop apps can be scanned through a local debugging port. Direction contracts record a seed reference instead of the raw roll key, and decision cards name their kind. Detector findings skip non-visible content, read contrast from the painted surface, and add advisory checks for a lonely last word and a stub heading line. Refine commands outside a full build are no longer capped at two rounds.
+
 ## 0.17.0 - 2026-10-13
 
 - Update bundled Impeccable to 4.5.2 and native engine 0.1.14. Operate and Read surfaces are code-led, code-led decision cards use HTML skeleton sketches, and comp prompts are shorter. The layout-transition detector rule is retired.
