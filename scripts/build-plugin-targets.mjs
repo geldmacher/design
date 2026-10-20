@@ -440,7 +440,7 @@ function adaptAgentPluginSkills(destination) {
   // SKILL.md anchors below are LF-authored; normalize CRLF from Windows checkouts.
   let impeccable = readProjectedText(impeccablePath);
   const start = "## Geldmacher Design host contract\n\n";
-  const end = "\n\nThis skill gives you the tools and permission to create design";
+  const end = "\n\nThis skill gives you the tools and permission to make design";
   const startIndex = impeccable.indexOf(start);
   const endIndex = impeccable.indexOf(end, startIndex + start.length);
   if (startIndex < 0 || endIndex < 0) throw new Error("portable Impeccable host contract anchors are missing");
