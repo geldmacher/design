@@ -34,6 +34,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.equal(first["agent-plugin"].hash, second["agent-plugin"].hash);
     assert.equal(first.cursor.hash, second.cursor.hash);
     assert.equal(first.codex.hash, second.codex.hash);
+    assert.equal(first.opencode.hash, second.opencode.hash);
     assert.equal(JSON.parse(readFileSync(join(first.cursor.path, ".cursor-plugin", "plugin.json"))).name, "geldmacher-design");
     const codexManifest = JSON.parse(readFileSync(join(first.codex.path, ".codex-plugin", "plugin.json")));
     assert.equal(codexManifest.name, "geldmacher-design");
@@ -64,7 +65,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(readFileSync(join(first["agent-plugin"].path, "skills", "design", "references", "lifecycle.md"), "utf8"), /^## Detect$/m);
     assert.match(agentPluginDesignSkill, /change-interface-review/);
     assert.match(agentPluginDesignSkill, /stakeholder-questionnaire/);
-    for (const host of ["agent-plugin", "cursor", "codex"]) {
+    for (const host of ["agent-plugin", "cursor", "codex", "opencode"]) {
       assert.deepEqual(existsSync(join(first[host].path, "docs")) ? readdirSync(join(first[host].path, "docs")) : [], host === "agent-plugin" ? [] : ["installation.md"]);
       const instructions = [join(first[host].path, "skills"), join(first[host].path, "agents")]
         .filter(existsSync).flatMap(resourceFiles).filter((path) => path.endsWith(".md"))
@@ -153,7 +154,7 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.doesNotMatch(planReview, /subagents are available/);
     assert.match(planReview, /Never submit the page or write a receipt on the user's behalf/);
 
-    for (const host of ['agent-plugin', 'cursor', 'codex']) {
+    for (const host of ['agent-plugin', 'cursor', 'codex', 'opencode']) {
       const target = first[host].path;
       assert.deepEqual(JSON.parse(readFileSync(join(target, 'licenses/impeccable-pin.json'))), impeccablePin);
       for (const platform of enginePlatforms) {
@@ -174,10 +175,10 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(portableNotices, /`licenses\/impeccable-apache-2\.0\.txt`/);
     assert.equal(existsSync(join(first["agent-plugin"].path, "licenses", "impeccable-apache-2.0.txt")), true);
     assert.equal(existsSync(join(first["agent-plugin"].path, "mcp.json")), false);
-    for (const hostOnly of [".agents", ".cursor-plugin", ".codex-plugin", "agents", "assets", "hooks", "scripts"]) {
+    for (const hostOnly of [".agents", ".cursor-plugin", ".codex-plugin", ".opencode-plugin", "agents", "assets", "hooks", "scripts"]) {
       assert.equal(existsSync(join(first["agent-plugin"].path, hostOnly)), false, `${hostOnly} leaked into Agent Plugins target`);
     }
-    for (const target of [first["agent-plugin"].path, first.cursor.path, first.codex.path]) {
+    for (const target of [first["agent-plugin"].path, first.cursor.path, first.codex.path, first.opencode.path]) {
       assert.equal(existsSync(join(target, "AGENTS.md")), false);
       assert.equal(existsSync(join(target, "rules")), false);
       for (const developmentRoot of [".agents", ".build", ".cursor", ".git", "node_modules", "tests", "upstream", "overlays"]) {
@@ -197,7 +198,7 @@ test("deterministic target allowlists isolate the portable package and native ad
         assert.equal(existsSync(join(target, updateSurface)), false, `${updateSurface} leaked into ${target}`);
       }
     }
-    for (const host of ["cursor", "codex"]) {
+    for (const host of ["cursor", "codex", "opencode"]) {
       const target = first[host].path;
       assert.equal(existsSync(join(target, "README.md")), true, `${host} release package is missing its compact README`);
       assert.equal(existsSync(join(target, "docs", "installation.md")), true, `${host} release package is missing installation guidance`);
@@ -254,6 +255,23 @@ test("deterministic target allowlists isolate the portable package and native ad
         assert.deepEqual(readFileSync(join(first[host].path, relativePath)), readFileSync(join(repositoryRoot, relativePath)), `${host} drifted ${relativePath}`);
       }
     }
+    const opencodeManifest = JSON.parse(readFileSync(join(first.opencode.path, ".opencode-plugin", "plugin.json"), "utf8"));
+    assert.equal(opencodeManifest.opencodeCompatibility, "2.1.2");
+    assert.equal(opencodeManifest.skills, "./skills/");
+    assert.equal(existsSync(join(first.opencode.path, "hooks")), false);
+    assert.equal(existsSync(join(first.opencode.path, "CLAUDE.md")), false);
+    assert.equal(existsSync(join(first.opencode.path, ".cursor-plugin")), false);
+    assert.equal(existsSync(join(first.opencode.path, ".codex-plugin")), false);
+    for (const name of ["design", "impeccable", "motion"]) {
+      const skill = readFileSync(join(first.opencode.path, "skills", name, "SKILL.md"), "utf8");
+      const command = readFileSync(join(first.opencode.path, "commands", `${name}.md`), "utf8");
+      assert.doesNotMatch(skill, /disable-model-invocation|opencode\/slash/);
+      assert.match(command, new RegExp(`Load the \`${name}\` skill`));
+      assert.match(command, /\$ARGUMENTS/);
+      if (name === "design") assert.doesNotMatch(skill, /opencode\/autoinvoke/);
+      else assert.match(skill, /opencode\/autoinvoke: false/);
+    }
+    assert.match(readFileSync(join(first.opencode.path, "skills", "design", "SKILL.md"), "utf8"), /\/design` or `@design/);
     assert.deepEqual(readFileSync(join(first.cursor.path, "hooks", "cursor-hooks.json")), readFileSync(join(repositoryRoot, "hooks", "cursor-hooks.json")));
     assert.deepEqual(readFileSync(join(first.cursor.path, "hooks", "impeccable-plugin-hook.mjs")), readFileSync(join(repositoryRoot, "hooks", "impeccable-plugin-hook.mjs")));
     assert.deepEqual(readFileSync(join(first.codex.path, "hooks", "hooks.json")), readFileSync(join(repositoryRoot, "hooks", "hooks.json")));

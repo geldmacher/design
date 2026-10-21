@@ -17,6 +17,7 @@ import { basename, dirname, join, relative, sep } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  assertProvenanceShape,
   changedRepositoryPaths,
   completeRelease,
   createReleaseCut,
@@ -91,7 +92,7 @@ function createFixture(t, { full = false, releaseReady = false } = {}) {
         return !excluded.has(item);
       },
     });
-    for (const path of ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", "manifests/agent-plugin.json"]) {
+    for (const path of ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", ".opencode-plugin/plugin.json", "manifests/agent-plugin.json"]) {
       const document = JSON.parse(readFileSync(join(root, path), "utf8"));
       document.version = "0.7.0";
       json(join(root, path), document);
@@ -105,6 +106,7 @@ function createFixture(t, { full = false, releaseReady = false } = {}) {
     });
     json(join(root, ".cursor-plugin/plugin.json"), fixtureManifest("0.7.0"));
     json(join(root, ".codex-plugin/plugin.json"), fixtureManifest("0.7.0"));
+    json(join(root, ".opencode-plugin/plugin.json"), fixtureManifest("0.7.0"));
     json(join(root, "manifests/agent-plugin.json"), fixtureManifest("0.7.0"));
     mkdirSync(join(root, "docs"), { recursive: true });
     writeFileSync(join(root, "docs", "installation.md"), "# Install Design\n");
@@ -130,9 +132,9 @@ function createFixture(t, { full = false, releaseReady = false } = {}) {
 function fakeTargetBuilder(outputRoot, sourceRoot) {
   const version = JSON.parse(readFileSync(join(sourceRoot, "package.json"), "utf8")).version;
   const result = { version };
-  for (const host of ["cursor", "codex"]) {
+  for (const host of ["cursor", "codex", "opencode"]) {
     const target = join(outputRoot, host, "geldmacher-design");
-    const manifest = host === "cursor" ? ".cursor-plugin/plugin.json" : ".codex-plugin/plugin.json";
+    const manifest = host === "cursor" ? ".cursor-plugin/plugin.json" : host === "codex" ? ".codex-plugin/plugin.json" : ".opencode-plugin/plugin.json";
     json(join(target, manifest), fixtureManifest(version));
     mkdirSync(join(target, "docs"), { recursive: true });
     writeFileSync(join(target, "README.md"), `# Design for ${host}\n`);
@@ -293,13 +295,16 @@ test("production targets and archives are deterministic and contain exact host i
     runner: github.runner,
     gateResult: gate,
   });
-  for (const host of ["cursor", "codex"]) {
+  assert.equal(first.provenance.schema, 2);
+  assert.deepEqual(Object.keys(first.provenance.targets), ["cursor", "codex", "opencode"]);
+  for (const host of ["cursor", "codex", "opencode"]) {
     const name = `geldmacher-design-${host}-v0.7.0.zip`;
     assert.deepEqual(readFileSync(join(first.directory, name)), readFileSync(join(second.directory, name)));
     const files = zipFiles(join(first.directory, name));
     assert.equal(files.length, first.provenance.targets[host].file_count);
     assert.ok(files.every((file) => file.startsWith("geldmacher-design/")));
-    assert.ok(files.includes(`geldmacher-design/${host === "cursor" ? ".cursor-plugin" : ".codex-plugin"}/plugin.json`));
+    const manifestDir = host === "cursor" ? ".cursor-plugin" : host === "codex" ? ".codex-plugin" : ".opencode-plugin";
+    assert.ok(files.includes(`geldmacher-design/${manifestDir}/plugin.json`));
     assert.ok(files.includes("geldmacher-design/README.md"));
     assert.ok(files.includes("geldmacher-design/docs/installation.md"));
     assert.ok(!files.some((file) => /release-plugin|plugin-github-release|marketplace\.json/.test(file)));
@@ -310,6 +315,7 @@ test("production targets and archives are deterministic and contain exact host i
     "SHA256SUMS",
     "geldmacher-design-codex-v0.7.0.zip",
     "geldmacher-design-cursor-v0.7.0.zip",
+    "geldmacher-design-opencode-v0.7.0.zip",
     "provenance.json",
   ]);
 });
@@ -555,4 +561,48 @@ test("ahead main still rejects committed secret material", (t) => {
   git(fixture.root, "add", "unsafe.txt");
   git(fixture.root, "commit", "--quiet", "-m", "Unsafe local work");
   assert.throws(() => completeRelease(releaseOptions(fixture, createGitHubRunner())), /secret material/);
+});
+
+test("schema 1 provenance accepts only Cursor and Codex targets", () => {
+  const version = "0.18.0";
+  const target = (host) => ({
+    archive: `geldmacher-design-${host}-v${version}.zip`,
+    archive_sha256: "a".repeat(64),
+    content_sha256: "b".repeat(64),
+    file_count: 2,
+    root_directory: "geldmacher-design",
+  });
+  const provenance = {
+    schema: 1,
+    kind: "github-release-provenance",
+    plugin: "geldmacher-design",
+    version,
+    tag: `v${version}`,
+    repository: "geldmacher/design",
+    targets: { cursor: target("cursor"), codex: target("codex") },
+    published_assets: [
+      `geldmacher-design-cursor-v${version}.zip`,
+      `geldmacher-design-codex-v${version}.zip`,
+      "RELEASE_NOTES.md",
+      "SHA256SUMS",
+      "provenance.json",
+    ],
+  };
+  assert.doesNotThrow(() => assertProvenanceShape(provenance));
+  const extraHost = structuredClone(provenance);
+  extraHost.targets.opencode = target("opencode");
+  assert.throws(() => assertProvenanceShape(extraHost), /provenance targets fields differ/);
+  const schema2 = structuredClone(provenance);
+  schema2.schema = 2;
+  assert.throws(() => assertProvenanceShape(schema2), /provenance targets fields differ/);
+  schema2.targets.opencode = target("opencode");
+  schema2.published_assets = [
+    `geldmacher-design-cursor-v${version}.zip`,
+    `geldmacher-design-codex-v${version}.zip`,
+    `geldmacher-design-opencode-v${version}.zip`,
+    "RELEASE_NOTES.md",
+    "SHA256SUMS",
+    "provenance.json",
+  ];
+  assert.doesNotThrow(() => assertProvenanceShape(schema2));
 });

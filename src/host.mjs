@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export const HOST_IDS = Object.freeze(['agent-plugin', 'cursor', 'codex']);
+export const HOST_IDS = Object.freeze(['agent-plugin', 'cursor', 'codex', 'opencode']);
 
 export function resolveHost(explicit, env = process.env) {
   const candidate = typeof explicit === 'string' && explicit.trim()
@@ -15,17 +15,17 @@ export function resolveHost(explicit, env = process.env) {
           : null;
 
   if (!candidate) {
-    throw new Error('Plugin host is unknown. Pass --host agent-plugin, cursor, or codex.');
+    throw new Error('Plugin host is unknown. Pass --host agent-plugin, cursor, codex, or opencode.');
   }
   if (!HOST_IDS.includes(candidate)) {
-    throw new Error(`Unsupported plugin host: ${candidate}. Expected agent-plugin, cursor, or codex.`);
+    throw new Error(`Unsupported plugin host: ${candidate}. Expected agent-plugin, cursor, codex, or opencode.`);
   }
   return candidate;
 }
 
 export function hostInvocation(host, skill) {
   const resolved = resolveHost(host, {});
-  if (resolved === 'cursor') return `/${skill}`;
+  if (resolved === 'cursor' || resolved === 'opencode') return `/${skill}`;
   if (resolved === 'codex') return `$${skill}`;
   return skill;
 }
@@ -38,5 +38,11 @@ export function resolvePluginHost(explicit, pluginRoot, env = process.env) {
     const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (manifest.$schema === 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json') return 'agent-plugin';
   }
+  const present = (relative) => {
+    const candidate = path.join(pluginRoot, relative);
+    return fs.existsSync(candidate) && fs.lstatSync(candidate).isFile();
+  };
+  // A source checkout contains every host manifest. Only the OpenCode package has this manifest alone.
+  if (present('.opencode-plugin/plugin.json') && !present('.cursor-plugin/plugin.json') && !present('.codex-plugin/plugin.json')) return 'opencode';
   return resolveHost(explicit, env);
 }

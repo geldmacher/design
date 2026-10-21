@@ -1,0 +1,26 @@
+{
+  "name": "geldmacher-design",
+  "displayName": "Design",
+  "description": "Plan, build, review, and refine websites and web apps around your product and visual language.",
+  "version": "0.18.0",
+  "author": {
+    "name": "Dennis Geldmacher",
+    "email": "geldmacher.dennis@outlook.de"
+  },
+  "homepage": "https://github.com/geldmacher/design#readme",
+  "repository": "https://github.com/geldmacher/design",
+  "license": "MIT",
+  "keywords": [
+    "design",
+    "frontend",
+    "ui",
+    "ux",
+    "web-app",
+    "website",
+    "impeccable",
+    "motion"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json",
+  "opencodeCompatibility": "2.1.2"
+}

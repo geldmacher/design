@@ -18,7 +18,7 @@ export function verifyCandidateRuntime(root, projection, destinations) {
     const targets = buildPluginTargets(build.targets, source);
     const runtime = resolveEngine(source);
     for (const required of ['scripts/command-metadata.json', 'reference/hooks.md', 'reference/degraded/finish-reviewer.md']) readFileSync(join(source, 'skills/impeccable', required));
-    for (const host of ['agent-plugin', 'cursor', 'codex']) {
+    for (const host of ['agent-plugin', 'cursor', 'codex', 'opencode']) {
       const target = targets[host].path;
       for (const platform of enginePlatforms) {
         const [os, arch] = platform.split('-');
@@ -32,6 +32,7 @@ export function verifyCandidateRuntime(root, projection, destinations) {
       for (const name of ['IMPECCABLE_HOST', 'CURSOR_PLUGIN_ROOT', 'PLUGIN_ROOT', 'IMPECCABLE_STALENESS_CACHE']) delete env[name];
       if (host === 'cursor') env.CURSOR_PLUGIN_ROOT = target;
       if (host === 'codex') env.PLUGIN_ROOT = target;
+      if (host === 'opencode') env.IMPECCABLE_HOST = 'opencode';
       const run = (file, args, input) => {
         const nativeScript = !file.endsWith('.mjs');
         const executable = nativeScript ? (process.platform === 'win32' ? 'cmd.exe' : file) : process.execPath;
@@ -51,7 +52,7 @@ export function verifyCandidateRuntime(root, projection, destinations) {
       if (!Array.isArray(doctor.findings) || doctor.pluginHook?.host !== host) throw new Error('Candidate plugin doctor contract missing.');
       const detect = JSON.parse(run(join(target, 'skills/design/scripts/design-cli.mjs'), ['--host', host, 'detect', '--json', '--', 'Clean.jsx']));
       if (detect.status !== 'no-findings' || detect.detector?.engineVersion !== runtime.engineVersion) throw new Error('Candidate Design detector contract missing.');
-      if (host !== 'agent-plugin') {
+      if (host === 'cursor' || host === 'codex') {
         mkdirSync(join(project, '.impeccable'));
         writeFileSync(join(project, '.impeccable/config.json'), '{"hook":{"enabled":true}}');
         const content = '<style>.card { border-left: 4px solid #7c3aed; border-radius: 16px; }</style><div class="card">Hello</div>';

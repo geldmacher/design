@@ -24,7 +24,9 @@ import {
 } from "./build-plugin-targets.mjs";
 
 export const PLUGIN_NAME = "geldmacher-design";
-export const RELEASE_HOSTS = Object.freeze(["cursor", "codex"]);
+export const RELEASE_HOSTS = Object.freeze(["cursor", "codex", "opencode"]);
+const PROVENANCE_HOSTS = Object.freeze({ 1: Object.freeze(["cursor", "codex"]), 2: RELEASE_HOSTS });
+export const PROVENANCE_SCHEMA = 2;
 const scriptPath = fileURLToPath(import.meta.url);
 export const defaultRoot = dirname(dirname(scriptPath));
 const fixedArchiveTime = "1980-01-01T00:00:00Z";
@@ -192,6 +194,7 @@ function sourceState(root, runner, { requireClean = false, requireReleaseCut = f
   const manifests = {
     cursor: readJson(join(root, ".cursor-plugin", "plugin.json"), "Cursor manifest"),
     codex: readJson(join(root, ".codex-plugin", "plugin.json"), "Codex manifest"),
+    opencode: readJson(join(root, ".opencode-plugin", "plugin.json"), "OpenCode manifest"),
     agent_plugins: readJson(join(root, "manifests", "agent-plugin.json"), "Agent Plugins manifest"),
   };
   for (const [target, manifest] of Object.entries(manifests)) {
@@ -453,7 +456,38 @@ function walk(directory, base = directory) {
 }
 
 function targetManifest(host) {
-  return host === "cursor" ? ".cursor-plugin/plugin.json" : ".codex-plugin/plugin.json";
+  if (host === "cursor") return ".cursor-plugin/plugin.json";
+  if (host === "codex") return ".codex-plugin/plugin.json";
+  if (host === "opencode") return ".opencode-plugin/plugin.json";
+  throw new Error(`unsupported release host: ${host}`);
+}
+
+function hostsForProvenance(provenance) {
+  const hosts = PROVENANCE_HOSTS[provenance?.schema];
+  if (!hosts) throw new Error("provenance.json identity is invalid");
+  return hosts;
+}
+
+export function assertProvenanceShape(provenance) {
+  const hosts = hostsForProvenance(provenance);
+  if (provenance.kind !== "github-release-provenance" || provenance.plugin !== PLUGIN_NAME) {
+    throw new Error("provenance.json identity is invalid");
+  }
+  if (!semver(provenance.version) || provenance.tag !== `v${provenance.version}`) throw new Error("provenance version and tag are inconsistent");
+  if (provenance.repository !== "geldmacher/design") throw new Error("provenance repository is invalid");
+  if (Object.keys(provenance.targets ?? {}).sort().join("\n") !== [...hosts].sort().join("\n")) throw new Error("provenance targets fields differ");
+  for (const host of hosts) {
+    const target = provenance.targets[host];
+    if (target?.archive !== assetName(host, provenance.version)) throw new Error(`provenance ${host} archive name is invalid`);
+    if (!/^[0-9a-f]{64}$/.test(target?.archive_sha256 ?? "") || !/^[0-9a-f]{64}$/.test(target?.content_sha256 ?? "")) {
+      throw new Error(`provenance ${host} hashes are invalid`);
+    }
+    if (!Number.isSafeInteger(target?.file_count) || target.file_count <= 0 || target.root_directory !== PLUGIN_NAME) {
+      throw new Error(`provenance ${host} target identity is invalid`);
+    }
+  }
+  const expected = [...hosts.map((host) => assetName(host, provenance.version)), "RELEASE_NOTES.md", "SHA256SUMS", "provenance.json"].sort();
+  if ([...provenance.published_assets].sort().join("\n") !== expected.join("\n")) throw new Error("provenance published assets differ");
 }
 
 export function inspectReleaseTarget(directory, host, version) {
@@ -527,11 +561,7 @@ function releaseNames(provenance) {
 }
 
 function verifyProvenance(provenance) {
-  if (provenance?.schema !== 1 || provenance.kind !== "github-release-provenance" || provenance.plugin !== PLUGIN_NAME) {
-    throw new Error("provenance.json identity is invalid");
-  }
-  if (!semver(provenance.version) || provenance.tag !== `v${provenance.version}`) throw new Error("provenance version and tag are inconsistent");
-  if (provenance.repository !== "geldmacher/design") throw new Error("provenance repository is invalid");
+  assertProvenanceShape(provenance);
   for (const [label, value] of [
     ["source commit", provenance.source?.commit_sha],
     ["source tree", provenance.source?.tree_sha],
@@ -545,19 +575,6 @@ function verifyProvenance(provenance) {
     || JSON.stringify(provenance.release_gate.commands) !== JSON.stringify(["npm run release-check", "git diff --check"])) {
     throw new Error("provenance release gate is invalid");
   }
-  for (const host of RELEASE_HOSTS) {
-    const target = provenance.targets?.[host];
-    if (target?.archive !== assetName(host, provenance.version)) throw new Error(`provenance ${host} archive name is invalid`);
-    if (!/^[0-9a-f]{64}$/.test(target.archive_sha256 ?? "") || !/^[0-9a-f]{64}$/.test(target.content_sha256 ?? "")) {
-      throw new Error(`provenance ${host} hashes are invalid`);
-    }
-    if (!Number.isSafeInteger(target.file_count) || target.file_count <= 0 || target.root_directory !== PLUGIN_NAME) {
-      throw new Error(`provenance ${host} target identity is invalid`);
-    }
-  }
-  const expected = [assetName("cursor", provenance.version), assetName("codex", provenance.version),
-    "RELEASE_NOTES.md", "SHA256SUMS", "provenance.json"].sort();
-  if (releaseNames(provenance).join("\n") !== expected.join("\n")) throw new Error("provenance published assets differ");
 }
 
 export function verifyPreparedRelease(directory, expectedReceipt = null) {
@@ -569,14 +586,14 @@ export function verifyPreparedRelease(directory, expectedReceipt = null) {
   const actualNames = readdirSync(directory).sort();
   const expectedNames = releaseNames(provenance);
   if (actualNames.join("\n") !== expectedNames.join("\n")) throw new Error("prepared release file inventory differs");
-  for (const host of RELEASE_HOSTS) {
+  for (const host of hostsForProvenance(provenance)) {
     const target = provenance.targets[host];
     if (fileSha256(join(directory, target.archive)) !== target.archive_sha256) throw new Error(`${host} archive differs from provenance`);
   }
   if (fileSha256(join(directory, "RELEASE_NOTES.md")) !== provenance.release_notes_sha256) {
     throw new Error("RELEASE_NOTES.md differs from provenance");
   }
-  const covered = [provenance.targets.cursor.archive, provenance.targets.codex.archive, "RELEASE_NOTES.md", "provenance.json"];
+  const covered = [...hostsForProvenance(provenance).map((host) => provenance.targets[host].archive), "RELEASE_NOTES.md", "provenance.json"];
   if (readFileSync(join(directory, "SHA256SUMS"), "utf8") !== checksumDocument(directory, covered)) {
     throw new Error("SHA256SUMS differs from prepared release files");
   }
@@ -639,7 +656,7 @@ export function prepareRelease({
     }
     writeFileSync(join(staged, "RELEASE_NOTES.md"), snapshotNotes);
     const provenance = {
-      schema: 1,
+      schema: PROVENANCE_SCHEMA,
       kind: "github-release-provenance",
       plugin: PLUGIN_NAME,
       version: source.version,
@@ -649,12 +666,12 @@ export function prepareRelease({
       release_gate: gate,
       release_notes_sha256: fileSha256(join(staged, "RELEASE_NOTES.md")),
       targets,
-      published_assets: [targets.cursor.archive, targets.codex.archive, "RELEASE_NOTES.md", "SHA256SUMS", "provenance.json"],
+      published_assets: [...RELEASE_HOSTS.map((host) => targets[host].archive), "RELEASE_NOTES.md", "SHA256SUMS", "provenance.json"],
     };
     provenance.receipt_sha256 = receiptForProvenance(provenance);
     writeJson(join(staged, "provenance.json"), provenance);
     writeFileSync(join(staged, "SHA256SUMS"), checksumDocument(staged, [
-      targets.cursor.archive, targets.codex.archive, "RELEASE_NOTES.md", "provenance.json",
+      ...RELEASE_HOSTS.map((host) => targets[host].archive), "RELEASE_NOTES.md", "provenance.json",
     ]));
     verifyPreparedRelease(staged, provenance.receipt_sha256);
     const finalSource = sourceState(resolve(root), runner, { requireClean: true, requireReleaseCut: true });

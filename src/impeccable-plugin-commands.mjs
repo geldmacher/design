@@ -16,11 +16,13 @@ export function interceptPluginCommand({ command, args, host, cwd, run }) {
   if (!directIgnore && !['hooks', 'hook-admin'].includes(command)) return null;
   const action = (args[0] || 'status').toLowerCase();
   const activation = readHookActivation(cwd);
-  if (!directIgnore && action === 'status') return { status: 0, stdout: `${JSON.stringify({ host, hook: host === 'agent-plugin' ? { state: 'unavailable', enabled: false } : activation, conflicts: detectProjectConflicts(cwd, { host }) })}\n`, stderr: '' };
+  const hooksUnavailable = host === 'agent-plugin' || host === 'opencode';
+  if (!directIgnore && action === 'status') return { status: 0, stdout: `${JSON.stringify({ host, hook: hooksUnavailable ? { state: 'unavailable', enabled: false } : activation, conflicts: detectProjectConflicts(cwd, { host }) })}\n`, stderr: '' };
   if (activation.state === 'malformed') throw new Error('Malformed configuration requires deliberate repair.');
   const configs = Object.fromEntries(configNames.map((name) => [name, readConfig(cwd, name)]));
   if (!directIgnore && ['on', 'off', 'reset'].includes(action)) {
     if (host === 'agent-plugin') throw new Error('Agent Plugins v1 has no native hooks.');
+    if (host === 'opencode') throw new Error('The OpenCode 2.1.2 package has no Design hook adapter.');
     if (args.length > 1) throw new Error('Unexpected hook lifecycle arguments.');
     if (action === 'on' && detectProjectConflicts(cwd, { host }).some((item) => item.severity === 'conflict')) throw new Error('Hook activation conflicts with a project installation.');
     if (action === 'reset') {
@@ -203,7 +205,7 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
         section = `CONTEXT_STALE:\n${JSON.stringify(findings.map(finding => { const projected = projectMaintenanceFinding(finding); return host === 'agent-plugin' ? { ...projected, fix: portableInstruction(projected.fix) } : projected; }), null, 2)}${section.slice(end + 2)}`;
         section = section.replace(migrationInstruction, migrationPolicy).replace('They are already throttled, so say them plainly rather than hedging about whether they matter.', 'Report them once per task; the plugin isolates the notice cache for each invocation.');
       }
-      if (activation.enabled && host !== 'agent-plugin' && !detectProjectConflicts(root, { host }).length
+      if (activation.enabled && (host === 'cursor' || host === 'codex') && !detectProjectConflicts(root, { host }).length
           && section.startsWith('MANUAL_DETECTOR_REQUIRED: No automatic Impeccable design hook is active this session. ')) {
         return `PLUGIN_DETECTOR: The ${host} adapter is configured (${host === 'cursor' ? 'pre-write' : 'post-write and Stop'}). A fresh host event is required to prove activation.`;
       }
@@ -211,7 +213,7 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
       return section;
     }).join('\n\n---\n\n');
     stdout = protectedContext.restore(stdout);
-    stdout += `\nPLUGIN_HOOK_STATE: ${host}: ${host === 'agent-plugin' ? 'unavailable' : activation.state}. This describes plugin configuration, not fresh host activation evidence.\n`;
+    stdout += `\nPLUGIN_HOOK_STATE: ${host}: ${host === 'agent-plugin' || host === 'opencode' ? 'unavailable' : activation.state}. This describes plugin configuration, not fresh host activation evidence.\n`;
     return stdout;
   }
   if (command === 'doctor') {
@@ -219,7 +221,7 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
     if (!Array.isArray(report.findings)) throw new Error('Unknown engine doctor report format.');
     const root = resolvedProject(report);
     report.pluginHook = { host, ...readHookActivation(root), evidence: 'configuration-only' };
-    if (host === 'agent-plugin') report.pluginHook = { host, state: 'unavailable', enabled: false };
+    if (host === 'agent-plugin' || host === 'opencode') report.pluginHook = { host, state: 'unavailable', enabled: false };
     report.findings = report.findings.map(finding => { const projected = projectMaintenanceFinding(finding); return host === 'agent-plugin' ? { ...projected, fix: portableInstruction(projected.fix) } : projected; });
     report.findings.push(...detectProjectConflicts(root, { host }));
     report.migrationPolicy = 'Report proposed migrations; obtain explicit user authorization before editing project context. Plugin doctor never applies migrations.';

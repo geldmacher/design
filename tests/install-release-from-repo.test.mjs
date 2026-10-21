@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 import YAML from "yaml";
 import { installRelease, parseInstallArguments, REPOSITORY, validateRelease } from "../scripts/install-release-from-repo.mjs";
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-design";
-const manifests = ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", "manifests/agent-plugin.json"];
+const manifests = ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", ".opencode-plugin/plugin.json", "manifests/agent-plugin.json"];
 
 function json(path, value) {
   mkdirSync(dirname(path), { recursive: true });
@@ -30,7 +30,7 @@ function release(version = "1.0.0") {
 
 // Real builder boundary with tiny deterministic payloads; deployed by the production installer.
 const builder = `
-import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,12 +42,18 @@ export function createTargetBuildWorkspace() {
 }
 export function removeTargetBuildWorkspace(workspace) { rmSync(workspace.owned, { recursive: true }); }
 export function buildPluginTargets(output = join(root, '.build', 'plugins')) {
-  return Object.fromEntries(['cursor', 'codex'].map(host => {
+  return Object.fromEntries(['cursor', 'codex', 'opencode'].map(host => {
     const path = join(output, host, 'geldmacher-design');
     const manifest = '.' + host + '-plugin';
     mkdirSync(path, { recursive: true });
     cpSync(join(root, manifest), join(path, manifest), { recursive: true });
     cpSync(join(root, 'payload.txt'), join(path, 'payload.txt'));
+    if (host === 'opencode') {
+      mkdirSync(join(path, 'commands'));
+      for (const id of ['design', 'impeccable', 'motion']) {
+        writeFileSync(join(path, 'commands', id + '.md'), 'Load the ' + String.fromCharCode(96) + id + String.fromCharCode(96) + ' skill and apply it to the current request.');
+      }
+    }
     return [host, { path }];
   }));
 }
@@ -94,7 +100,8 @@ function fixture(t, { seedRelease = true } = {}) {
   const codex = join(directory, "codex.mjs");
   writeFileSync(codex, codexCli, { mode: 0o755 });
   json(statePath, { installed: null, adds: 0 });
-  const env = { ...process.env, CODEX_BIN: codex, CODEX_HOME: join(home, ".codex"), INSTALL_TEST_STATE: statePath, npm_config_cache: join(directory, "npm-cache") };
+  const env = { ...process.env, CODEX_BIN: codex, CODEX_HOME: join(home, ".codex"), LOCAL_PLUGIN_HOME: home, XDG_CONFIG_HOME: join(home, ".config"), INSTALL_TEST_STATE: statePath, npm_config_cache: join(directory, "npm-cache") };
+  delete env.OPENCODE_CONFIG_DIR;
   mkdirSync(root);
   command("git", ["init", "--quiet", root], { env });
   command("git", ["config", "user.name", "Install Test"], { cwd: root, env });
@@ -103,6 +110,8 @@ function fixture(t, { seedRelease = true } = {}) {
   command("git", ["remote", "add", "origin", REPOSITORY], { cwd: root, env });
   writeFileSync(join(root, ".gitignore"), "node_modules/\n.build/\n");
   mkdirSync(join(root, "scripts"));
+  cpSync(join(repositoryRoot, "scripts/local-plugin-deploy.mjs"), join(root, "scripts/local-plugin-deploy.mjs"));
+  cpSync(join(repositoryRoot, "scripts/install-release-from-repo.mjs"), join(root, "scripts/install-release-from-repo.mjs"));
   writeFileSync(join(root, "scripts", "build-plugin-targets.mjs"), builder);
   const item = { directory, root, home, env, statePath, calls: [], events: [] };
   item.cut = (version, payload = version) => {
@@ -120,6 +129,12 @@ function fixture(t, { seedRelease = true } = {}) {
     if (binary === "cursor") return "fixture cursor";
     // Substitute only the network transport, keeping a real tag fetch and detached checkout.
     if (binary === "git" && args[0] === "fetch") args = args.map(arg => arg === "origin" ? root : arg);
+    if (binary === "npm" && args[0] === "ci") {
+      // Substitute registry installation with the same locked dependencies in the prepared source only.
+      symlinkSync(join(repositoryRoot, "node_modules"), join(options.cwd, "node_modules"), "dir");
+      writeFileSync(join(options.cwd, ".git/info/exclude"), "node_modules\n");
+      return "";
+    }
     return command(binary, args, options);
   };
   item.options = { root, home, env, temporaryRoot: directory, execute: item.execute, resolveRelease: async () => release(), report: value => item.events.push(value) };
@@ -137,8 +152,51 @@ function retained(item) {
 test("CLI requires exactly one explicit supported host", () => {
   assert.deepEqual(parseInstallArguments(["--codex-only", "--dry-run"]), { host: "codex", dryRun: true });
   assert.deepEqual(parseInstallArguments(["--cursor-only"]), { host: "cursor", dryRun: false });
-  for (const args of [[], ["--both"], ["--codex-only", "--cursor-only"], ["--cursor-only", "--version", "main"]]) assert.throws(() => parseInstallArguments(args));
+  assert.deepEqual(parseInstallArguments(["--opencode-only", "--dry-run"]), { host: "opencode", dryRun: true });
+  for (const args of [[], ["--both"], ["--codex-only", "--cursor-only"], ["--opencode-only", "--cursor-only"], ["--cursor-only", "--version", "main"]]) assert.throws(() => parseInstallArguments(args));
 });
+
+for (const host of ["cursor", "codex", "opencode"]) {
+  test(`${host}: the installer CLI bootstraps from a checkout without node_modules`, t => {
+    const item = fixture(t);
+    const calls = join(item.directory, "bootstrap-calls.jsonl");
+    const preload = join(item.directory, "bootstrap-boundaries.mjs");
+    writeFileSync(preload, `
+      import cp from 'node:child_process';
+      import { appendFileSync, symlinkSync } from 'node:fs';
+      import { join } from 'node:path';
+      import { syncBuiltinESMExports } from 'node:module';
+      globalThis.fetch = async () => new Response(JSON.stringify(${JSON.stringify(release())}));
+      const original = cp.spawnSync;
+      cp.spawnSync = (binary, args, options) => {
+        if (binary === 'cursor') return { status: 0, stdout: 'fixture cursor', stderr: '' };
+        if (binary === 'git' && args[0] === 'fetch') args = args.map(arg => arg === 'origin' ? ${JSON.stringify(item.root)} : arg);
+        if (binary === 'npm' && args[0] === 'ci') {
+          appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ cwd: options.cwd, args }) + '\\n');
+          symlinkSync(${JSON.stringify(join(repositoryRoot, "node_modules"))}, join(options.cwd, 'node_modules'), 'dir');
+          appendFileSync(join(options.cwd, '.git/info/exclude'), '\\nnode_modules\\n');
+          return { status: 0, stdout: '', stderr: '' };
+        }
+        return original(binary, args, options);
+      };
+      syncBuiltinESMExports();
+    `);
+    const result = spawnSync(process.execPath, ["--import", pathToFileURL(preload).href, realpathSync(join(item.root, "scripts/install-release-from-repo.mjs")), `--${host}-only`], {
+      cwd: item.root, env: item.env, encoding: "utf8", timeout: 30000,
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(existsSync(join(item.root, "node_modules")), false);
+    const installs = readFileSync(calls, "utf8").trim().split("\n").map(JSON.parse);
+    assert.equal(installs.length, 1);
+    assert.notEqual(installs[0].cwd, item.root);
+    const destination = host === "opencode" ? join(item.home, ".config/opencode", plugin) : dirname(target(item, host));
+    assert.equal(readFileSync(join(destination, "payload.txt"), "utf8"), "1.0.0");
+    assert.equal(JSON.parse(readFileSync(join(destination, ".local-deploy.json"))).host, host);
+    assert.match(result.stdout, /"activation": "not-tested"/);
+    assert.deepEqual(retained(item), []);
+  });
+}
 
 test("release selection rejects missing, draft, prerelease and unrelated release metadata", () => {
   assert.equal(validateRelease(release()).version, "1.0.0");
@@ -310,16 +368,7 @@ test("real Design source builds, validates and installs through the release path
   command("git", ["commit", "--quiet", "-m", "Real Design release fixture"], { cwd: item.root });
   const version = JSON.parse(readFileSync(join(item.root, "package.json"), "utf8")).version;
   command("git", ["tag", `v${version}`], { cwd: item.root });
-  const result = await installRelease({ ...item.options, host: "cursor", resolveRelease: async () => release(version), execute: (binary, args, options) => {
-    if (binary === "npm" && args[0] === "ci") {
-      // Reuse installed locked dependencies; this test performs no registry or GitHub access.
-      symlinkSync(join(repositoryRoot, "node_modules"), join(options.cwd, "node_modules"), "dir");
-      // The release ignores a physical node_modules/; our test-only symlink needs its own exclude.
-      writeFileSync(join(options.cwd, ".git/info/exclude"), "node_modules\n");
-      return "";
-    }
-    return item.execute(binary, args, options);
-  } });
+  const result = await installRelease({ ...item.options, host: "cursor", resolveRelease: async () => release(version) });
   assert.equal(result.verification.current, true);
   assert.equal(existsSync(target(item, "cursor", "skills/design/SKILL.md")), true);
   assert.equal(existsSync(target(item, "cursor", "scripts/install-release-from-repo.mjs")), false);

@@ -13,7 +13,7 @@ Motion's local guidance is included. For online documentation and free examples,
 
 ## Ask your agent to install
 
-Copy this prompt into your Cursor or Codex agent:
+Copy this prompt into your Cursor, Codex, or OpenCode agent:
 
 ```text
 Install the latest stable GitHub Release of geldmacher/design for this editor.
@@ -21,13 +21,14 @@ Read https://github.com/geldmacher/design/blob/main/docs/installation.md and che
 the release installer prerequisites. Use an existing Design source checkout or
 clone https://github.com/geldmacher/design.git into a normal source directory,
 outside the plugin installation directories. Open that checkout and invoke
-/install-new-release-from-repo for Cursor or $install-new-release-from-repo for
-Codex, targeting only this editor. If the skill cannot be discovered, run the
+/install-new-release-from-repo for Cursor, $install-new-release-from-repo for
+Codex, or npm run install:release -- --opencode-only for OpenCode 2.1.2,
+targeting only this editor. If the skill cannot be discovered, run the
 matching release installer command from the guide. Report the release, installed
 version, verification result, and remaining activation steps.
 ```
 
-The [release installer workflow](#release-installer-for-agent-assisted-installation) below contains the prerequisites and exact commands. Its skill is available only in the source checkout, not in the installed plugin. If the destination is not clear from your agent's editor, name Cursor or Codex in the prompt. To inspect without installing, request a **preview**.
+The [release installer workflow](#release-installer-for-agent-assisted-installation) below contains the prerequisites and exact commands. Its skill is available only in the source checkout, not in the installed plugin. If the destination is not clear from your agent's editor, name Cursor, Codex, or OpenCode in the prompt. To inspect without installing, request a **preview**.
 
 ## Update an existing installation
 
@@ -36,7 +37,7 @@ The [release installer workflow](#release-installer-for-agent-assisted-installat
 1. Download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` from the [latest stable release](https://github.com/geldmacher/design/releases/latest).
 2. Follow the [verification steps](#2-verify-the-downloads), just as for the first installation.
 3. Retain the previous complete plugin directory and its matching verification files. Replace it with the complete verified package; never merge files from different releases.
-4. Follow the [Cursor](#3a-install-the-cursor-archive) or [Codex](#3b-install-the-codex-archive) activation steps again, including Codex Marketplace/cache refresh when applicable.
+4. Follow the [Cursor](#3a-install-the-cursor-archive), [Codex](#3b-install-the-codex-archive), or [OpenCode](#3c-install-the-opencode-archive) activation steps again, including Codex Marketplace/cache refresh when applicable.
 
 For rollback, use the retained verified package or download and verify an older release, then repeat the same replacement and activation steps.
 
@@ -48,6 +49,7 @@ The existing **install-new-release-from-repo** skill handles updates as well as 
 | --- | --- | --- |
 | Cursor | `/install-new-release-from-repo` | `/install-new-release-from-repo preview` |
 | Codex | `$install-new-release-from-repo` | `$install-new-release-from-repo preview` |
+| OpenCode | `npm run install:release -- --opencode-only` from the source checkout | add `--dry-run` |
 
 Or copy this prompt into your agent:
 
@@ -55,21 +57,22 @@ Or copy this prompt into your agent:
 Update Design to the latest stable GitHub Release for this editor.
 Read https://github.com/geldmacher/design/blob/main/docs/installation.md. Use the
 existing Design source checkout or prepare one as described there, then invoke
-/install-new-release-from-repo for Cursor or $install-new-release-from-repo for
-Codex. If the skill cannot be discovered, use the matching release installer
-command. Report whether anything changed, the installed version, verification
-result, and any remaining activation steps.
+/install-new-release-from-repo for Cursor, $install-new-release-from-repo for
+Codex, or npm run install:release -- --opencode-only for OpenCode. If the skill
+cannot be discovered, use the matching release installer command. Report whether
+anything changed, the installed version, verification result, and any remaining
+activation steps.
 ```
 
-Each invocation resolves the latest stable release. If installed content already matches, the installer verifies it and makes no changes. Otherwise, reload Cursor or start a new Codex task after the update and review changed hook permissions. The installer handles Codex cache verification. You can also rerun the [terminal install command](#3-install-for-one-editor) yourself.
+Each invocation resolves the latest stable release. If installed content already matches, the installer verifies it and makes no changes. Otherwise, reload Cursor, start a new Codex task, or start a new OpenCode session after the update and review changed hook permissions where that host has a hook adapter. The installer handles Codex cache verification. You can also rerun the [terminal install command](#3-install-for-one-editor) yourself.
 
 ## Install from a GitHub Release
 
-Use this manual path on macOS, Linux, or Windows. You need Node.js 22+ and Cursor or Codex with plugin support. A source checkout, Git, and npm are not needed for the ZIP path. Download the matching package, verify its files, then install it for your editor.
+Use this manual path on macOS, Linux, or Windows. You need Node.js 22+ and Cursor, Codex, or OpenCode 2.1.2. A source checkout, Git, and npm are not needed for the ZIP path. Download the matching package, verify its files, then install it for your editor.
 
 ### 1. Download the package and verification files
 
-Each Design GitHub Release contains separate packages for Cursor and Codex. From the [latest GitHub Release](https://github.com/geldmacher/design/releases/latest), download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` into the same directory. For an older version, use that version's release page and matching verification files.
+Each Design GitHub Release contains separate packages for Cursor, Codex, and OpenCode. From the [latest GitHub Release](https://github.com/geldmacher/design/releases/latest), download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` into the same directory. For an older version, use that version's release page and matching verification files. Releases that predate OpenCode use provenance schema 1 and list only Cursor and Codex. Current releases use schema 2 and add OpenCode without changing the Cursor or Codex target records.
 
 `SHA256SUMS` lists the expected file hashes, which let you check that your downloads match the release. `provenance.json` records which source commit and build produced them. Verify both the ZIP and `provenance.json` before installation.
 
@@ -77,6 +80,7 @@ Release assets use these names:
 
 - `geldmacher-design-cursor-v<version>.zip`
 - `geldmacher-design-codex-v<version>.zip`
+- `geldmacher-design-opencode-v<version>.zip`
 - `RELEASE_NOTES.md`
 - `SHA256SUMS`
 - `provenance.json`
@@ -129,10 +133,13 @@ foreach ($file in $files) {
 
 `provenance.json` binds the version, tag, repository commit, Git tree, release gate, target content hashes, archive hashes, file counts, release-notes hash, and canonical receipt. Confirm that the identity and selected archive match the intended release. A mismatch is a hard stop.
 
+`SHA256SUMS` may list other host archives from the same release. The checks above require exactly one line for the selected archive and one line for `provenance.json`. Extra lines are not a failure. Schema 1 documents, whose targets are exactly `cursor` and `codex`, remain valid. Schema 2 documents use exactly the hosts `cursor`, `codex`, and `opencode`. Canonical JSON stores object keys alphabetically; the host list itself is cursor, then codex, then opencode. An installer looks up `targets.<selected host>` and does not reject extra target keys.
+
 Each ZIP expands to exactly one top-level `geldmacher-design/` directory. The matching manifest must be directly below it:
 
 - Cursor: `geldmacher-design/.cursor-plugin/plugin.json`
 - Codex: `geldmacher-design/.codex-plugin/plugin.json`
+- OpenCode: `geldmacher-design/.opencode-plugin/plugin.json`
 
 The directory also contains a compact `README.md` and this installation guide.
 
@@ -171,7 +178,26 @@ Reference that directory from an existing personal Marketplace entry without rep
 
 Source placement is not activation. Fully restart the desktop app when required, refresh or reinstall **geldmacher-design** from its Marketplace, verify the cached manifest version, review any trust request, and start a new Codex task. For update or rollback, replace the complete source directory with the separately verified version and repeat every cache and new-task check. Never merge files from different releases.
 
-The ZIP checksum proves the downloaded bytes only. It does not prove Marketplace acceptance, cache currentness, Cursor reload, Hook Trust, or fresh-task activation.
+### 3c. Install the OpenCode archive
+
+This package targets OpenCode 2.1.2 (`npm` package `@opencode/cli`) only. OpenCode 1.x (`opencode-ai`) is not supported. There is no `CLAUDE.md` and no install into `~/.claude` or `~/.agents`.
+
+Place the complete extracted directory at:
+
+- macOS/Linux: `~/.config/opencode/geldmacher-design`
+- Windows: `%USERPROFILE%\.config\opencode\geldmacher-design`
+
+OpenCode discovers the skills when that package's `skills/` directory is listed in the global `skills` array. It loads an explicit skill with `@design`, `@impeccable`, or `@motion`. The matching files in `~/.config/opencode/commands/` provide `/design`, `/impeccable`, and `/motion`. Design is autodiscovered. Impeccable and Motion stay explicit, matching Cursor and Codex.
+
+OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
+
+Add only the Design skills path to an existing `skills` array. Keep every other key and every other plugin path, including Workflow and Efficiency. Do not write a second copy of those entries and do not remove them. Leave `opencode.jsonc` comments untouched. If `design.md`, `impeccable.md`, or `motion.md` already exists and is not a Design command, stop.
+
+Before a write that changes `opencode.json` or one of Design's own command files, deploy saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-design/` and leaves that backup in place after success or failure. A failed deploy restores the shared files from the backup taken for that attempt. A second deploy that changes nothing does not write and does not add another backup.
+
+`npm run deploy:local -- --opencode-only` performs that merge, backup, and command copy. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package. Start a new OpenCode session after installation. This package does not install a hook adapter.
+
+The ZIP checksum proves the downloaded bytes only. It does not prove Marketplace acceptance, cache currentness, Cursor reload, Hook Trust, OpenCode skill registration, or fresh-task activation.
 
 ## Release installer for agent-assisted installation
 
@@ -222,6 +248,12 @@ npm run install:release -- --cursor-only
 npm run install:release -- --codex-only
 ```
 
+**OpenCode 2.1.2:**
+
+```sh
+npm run install:release -- --opencode-only
+```
+
 To inspect the planned installation first, add `--dry-run`. For example:
 
 ```sh
@@ -236,6 +268,7 @@ A preview still downloads and builds the release in temporary storage. It reads 
 | --- | --- | --- |
 | Cursor | `/install-new-release-from-repo` | `/install-new-release-from-repo preview` |
 | Codex | `$install-new-release-from-repo` | `$install-new-release-from-repo preview` |
+| OpenCode | `npm run install:release -- --opencode-only` from the source checkout | add `--dry-run` |
 
 This skill exists only in the source checkout, not in installed packages. It uses the current editor as the destination unless you explicitly name the other one. If a new Codex task cannot discover it, use the terminal command above.
 
@@ -243,10 +276,10 @@ This skill exists only in the source checkout, not in installed packages. It use
 
 After installation:
 
-1. Reload Cursor or start a new Codex task in your website or web-app project.
+1. Reload Cursor, start a new Codex task, or start a new OpenCode session in your website or web-app project.
 2. Review any changed hook permissions before granting trust.
-3. Ask for `/design status` in Cursor or `$design status` in Codex to inspect the version and project configuration.
-4. Try a request such as `$design critique the checkout page` (use `/design` in Cursor).
+3. Ask for `/design status` in Cursor or OpenCode, or `$design status` in Codex, to inspect the version and project configuration. OpenCode also accepts `@design status`.
+4. Try a request such as `$design critique the checkout page` (use `/design` in Cursor and OpenCode).
 
 The installer reports the release, installed paths, versions, and verification result. Successful installation and cache verification do not establish that the editor has loaded the new plugin; that is why the fresh-task step matters. Status describes configuration, not proof that automatic checks have run.
 
@@ -272,6 +305,7 @@ A normal invocation authorizes installation into the selected editor without a s
 | --- | --- |
 | Cursor | `~/.cursor/plugins/local/geldmacher-design` |
 | Codex | `~/.codex/plugins/geldmacher-design`, registered through this plugin's entry in the `personal` Marketplace |
+| OpenCode | `~/.config/opencode/geldmacher-design`, merged into the shared `skills` array and command directory |
 
 The local installer handles replacement, rollback, and Codex cache verification. Local versions have a `+local.<host>.<digest>` suffix identifying the editor and a hash of the packaged content. They are built from released source and need not be byte-identical to the published ZIP.
 

@@ -54,7 +54,7 @@ function codexSkillCandidates(projectRoot) {
 
 export function detectProjectConflicts(projectRoot, options = {}) {
   const host = resolveHost(options.host, options.env);
-  if (host === 'agent-plugin') return [];
+  if (host === 'agent-plugin' || host === 'opencode') return [];
   const root = path.resolve(projectRoot);
   const conflicts = [];
   const directSkills = host === 'cursor'
@@ -120,7 +120,9 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
     ? path.join(pluginRoot, '.cursor-plugin', 'plugin.json')
     : host === 'codex'
       ? path.join(pluginRoot, '.codex-plugin', 'plugin.json')
-      : path.join(pluginRoot, 'plugin.json');
+      : host === 'opencode'
+        ? path.join(pluginRoot, '.opencode-plugin', 'plugin.json')
+        : path.join(pluginRoot, 'plugin.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   const modules = loadModules(pluginRoot);
   const skillText = fs.readFileSync(path.join(pluginRoot, 'skills', 'impeccable', 'SKILL.md'), 'utf8');
@@ -129,7 +131,7 @@ export function inspectProject(projectRoot = process.cwd(), options = {}) {
     || null;
   const impeccableModule = modules.find((module) => module.id === 'impeccable');
   const configuration = readHookActivation(root);
-  const activation = host === 'agent-plugin'
+  const activation = host === 'agent-plugin' || host === 'opencode'
     ? { state: 'unavailable', enabled: false, explicit: false, path: null }
     : configuration;
   const hook = {
@@ -261,7 +263,7 @@ export function setupProject(projectRoot = process.cwd(), options = {}) {
   const state = inspectProject(projectRoot, options);
   const unresolved = options.contextReader && state.readiness.scope.state !== 'resolved';
   const malformed = state.readiness.configuration.state === 'malformed';
-  const enableHook = state.host !== 'agent-plugin' && options.enableHook !== false;
+  const enableHook = state.host !== 'agent-plugin' && state.host !== 'opencode' && options.enableHook !== false;
   const plan = {
     writes: enableHook && !malformed && !unresolved
       ? planHookActivation(state.projectRoot, true).map(({ name }) => `.impeccable/${name}: set hook.enabled=true`) : [],
@@ -291,6 +293,9 @@ export function setProjectHook(projectRoot, enabled, options = {}) {
   const state = inspectProject(projectRoot, options);
   if (state.host === 'agent-plugin') {
     throw new Error('Hook management is unavailable because Agent Plugins v1 does not standardize plugin hooks.');
+  }
+  if (state.host === 'opencode') {
+    throw new Error('Hook management is unavailable because the OpenCode 2.1.2 package does not include a hook adapter.');
   }
   if (state.hook.state === 'malformed') throw new Error('Malformed config requires a deliberate manual repair.');
   if (enabled && state.conflicts.some((finding) => finding.severity === 'conflict')) {

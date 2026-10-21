@@ -110,6 +110,15 @@ for (const intentionallyAbsent of ['apps', 'agents']) {
   check(!Object.hasOwn(codexManifest, intentionallyAbsent), `Codex ${intentionallyAbsent} must remain absent.`);
 }
 check(codexManifest.author?.name === manifest.author.name, 'Cursor and Codex author names differ.');
+
+const opencodeManifest = readJson('.opencode-plugin/plugin.json');
+check(opencodeManifest.name === manifest.name, 'OpenCode plugin name differs.');
+check(opencodeManifest.version === manifest.version, 'OpenCode manifest version differs.');
+check(opencodeManifest.description === manifest.description, 'OpenCode description differs.');
+check(opencodeManifest.skills === './skills/', 'OpenCode manifest must discover the shared skills directory.');
+check(opencodeManifest.opencodeCompatibility === '2.1.2', 'OpenCode package must target OpenCode 2.1.2.');
+check(!opencodeManifest.hooks && !opencodeManifest.agents, 'OpenCode manifest must not register hooks or agents.');
+check(!fs.existsSync(path.join(root, 'CLAUDE.md')), 'The repository must not add CLAUDE.md.');
 check(codexManifest.interface?.displayName === 'Design', 'Unexpected Codex display name.');
 check(codexManifest.interface?.developerName === 'Geldmacher', 'Unexpected Codex developer name.');
 check(Array.isArray(codexManifest.interface?.capabilities), 'Codex capabilities must be an array.');
