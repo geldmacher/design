@@ -3,8 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { deployPreparedTargets, deploymentStatus, prepareMetadata } from "./local-plugin-deploy.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const repositoryRoot = dirname(dirname(scriptPath));
@@ -107,7 +106,7 @@ export async function installRelease({
   home = process.env.LOCAL_PLUGIN_HOME || homedir(), env = process.env,
   // Boundaries are injectable for isolated repository tests, never CLI switches.
   execute = run, resolveRelease = latestRelease, checkPrerequisites = preflight,
-  deploy = deployPreparedTargets, status = deploymentStatus,
+  deploy, status,
   temporaryRoot = tmpdir(), report = (value) => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`),
 } = {}) {
   if (!["cursor", "codex", "opencode"].includes(host)) throw new Error("Select a supported host: cursor, codex, or opencode.");
@@ -145,6 +144,9 @@ export async function installRelease({
       }
     };
     assertSource();
+    const deployment = await import(pathToFileURL(join(source, "scripts", "local-plugin-deploy.mjs")).href);
+    deploy ??= deployment.deployPreparedTargets;
+    status ??= deployment.deploymentStatus;
     const options = {
       root: source, plugin: PLUGIN, baseVersion: release.version, home, env,
       gitHead: commit, gitDirty: false, hosts: [host], codexBinary: env.CODEX_BIN || "codex",
@@ -159,7 +161,7 @@ export async function installRelease({
       return { release, preview, dry_run: true, workspace_removed: true };
     }
     assertSource();
-    const prepared = prepareMetadata(options)[host];
+    const prepared = deployment.prepareMetadata(options)[host];
     if (prepared.hash !== preview.targets[host].content_sha256) {
       throw new Error("Prepared bundle changed after preview; installation stopped.");
     }

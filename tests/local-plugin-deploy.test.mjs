@@ -18,6 +18,7 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import { parse as parseJsonc } from "jsonc-parser";
 import {
   OPENCODE_SHARED_CONFIG_RULE,
   contentHash,
@@ -873,6 +874,42 @@ function dirnameOf(path) {
   return join(path, "..");
 }
 
+test("OpenCode uninstall removes JSONC registrations while preserving all comments and unrelated content", () => {
+  for (const entries of [["design", "workflow"], ["workflow", "design", "efficiency"], ["workflow", "design", "design"], ["design", "design"], ["design"]]) {
+    const item = fixture();
+    try {
+      const paths = deploymentPaths(item.home, plugin);
+      const skills = openCodeSkillsPath(item.home, plugin);
+      const values = entries.map((entry, index) => entry === "design" ? (index % 2 ? `~/.config/opencode/${plugin}/skills` : skills) : `/opt/${entry}/skills`);
+      const lines = values.map((value, index) => `    // keep comment ${index}\n    ${JSON.stringify(value)} /* keep block ${index} */${index < values.length - 1 || entries.length % 2 === 0 ? "," : ""}`);
+      const original = `{\n  // keep model\n  "model": "keep",\n  "skills": [\n${lines.join("\n")}\n  ],\n  "commands": { "foreign": { "template": "keep" } },\n}\n`.replaceAll("\n", entries.length === 2 ? "\r\n" : "\n");
+      mkdirSync(dirnameOf(paths.opencodeConfigComments), { recursive: true });
+      writeFileSync(paths.opencodeConfigComments, original);
+      const installed = deployPreparedTargets({ ...metadata(item.repository), home: item.home, hosts: ["opencode"], env: {} });
+      assert.equal(installed.opencode.config_change, false);
+      assert.equal(existsSync(paths.opencodeConfig), false);
+      const removed = uninstallOpenCodeDeployment({ plugin, home: item.home, env: {} });
+      const after = readFileSync(paths.opencodeConfigComments, "utf8");
+      const errors = [];
+      const document = parseJsonc(after, errors, { allowTrailingComma: true });
+      assert.deepEqual(errors, []);
+      assert.deepEqual(document, { model: "keep", skills: values.filter((_, index) => entries[index] !== "design"), commands: { foreign: { template: "keep" } } });
+      assert.deepEqual(after.match(/\/\/[^\n]*/g), original.match(/\/\/[^\n]*/g));
+      assert.deepEqual(after.match(/\/\*[\s\S]*?\*\//g), original.match(/\/\*[\s\S]*?\*\//g));
+      assert.equal(removed.opencode.jsonc_registered, false);
+      assert.equal(removed.opencode.skills_removed.length, entries.filter((entry) => entry === "design").length);
+      assert.equal(readFileSync(join(removed.backup, "opencode.jsonc"), "utf8"), original);
+      assert.equal(existsSync(paths.opencode), false);
+      const backups = backupDirectories(paths.opencodeBackups);
+      assert.equal(uninstallOpenCodeDeployment({ plugin, home: item.home, env: {} }).no_op, true);
+      assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), after);
+      assert.deepEqual(backupDirectories(paths.opencodeBackups), backups);
+    } finally {
+      rmSync(item.root, { recursive: true, force: true });
+    }
+  }
+});
+
 test("failed OpenCode deploy restores the shared config and replaced command from its timestamped backup", () => {
   const item = fixture();
   try {
@@ -928,27 +965,53 @@ test("OpenCode uninstall CLI removes only this plugin under an isolated XDG_CONF
     writeFileSync(join(paths.opencodeCommands, "efficiency-review.md"), "leave me\n");
     writeFileSync(join(paths.opencodeCommands, "plan-work.md"), "Load the `plan-work` skill and apply it to the current request.\n");
     writeFileSync(paths.opencodeConfig, `${JSON.stringify({ model: "keep", skills: ["./efficiency/skills", skills, skills] }, null, 2)}\n`);
+    const jsonc = `{\n  // retain shared comments\n  "skills": [${JSON.stringify(skills)}, "/opt/workflow/skills", ${JSON.stringify(skills)}],\n  "theme": "keep",\n}\n`;
+    writeFileSync(paths.opencodeConfigComments, jsonc);
+    const original = readFileSync(paths.opencodeConfig, "utf8");
     const env = { ...process.env, LOCAL_PLUGIN_HOME: home, XDG_CONFIG_HOME: join(home, ".config") };
     delete env.OPENCODE_CONFIG_DIR;
     const invalid = spawnSync(process.execPath, [script, "uninstall", "--cursor-only"], { env, encoding: "utf8" });
     assert.equal(invalid.status, 1, invalid.stderr);
     assert.match(invalid.stderr, /use --opencode-only/);
+    const preload = join(parent, "uninstall-failure.mjs");
+    writeFileSync(preload, `
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      const original = fs.rmSync;
+      fs.rmSync = (path, options) => {
+        if (path === ${JSON.stringify(paths.opencode)}) throw new Error('fixture package removal failure');
+        return original(path, options);
+      };
+      syncBuiltinESMExports();
+    `);
+    const failed = spawnSync(process.execPath, ["--import", pathToFileURL(preload).href, script, "uninstall"], { env, encoding: "utf8" });
+    assert.equal(failed.status, 1, failed.stderr);
+    assert.match(failed.stderr, /rolled back: fixture package removal failure/);
+    assert.equal(readFileSync(paths.opencodeConfig, "utf8"), original);
+    assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
+    assert.equal(readFileSync(join(paths.opencodeCommands, "design.md"), "utf8"), command);
+    assert.equal(existsSync(paths.opencode), true);
+    const [failedBackup] = backupDirectories(paths.opencodeBackups);
+    assert.equal(readFileSync(join(paths.opencodeBackups, failedBackup, "opencode.jsonc"), "utf8"), jsonc);
     const removed = spawnSync(process.execPath, [script, "uninstall", "--opencode-only"], { env, encoding: "utf8" });
     assert.equal(removed.status, 0, removed.stderr);
     const payload = JSON.parse(removed.stdout);
     assert.equal(payload.no_op, false);
-    assert.deepEqual(payload.opencode.skills_removed, [skills, skills]);
+    assert.deepEqual(payload.opencode.skills_removed, [skills, skills, skills, skills]);
+    assert.equal(payload.opencode.jsonc_registered, false);
     assert.deepEqual(JSON.parse(readFileSync(paths.opencodeConfig, "utf8")).skills, ["./efficiency/skills"]);
+    assert.deepEqual(parseJsonc(readFileSync(paths.opencodeConfigComments, "utf8")), { skills: ["/opt/workflow/skills"], theme: "keep" });
+    assert.match(readFileSync(paths.opencodeConfigComments, "utf8"), /\/\/ retain shared comments/);
     assert.equal(JSON.parse(readFileSync(paths.opencodeConfig, "utf8")).model, "keep");
     assert.equal(existsSync(join(paths.opencodeCommands, "design.md")), false);
     assert.equal(readFileSync(join(paths.opencodeCommands, "efficiency-review.md"), "utf8"), "leave me\n");
     assert.match(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), /Load the `plan-work` skill/);
     assert.equal(existsSync(paths.opencode), false);
-    assert.equal(backupDirectories(paths.opencodeBackups).length, 1);
+    assert.equal(backupDirectories(paths.opencodeBackups).length, 2);
     const again = spawnSync(process.execPath, [script, "uninstall"], { env, encoding: "utf8" });
     assert.equal(again.status, 0, again.stderr);
     assert.equal(JSON.parse(again.stdout).no_op, true);
-    assert.equal(backupDirectories(paths.opencodeBackups).length, 1);
+    assert.equal(backupDirectories(paths.opencodeBackups).length, 2);
     assert.equal(existsSync(leaked), leakedBefore);
   } finally {
     rmSync(parent, { recursive: true, force: true });

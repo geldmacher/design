@@ -20,7 +20,7 @@ import {
 import { homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parse as parseJsonc } from "jsonc-parser";
+import { applyEdits, createScanner, findNodeAtLocation, parse as parseJsonc, parseTree, SyntaxKind } from "jsonc-parser";
 
 export const RECEIPT_NAME = ".local-deploy.json";
 export const HOSTS = ["cursor", "codex", "opencode"];
@@ -277,14 +277,15 @@ function readOpenCodeConfigFiles(paths) {
   const jsonPresent = lstatExists(paths.opencodeConfig);
   const original = jsonPresent ? readFileSync(paths.opencodeConfig) : null;
   const json = original === null ? null : JSON.parse(original.toString("utf8"));
+  const originalComments = lstatExists(paths.opencodeConfigComments) ? readFileSync(paths.opencodeConfigComments) : null;
   let jsonc = null;
-  if (lstatExists(paths.opencodeConfigComments)) {
+  if (originalComments !== null) {
     const errors = [];
-    jsonc = parseJsonc(readFileSync(paths.opencodeConfigComments, "utf8"), errors, { allowTrailingComma: true });
+    jsonc = parseJsonc(originalComments.toString("utf8"), errors, { allowTrailingComma: true });
     if (errors.length) throw new Error(`invalid OpenCode JSONC: ${paths.opencodeConfigComments}`);
     if (jsonc === null || typeof jsonc !== "object" || Array.isArray(jsonc)) throw new Error(`OpenCode config must be a JSON object: ${paths.opencodeConfigComments}`);
   }
-  return { json, jsonc, original };
+  return { json, jsonc, original, originalComments };
 }
 
 function openCodeConfigPlan(paths, home) {
@@ -377,11 +378,11 @@ function restoreOpenCodeBackup(directory, { plugin, home }) {
   if (manifest?.schema !== 1 || manifest.plugin !== plugin || !Array.isArray(manifest.files)) {
     throw new Error(`OpenCode backup is not usable: ${directory}`);
   }
-  const configPath = join(resolve(home), ".config", "opencode", "opencode.json");
+  const configPaths = ["opencode.json", "opencode.jsonc"].map((name) => join(resolve(home), ".config", "opencode", name));
   const commandsRoot = join(resolve(home), ".config", "opencode", "commands");
   for (const file of manifest.files) {
     const target = resolve(file.path);
-    if (target !== configPath && !isInside(commandsRoot, target)) throw new Error(`OpenCode backup restore target is outside the shared config: ${file.path}`);
+    if (!configPaths.includes(target) && !isInside(commandsRoot, target)) throw new Error(`OpenCode backup restore target is outside the shared config: ${file.path}`);
     assertOpenCodePath(target, home);
     if (lstatExists(target) && lstatSync(target).isSymbolicLink()) throw new Error(`OpenCode restore target is a symlink: ${target}`);
     if (file.existed) {
@@ -417,26 +418,47 @@ function ownedOpenCodeCommands(packageRoot, plugin) {
   return { present: true, names };
 }
 
+function removeOpenCodeJsoncSkills(text, indexes) {
+  // General JSONC array edits also consume neighboring comments; remove only values and separators.
+  const entries = findNodeAtLocation(parseTree(text), ["skills"]).children;
+  const removed = new Set(indexes);
+  const lastKept = entries.findLastIndex((_, index) => !removed.has(index));
+  const scanner = createScanner(text, true);
+  const edits = [];
+  for (const [index, entry] of entries.entries()) {
+    if (removed.has(index)) edits.push({ offset: entry.offset, length: entry.length, content: "" });
+    scanner.setPosition(entry.offset + entry.length);
+    if (scanner.scan() === SyntaxKind.CommaToken && (removed.has(index) || (index === lastKept && index < entries.length - 1))) {
+      edits.push({ offset: scanner.getTokenOffset(), length: scanner.getTokenLength(), content: "" });
+    }
+  }
+  return applyEdits(text, edits);
+}
+
 function planOpenCodeRemoval(paths, home, plugin, commandNames) {
   const skillsPath = openCodeSkillsPath(home, plugin);
-  const { json, jsonc, original } = readOpenCodeConfigFiles(paths);
+  const { json, jsonc, original, originalComments } = readOpenCodeConfigFiles(paths);
   const removed = [];
-  let nextBytes = null;
-  if (json !== null) {
-    if (typeof json !== "object" || Array.isArray(json)) throw new Error("OpenCode config must be a JSON object");
-    if (json.skills !== undefined && (!Array.isArray(json.skills) || json.skills.some((entry) => typeof entry !== "string"))) {
+  const configs = [];
+  for (const [path, document, bytes] of [[paths.opencodeConfig, json, original], [paths.opencodeConfigComments, jsonc, originalComments]]) {
+    if (document === null) continue;
+    if (typeof document !== "object" || Array.isArray(document)) throw new Error("OpenCode config must be a JSON object");
+    if (document.skills !== undefined && (!Array.isArray(document.skills) || document.skills.some((entry) => typeof entry !== "string"))) {
       throw new Error("OpenCode skills entries must be strings");
     }
-    if (Array.isArray(json.skills)) {
-      const skills = json.skills.filter((entry) => {
-        const match = entry === skillsPath || expandOpenCodePath(entry, home) === skillsPath;
-        if (match) removed.push(entry);
-        return !match;
+    if (Array.isArray(document.skills)) {
+      const indexes = [];
+      const skills = document.skills.filter((entry, index) => {
+        if (entry !== skillsPath && expandOpenCodePath(entry, home) !== skillsPath) return true;
+        removed.push(entry);
+        indexes.push(index);
+        return false;
       });
-      if (removed.length) {
-        const next = structuredClone(json);
-        next.skills = skills;
-        nextBytes = Buffer.from(`${JSON.stringify(next, null, 2)}\n`);
+      if (indexes.length) {
+        const nextBytes = path === paths.opencodeConfigComments
+          ? Buffer.from(removeOpenCodeJsoncSkills(bytes.toString("utf8"), indexes))
+          : Buffer.from(`${JSON.stringify({ ...document, skills }, null, 2)}\n`);
+        configs.push({ path, original: bytes, nextBytes });
       }
     }
   }
@@ -450,7 +472,7 @@ function planOpenCodeRemoval(paths, home, plugin, commandNames) {
     if (!designCommand(name, readFileSync(destination, "utf8"))) continue;
     commands.push({ name, destination, bytes: readFileSync(destination) });
   }
-  return { skillsPath, removed, nextBytes, original, commands, jsoncRegistered: openCodeSkillRegistered(jsonc, skillsPath, home), configChange: nextBytes !== null };
+  return { skillsPath, removed, configs, commands, jsoncRegistered: openCodeSkillRegistered(jsonc, skillsPath, home) };
 }
 
 export function uninstallOpenCodeDeployment({ plugin, home, env = process.env, deployedAt = new Date().toISOString() } = {}) {
@@ -463,8 +485,8 @@ export function uninstallOpenCodeDeployment({ plugin, home, env = process.env, d
   const owned = ownedOpenCodeCommands(paths.opencode, plugin);
   const plan = planOpenCodeRemoval(paths, paths.home, plugin, owned.names);
   const files = [];
-  if (plan.configChange) {
-    files.push({ kind: "opencode-config", path: paths.opencodeConfig, existed: true, bytes: plan.original, backup: "opencode.json" });
+  for (const config of plan.configs) {
+    files.push({ kind: "opencode-config", path: config.path, existed: true, bytes: config.original, backup: basename(config.path) });
   }
   for (const file of plan.commands) {
     files.push({ kind: "opencode-command", path: file.destination, existed: true, bytes: file.bytes, backup: `commands/${file.name}` });
@@ -490,8 +512,13 @@ export function uninstallOpenCodeDeployment({ plugin, home, env = process.env, d
     ? writeOpenCodeBackup({ home: paths.home, plugin, root: paths.opencodeBackups, createdAt: deployedAt, reason: "uninstall", files })
     : null;
   try {
-    if (plan.configChange) atomicWrite(paths.opencodeConfig, plan.nextBytes);
+    for (const config of plan.configs) atomicWrite(config.path, config.nextBytes);
     for (const file of plan.commands) rmSync(file.destination, { force: true });
+    const { json, jsonc } = readOpenCodeConfigFiles(paths);
+    if (openCodeSkillRegistered(json, plan.skillsPath, paths.home) || openCodeSkillRegistered(jsonc, plan.skillsPath, paths.home)) {
+      throw new Error("OpenCode skills remained registered after uninstall");
+    }
+    result.opencode.jsonc_registered = false;
     if (owned.present) rmSync(paths.opencode, { recursive: true, force: true });
     result.backup = backup;
     result.opencode.backup = backup;
