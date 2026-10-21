@@ -14,12 +14,12 @@ const PLUGIN = "geldmacher-design";
 const stableTag = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 export function parseInstallArguments(args) {
-  const allowed = new Set(["--cursor-only", "--codex-only", "--dry-run"]);
+  const allowed = new Set(["--cursor-only", "--codex-only", "--opencode-only", "--dry-run"]);
   for (const arg of args) {
     if (!allowed.has(arg)) throw new Error(`Unsupported argument: ${arg}`);
   }
-  const hosts = ["cursor", "codex"].filter((host) => args.includes(`--${host}-only`));
-  if (hosts.length !== 1) throw new Error("Select exactly one host with --cursor-only or --codex-only.");
+  const hosts = ["cursor", "codex", "opencode"].filter((host) => args.includes(`--${host}-only`));
+  if (hosts.length !== 1) throw new Error("Select exactly one host with --cursor-only, --codex-only, or --opencode-only.");
   return { host: hosts[0], dryRun: args.includes("--dry-run") };
 }
 
@@ -68,7 +68,7 @@ function json(root, file) {
 }
 
 function assertIdentity(root, version) {
-  for (const file of ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", "manifests/agent-plugin.json"]) {
+  for (const file of ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", ".opencode-plugin/plugin.json", "manifests/agent-plugin.json"]) {
     const manifest = json(root, file);
     if (manifest.name !== PLUGIN || (version && manifest.version !== version)) {
       throw new Error(`Unexpected Design identity or release version in ${file}.`);
@@ -85,14 +85,17 @@ function preflight({ root, host, env, execute }) {
   const top = execute("git", ["rev-parse", "--show-toplevel"], { cwd: root, env });
   if (realpathSync(top) !== realpathSync(root)) throw new Error("Open the Design source repository root before installing.");
   const origin = execute("git", ["remote", "get-url", "origin"], { cwd: root, env });
-  if (![REPOSITORY, REPOSITORY.slice(0, -4), "git@github.com:geldmacher/design.git", "ssh://git@github.com/geldmacher/design.git"].includes(origin)) {
+  const normalized = origin.replace(/^https:\/\/[^@\s]+@github\.com\//, "https://github.com/").replace(/\.git$/, "");
+  const accepted = [REPOSITORY, REPOSITORY.slice(0, -4), "git@github.com:geldmacher/design.git", "ssh://git@github.com/geldmacher/design.git"]
+    .map((value) => value.replace(/\.git$/, ""));
+  if (!accepted.includes(normalized) && !accepted.includes(origin.replace(/\.git$/, ""))) {
     throw new Error("The source repository origin must be geldmacher/design on GitHub.");
   }
   execute("npm", ["--version"], { cwd: root, env });
   if (host === "codex") {
     const help = execute(env.CODEX_BIN || "codex", ["plugin", "add", "--help"], { cwd: root, env });
     if (!help.includes("--json")) throw new Error("The Codex CLI must support codex plugin add --json.");
-  } else {
+  } else if (host === "cursor") {
     const appAvailable = process.platform === "darwin" && ["/Applications/Cursor.app", join(homedir(), "Applications", "Cursor.app")].some(existsSync);
     if (!appAvailable) execute("cursor", ["--version"], { cwd: root, env });
   }
@@ -107,7 +110,7 @@ export async function installRelease({
   deploy = deployPreparedTargets, status = deploymentStatus,
   temporaryRoot = tmpdir(), report = (value) => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`),
 } = {}) {
-  if (!["cursor", "codex"].includes(host)) throw new Error("Select a supported host: cursor or codex.");
+  if (!["cursor", "codex", "opencode"].includes(host)) throw new Error("Select a supported host: cursor, codex, or opencode.");
   checkPrerequisites({ root, host, env, execute });
   const release = validateRelease(await resolveRelease());
   const workspace = mkdtempSync(join(temporaryRoot, "design-release-install-"));
@@ -172,7 +175,7 @@ export async function installRelease({
     const result = {
       release, installed, verification: verified, dry_run: false,
       activation: "not-tested",
-      next_action: installed.no_op ? "none" : host === "cursor" ? "Reload Cursor and review changed hook trust." : "Start a new Codex task and review changed hook trust.",
+      next_action: installed.no_op ? "none" : host === "cursor" ? "Reload Cursor and review changed hook trust." : host === "opencode" ? "Start a new OpenCode session." : "Start a new Codex task and review changed hook trust.",
       workspace_removed: true,
     };
     rmSync(workspace, { recursive: true });

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an OpenCode 2.1.2 package beside Cursor and Codex, with skill discovery through the global `skills` list, `/name` and `@name` commands, local deploy, and provenance schema 2. Suggested next version: **0.19.0**.
+
 ## 0.18.0 - 2026-10-20
 
 - Update bundled Impeccable to 4.7.0 and native engine 0.1.16 (includes 4.6.0). Native critiques review the interface itself, and critique and audit can scan desktop apps (Electron, NW.js, CEF, WebView2) through a local debugging port. Direction contracts record a seed reference instead of the raw roll key, and decision cards name their kind. Detector findings skip non-visible content, read contrast from the painted surface, and add advisory checks for a lonely last word and a stub heading line; typeset guidance recommends `text-wrap: balance` for headings and `pretty` for body copy. In a monorepo, `context` only offers workspaces that render a UI. Refine commands outside a full build are no longer capped at two rounds, and discarding a live variant restores the original element.

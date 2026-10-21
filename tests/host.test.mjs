@@ -18,6 +18,8 @@ test('host invocations and Impeccable provider prefixes stay target-correct', ()
   assert.equal(hostInvocation('cursor', 'design'), '/design');
   assert.equal(hostInvocation('codex', 'design'), '$design');
   assert.equal(hostInvocation('agent-plugin', 'design'), 'design');
+  assert.equal(hostInvocation('opencode', 'design'), '/design');
+  assert.equal(resolveHost('opencode', {}), 'opencode');
   for (const host of ['cursor', 'codex', 'agent-plugin']) {
     assert.equal(impeccableRuntimeEnvironment(host, '/plugin', {}).IMPECCABLE_PROVIDER_ID, host);
   }

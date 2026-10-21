@@ -1,6 +1,6 @@
 ---
 name: deploy-local-plugin
-description: Build, inspect, preview, or deploy this Design source checkout to selected local Cursor and Codex installations. Use only on explicit deploy-local-plugin invocation; installing a published release is a separate operation.
+description: Build, inspect, preview, or deploy this Design source checkout to selected local Cursor, Codex, and OpenCode installations. Use only on explicit deploy-local-plugin invocation; installing a published release is a separate operation.
 disable-model-invocation: true
 ---
 
@@ -14,9 +14,9 @@ Operate only on the current repository. Never search for or deploy sibling plugi
    - dry run or preview: `npm run deploy:local -- --dry-run`
    - deploy or update: `npm run deploy:local`
    - full deploy or full validation: `npm run deploy:local -- --full`
-   Resolve host scope independently: no host request means both hosts; append `--cursor-only` for Cursor only or `--codex-only` for Codex only. The host flags work with status, dry-run, standard, and full paths.
-3. Run from the repository root. Do not manually copy plugin files, edit the personal Marketplace, remove Codex caches, trust hooks, restart Cursor, or restart Codex.
+   Resolve host scope independently: no host request means Cursor, Codex, and OpenCode; append `--cursor-only`, `--codex-only`, or `--opencode-only` for one host. The host flags work with status, dry-run, standard, and full paths.
+3. Run from the repository root. Do not manually copy plugin files, edit the personal Marketplace, remove Codex caches, trust hooks, restart Cursor, restart Codex, or restart OpenCode. OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
 4. Report the selected hosts, product and local versions, content hashes, destination paths, dirty provenance, applicable Codex cache verification, and whether hook trust needs manual review.
-5. After a real deployment, tell the user to reload Cursor and/or start a new Codex task for the hosts that changed. Do not claim live activation until those host-specific checks happen.
+5. After a real deployment, tell the user to reload Cursor, start a new Codex task, and/or start a new OpenCode session for the hosts that changed. Do not claim live activation until those host-specific checks happen.
 
 Stop on any manifest identity, path-boundary, symlink, validation, swap, rollback, Marketplace, or Codex cache error. Preserve the deploy command's verified/provisional distinction.

@@ -251,7 +251,7 @@ test('candidate readiness exercises packaged launchers and rejects missing integ
   const source = path.join(root, 'source');
   fs.cpSync(pluginRoot, source, { recursive: true, filter: file => !['.git', '.build', 'node_modules', '.agents', '.cursor'].includes(path.relative(pluginRoot, file).split(path.sep)[0]) });
   const ready = verifyCandidateRuntime(source, source, []);
-  assert.deepEqual(ready.targets, ['agent-plugin', 'cursor', 'codex']);
+  assert.deepEqual(ready.targets, ['agent-plugin', 'cursor', 'codex', 'opencode']);
   assert.equal(ready.engineVersion, pin.engine.version);
   const runtime = path.join(source, 'src/impeccable-runtime.mjs');
   const bytes = fs.readFileSync(runtime);

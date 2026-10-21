@@ -21,7 +21,7 @@ Keep the [main README](../README.md) focused on the benefit, installation, and a
 Two documentation surfaces are generated:
 
 - For `docs/commands.md`, edit the first-party explanations in `scripts/build-command-reference.mjs`, then run `npm run build:commands`. The command inventory comes from pinned Impeccable; update it only through the maintenance workflow.
-- For Cursor and Codex package READMEs, edit `packageReadme(host)` in `scripts/build-plugin-targets.mjs`, then run `npm run build:targets`.
+- For Cursor, Codex, and OpenCode package READMEs, edit `packageReadme(host)` in `scripts/build-plugin-targets.mjs`, then run `npm run build:targets`.
 
 The release packages include `docs/installation.md`. Keep its local links valid inside the package as well as in this repository.
 
@@ -41,15 +41,16 @@ Maintainers run `npm run verify:impeccable-engine` for isolated engine, detector
 
 ## Package targets
 
-One source checkout produces three deterministic packages:
+One source checkout produces four deterministic packages:
 
 | Target | Package | Portable or native behavior |
 | --- | --- | --- |
 | Agent Plugins v1 | `.build/plugins/agent-plugin/geldmacher-design` | Standard `plugin.json` plus the `design` and `impeccable` skills; no MCP, registered/native hook integration, or native agents |
 | Cursor | `.build/plugins/cursor/geldmacher-design` | `/design`, `/impeccable`, pre-write hook, and native agents |
 | Codex | `.build/plugins/codex/geldmacher-design` | `$design`, `$impeccable`, PostToolUse/Stop hook, and inherited generic subagents |
+| OpenCode 2.1.2 | `.build/plugins/opencode/geldmacher-design` | `/design` and `@design`, explicit `/impeccable` and `/motion`, no hook adapter |
 
-Run `npm run build:targets` to materialize all three. First-party Design text is shared; an explicitly marked host section and selected frontmatter fields are projected for the portable target. Missing or duplicate markers fail the build. Native packages include only `assets/logo.svg`; other branding stays in source. The Agent Plugins package follows v1.0.0 and declares the skill identities `design` and `impeccable`. Discovery, presentation, and invocation syntax remain client-specific because the standard does not define distribution, permissions, hooks, native agents, commands, or client UX. See [the Agent Plugins target guide](agent-plugin-target.md).
+Run `npm run build:targets` to materialize all four. First-party Design text is shared; an explicitly marked host section and selected frontmatter fields are projected for the portable target. Missing or duplicate markers fail the build. Native packages include only `assets/logo.svg`; other branding stays in source. The Agent Plugins package follows v1.0.0 and declares the skill identities `design` and `impeccable`. Discovery, presentation, and invocation syntax remain client-specific because the standard does not define distribution, permissions, hooks, native agents, commands, or client UX. See [the Agent Plugins target guide](agent-plugin-target.md).
 
 ## Local maintainer deployment
 
@@ -70,24 +71,28 @@ If you already have a checkout, use it instead and run `npm ci` from its reposit
 
 ### Preview and install
 
-Choose one host or deploy both:
+Choose one host or deploy all of them:
 
 | Target | Preview without changing host state | Install or update |
 | --- | --- | --- |
 | Cursor only | `npm run deploy:local -- --dry-run --cursor-only` | `npm run deploy:local -- --cursor-only` |
 | Codex only | `npm run deploy:local -- --dry-run --codex-only` | `npm run deploy:local -- --codex-only` |
-| Cursor and Codex | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
+| OpenCode only | `npm run deploy:local -- --dry-run --opencode-only` | `npm run deploy:local -- --opencode-only` |
+| Cursor, Codex, and OpenCode | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
+
+OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
 
 `deploy:build` materializes the packages. The normal deploy uses `deploy:prepare` for its targeted checks; append `--full` to select the shared build followed by one complete `release-check`, without repeating the targeted suites. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
 
-The deploy command builds and validates all three packages, but deploys only the native bundles under `.build/plugins/{cursor,codex}/geldmacher-design`. It then atomically replaces only the selected physical host copies:
+The deploy command builds and validates the packages, but deploys only the native bundles under `.build/plugins/{cursor,codex,opencode}/geldmacher-design`. It then atomically replaces only the selected physical host copies:
 
 - Cursor: `~/.cursor/plugins/local/geldmacher-design`
 - Codex source: `~/.codex/plugins/geldmacher-design`
+- OpenCode source: `~/.config/opencode/geldmacher-design`
 
 Every installed copy contains a `.local-deploy.json` receipt with its content-derived local version, Git revision, dirty status, source path, and deployment time. Dirty checkouts are allowed and explicitly recorded. For Codex, the command also creates or updates only this plugin's entry in the `personal` Marketplace and refreshes the verified Codex cache with `codex plugin add geldmacher-design@personal --json`. Do not delete Codex caches manually.
 
-After installation or an update, reload Cursor before testing its plugin surface and start a new Codex task before testing Codex discovery. Review changed hooks manually before granting trust. The deploy command does not restart either host or grant hook trust. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
+After installation or an update, reload Cursor before testing its plugin surface, start a new Codex task before testing Codex discovery, and start a new OpenCode session before testing OpenCode discovery. Review changed hooks manually before granting trust. The deploy command does not restart a host or grant hook trust. OpenCode has no Design hook adapter. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
 
 ### Update from the origin repository
 
@@ -104,4 +109,4 @@ npm run deploy:local
 npm run deploy:status
 ```
 
-Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last three commands above update both hosts; use the matching `--cursor-only` or `--codex-only` flag when only one host is installed. An unchanged bundle is a verified no-op; changed content receives a new host-specific local version and replaces the previous copy transactionally.
+Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last commands above update every selected host; use `--cursor-only`, `--codex-only`, or `--opencode-only` when only one host is installed. An unchanged bundle is a verified no-op; changed content receives a new host-specific local version and replaces the previous copy transactionally.

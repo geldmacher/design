@@ -2,7 +2,7 @@
 
 # Design
 
-**Build clearer, more consistent websites and web apps with Cursor or Codex.**
+**Build clearer, more consistent websites and web apps with Cursor, Codex, or OpenCode.**
 
 Design helps your AI assistant plan new pages, improve existing interfaces, and spot usability problems. It works with your product goals, components, and visual style so changes fit your project.
 
@@ -18,7 +18,7 @@ With Design installed, open your website or web-app project and name the page or
 $design Improve the labels and error messages in app/checkout so customers can complete the form. Keep the existing components, fields, and step order. Verify keyboard use and mobile error states.
 ```
 
-In **Cursor**, replace `$design` with `/design`. Send this as a message to your assistant. Commands are optional: describe the outcome in your own language, including German, and Design selects a suitable operation. It can also be selected automatically for matching interface requests; an explicit choice of another skill takes precedence.
+In **Cursor** or **OpenCode**, replace `$design` with `/design`. OpenCode also accepts `@design`. Send this as a message to your assistant. Commands are optional: describe the outcome in your own language, including German, and Design selects a suitable operation. It can also be selected automatically for matching interface requests; an explicit choice of another skill takes precedence.
 
 ## Recommended workflows
 
@@ -35,12 +35,12 @@ Design uses existing `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` context. Use 
 
 ## Install from a release
 
-Use the [latest stable GitHub Release](https://github.com/geldmacher/design/releases/latest) for Cursor or Codex. Design requires **Node.js 22+**.
+Use the [latest stable GitHub Release](https://github.com/geldmacher/design/releases/latest) for Cursor, Codex, or OpenCode 2.1.2. Design requires **Node.js 22+**.
 
-- **Manually:** follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify and install the complete package.
-- **Through your agent:** copy the [installation prompt](docs/installation.md#ask-your-agent-to-install) and check the listed prerequisites. This route uses the source checkout's installer on macOS or Linux.
+- **Manually:** follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify and install the complete package. The OpenCode archive is `geldmacher-design-opencode-v<version>.zip`.
+- **Through your agent:** copy the [installation prompt](docs/installation.md#ask-your-agent-to-install) and check the listed prerequisites. This route uses the source checkout's installer on macOS or Linux. For OpenCode, the command is `npm run install:release -- --opencode-only`.
 
-Complete the guide's activation steps: reload Cursor, or refresh the Codex Marketplace installation and start a new task. Review changed hook permissions or trust requests when prompted.
+Complete the guide's activation steps: reload Cursor, refresh the Codex Marketplace installation and start a new task, or start a new OpenCode session. Review changed hook permissions or trust requests when the host has a hook adapter. OpenCode config (`opencode.json` and `commands/`) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
 
 ## Update from a release
 

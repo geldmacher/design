@@ -32,7 +32,7 @@ function parseArgs(argv) {
     } else if (arg === '--host') {
       host = argv[++index];
       if (!host) {
-        parseError = '--host requires agent-plugin, cursor, or codex.';
+        parseError = '--host requires agent-plugin, cursor, codex, or opencode.';
         break;
       }
     } else if (arg.startsWith('--host=')) {

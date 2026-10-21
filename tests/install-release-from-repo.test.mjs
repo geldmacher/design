@@ -10,7 +10,7 @@ import { installRelease, parseInstallArguments, REPOSITORY, validateRelease } fr
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-design";
-const manifests = ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", "manifests/agent-plugin.json"];
+const manifests = ["package.json", ".cursor-plugin/plugin.json", ".codex-plugin/plugin.json", ".opencode-plugin/plugin.json", "manifests/agent-plugin.json"];
 
 function json(path, value) {
   mkdirSync(dirname(path), { recursive: true });
@@ -42,7 +42,7 @@ export function createTargetBuildWorkspace() {
 }
 export function removeTargetBuildWorkspace(workspace) { rmSync(workspace.owned, { recursive: true }); }
 export function buildPluginTargets(output = join(root, '.build', 'plugins')) {
-  return Object.fromEntries(['cursor', 'codex'].map(host => {
+  return Object.fromEntries(['cursor', 'codex', 'opencode'].map(host => {
     const path = join(output, host, 'geldmacher-design');
     const manifest = '.' + host + '-plugin';
     mkdirSync(path, { recursive: true });
@@ -137,7 +137,8 @@ function retained(item) {
 test("CLI requires exactly one explicit supported host", () => {
   assert.deepEqual(parseInstallArguments(["--codex-only", "--dry-run"]), { host: "codex", dryRun: true });
   assert.deepEqual(parseInstallArguments(["--cursor-only"]), { host: "cursor", dryRun: false });
-  for (const args of [[], ["--both"], ["--codex-only", "--cursor-only"], ["--cursor-only", "--version", "main"]]) assert.throws(() => parseInstallArguments(args));
+  assert.deepEqual(parseInstallArguments(["--opencode-only", "--dry-run"]), { host: "opencode", dryRun: true });
+  for (const args of [[], ["--both"], ["--codex-only", "--cursor-only"], ["--opencode-only", "--cursor-only"], ["--cursor-only", "--version", "main"]]) assert.throws(() => parseInstallArguments(args));
 });
 
 test("release selection rejects missing, draft, prerelease and unrelated release metadata", () => {

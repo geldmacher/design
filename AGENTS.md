@@ -17,6 +17,7 @@ Design helps people ship websites and web apps that feel intentional. Act as a f
 - Keep the Agent Plugins v1 package as the portable skills-only floor; do not emulate hooks, native agents, distribution, or activation.
 - Cursor enters through `/design`, resolves plugin files from `${CURSOR_PLUGIN_ROOT}`, and may enforce known UI issues before a write.
 - Codex enters through `$design`, resolves plugin files from `${PLUGIN_ROOT}`, and reports issues after a change or at Stop. It does not pretend to roll back completed edits.
+- OpenCode 2.1.2 enters through `/design` or `@design`. Skills are registered from the installed package directory. OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
 - Do not silently guess an unknown host, provider, or tool contract. Preserve observable host differences.
 - Specialized roles inherit the user's selected parent model. Do not add hidden model overrides or conversation forks.
 

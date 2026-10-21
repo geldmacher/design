@@ -31,16 +31,16 @@ The Design lifecycle, stakeholder questionnaire, and read-only change review rem
 
 ## Native compatibility layers
 
-| Capability | Agent Plugins v1 | Cursor | Codex |
-| --- | --- | --- | --- |
-| Skills | Identities `design`, `impeccable`, `motion`; client-specific exposure | `/design`, `/impeccable`, `/motion` | `$design`, `$impeccable`, `$motion` |
-| Motion through Design | Loaded `design` skill operation | `/design motion` | `$design motion` |
-| Free Motion documentation MCP | Not configured; local guidance included | Bundled remote connection; host enablement and permissions apply | Bundled remote connection; host enablement and permissions apply |
-| Stakeholder questionnaire | Loaded `design` skill operation | `/design questionnaire` | `$design questionnaire` |
-| Change review | Loaded `design` skill operation | `/design review` | `$design review` |
-| Hook | Unavailable | Pre-write | PostToolUse and Stop |
-| Specialized roles | Bundled degraded instructions | Native agents | Generic inherited subagents |
-| Local deployment helper | No | Yes | Yes |
+| Capability | Agent Plugins v1 | Cursor | Codex | OpenCode 2.1.2 |
+| --- | --- | --- | --- | --- |
+| Skills | Identities `design`, `impeccable`, `motion`; client-specific exposure | `/design`, `/impeccable`, `/motion` | `$design`, `$impeccable`, `$motion` | `/design` or `@design`; `/impeccable` and `/motion` are explicit |
+| Motion through Design | Loaded `design` skill operation | `/design motion` | `$design motion` | `/design motion` or `@design motion` |
+| Free Motion documentation MCP | Not configured; local guidance included | Bundled remote connection; host enablement and permissions apply | Bundled remote connection; host enablement and permissions apply | Declared in `mcp.json`; the shared OpenCode config is not edited |
+| Stakeholder questionnaire | Loaded `design` skill operation | `/design questionnaire` | `$design questionnaire` | `/design questionnaire` |
+| Change review | Loaded `design` skill operation | `/design review` | `$design review` | `/design review` |
+| Hook | Unavailable | Pre-write | PostToolUse and Stop | Unavailable; no adapter is installed |
+| Specialized roles | Bundled degraded instructions | Native agents | Generic inherited subagents | OpenCode subagent tool, or the bundled degraded contract |
+| Local deployment helper | No | Yes | Yes | Yes, merging the shared OpenCode config |
 
 The native packages remain separate compatibility layers. They are not embedded as client-specific extensions in the standard package.
 

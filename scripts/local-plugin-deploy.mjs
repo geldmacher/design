@@ -20,9 +20,12 @@ import {
 import { homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { parse as parseJsonc } from "jsonc-parser";
 
 export const RECEIPT_NAME = ".local-deploy.json";
-export const HOSTS = ["cursor", "codex"];
+export const HOSTS = ["cursor", "codex", "opencode"];
+export const OPENCODE_BACKUP_SUFFIX = ".geldmacher-design-backup";
+export const OPENCODE_SHARED_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.";
 const DEVELOPMENT_ROOTS = new Set([".agents", ".build", ".cursor", ".git", "node_modules", "test", "tests"]);
 const scriptPath = fileURLToPath(import.meta.url);
 const repositoryRoot = dirname(dirname(scriptPath));
@@ -39,6 +42,7 @@ export function isInside(base, candidate) {
 function manifestRelative(host) {
   if (host === "cursor") return ".cursor-plugin/plugin.json";
   if (host === "codex") return ".codex-plugin/plugin.json";
+  if (host === "opencode") return ".opencode-plugin/plugin.json";
   throw new Error(`unsupported plugin host: ${host}`);
 }
 
@@ -196,7 +200,166 @@ export function deploymentPaths(home, plugin) {
     codexHome: join(resolvedHome, ".codex"),
     marketplace: join(resolvedHome, ".agents", "plugins", "marketplace.json"),
     marketplaceSource: `./.codex/plugins/${plugin}`,
+    opencode: join(resolvedHome, ".config", "opencode", plugin),
+    opencodeConfig: join(resolvedHome, ".config", "opencode", "opencode.json"),
+    opencodeConfigComments: join(resolvedHome, ".config", "opencode", "opencode.jsonc"),
+    opencodeCommands: join(resolvedHome, ".config", "opencode", "commands"),
   };
+}
+
+function assertOpenCodeConfigDirectory(home, env) {
+  const supported = resolve(home, ".config", "opencode");
+  const configured = resolve(env.OPENCODE_CONFIG_DIR ?? join(env.XDG_CONFIG_HOME || join(resolve(home), ".config"), "opencode"));
+  if (configured !== supported) {
+    const variable = env.OPENCODE_CONFIG_DIR !== undefined ? "OPENCODE_CONFIG_DIR" : "XDG_CONFIG_HOME";
+    throw new Error(`unsupported OpenCode configuration directory from ${variable}: ${configured}; local deployment supports ${supported}`);
+  }
+}
+
+function expandOpenCodePath(entry, home) {
+  const text = String(entry).replaceAll("\\", "/");
+  if (text.startsWith("~/")) return slash(resolve(home, text.slice(2)));
+  return slash(resolve(text));
+}
+
+export function openCodeSkillsPath(home, plugin) {
+  return slash(resolve(deploymentPaths(home, plugin).opencode, "skills"));
+}
+
+export function openCodeSkillRegistered(document, skillsPath, home) {
+  return Array.isArray(document?.skills) && document.skills.some((entry) => typeof entry === "string" && expandOpenCodePath(entry, home) === skillsPath);
+}
+
+export function updateOpenCodeDocument(document, skillsPath) {
+  if (document !== null && (typeof document !== "object" || Array.isArray(document))) {
+    throw new Error("OpenCode config must be a JSON object");
+  }
+  const next = document === null ? { $schema: "https://opencode.ai/config.json" } : structuredClone(document);
+  if (next.skills === undefined) next.skills = [];
+  if (!Array.isArray(next.skills) || next.skills.some((entry) => typeof entry !== "string")) {
+    throw new Error("OpenCode skills entries must be strings");
+  }
+  if (!next.skills.includes(skillsPath)) next.skills = [...next.skills, skillsPath];
+  return next;
+}
+
+function persistentBackupPath(path) {
+  return `${path}${OPENCODE_BACKUP_SUFFIX}`;
+}
+
+function ensurePersistentBackup(path) {
+  if (!lstatExists(path)) return null;
+  const stat = lstatSync(path);
+  if (stat.isSymbolicLink() || !stat.isFile()) throw new Error(`OpenCode shared file is not a regular file: ${path}`);
+  const backup = persistentBackupPath(path);
+  if (lstatExists(backup)) {
+    const backupStat = lstatSync(backup);
+    if (backupStat.isSymbolicLink() || !backupStat.isFile()) throw new Error(`OpenCode backup is not a regular file: ${backup}`);
+    return backup;
+  }
+  atomicWrite(backup, readFileSync(path));
+  return backup;
+}
+
+function designCommand(name, text) {
+  return text.includes(`Load the \`${name.slice(0, -3)}\` skill and apply it to the current request.`);
+}
+
+function openCodeCommandPlan(packageRoot, commandsDir) {
+  const sourceDir = join(packageRoot, "commands");
+  if (!existsSync(sourceDir)) throw new Error("OpenCode package is missing commands");
+  const names = readdirSync(sourceDir).filter((name) => name.endsWith(".md")).sort();
+  if (names.length === 0) throw new Error("OpenCode package is missing commands");
+  const files = names.map((name) => {
+    const source = readFileSync(join(sourceDir, name), "utf8");
+    const destination = join(commandsDir, name);
+    if (lstatExists(destination)) {
+      const stat = lstatSync(destination);
+      if (stat.isSymbolicLink()) throw new Error(`OpenCode command is a symlink: ${destination}`);
+      if (!stat.isFile()) throw new Error(`OpenCode command is not a file: ${destination}`);
+    }
+    const current = lstatExists(destination) ? readFileSync(destination, "utf8") : null;
+    if (current !== null && current !== source && !designCommand(name, current)) {
+      throw new Error(`OpenCode command ${name} already exists and is not a Design command. ${OPENCODE_SHARED_CONFIG_RULE}`);
+    }
+    return { name, destination, source, current, change: current !== source };
+  });
+  return { files, change: files.some((file) => file.change) };
+}
+
+function readOpenCodeConfig(paths) {
+  for (const path of [paths.opencodeConfig, paths.opencodeConfigComments]) {
+    if (lstatExists(path) && lstatSync(path).isSymbolicLink()) throw new Error(`OpenCode config escaped through a symlink: ${path}`);
+  }
+  const jsonPresent = lstatExists(paths.opencodeConfig);
+  const json = jsonPresent ? readJson(paths.opencodeConfig) : null;
+  let jsonc = null;
+  if (lstatExists(paths.opencodeConfigComments)) {
+    const errors = [];
+    jsonc = parseJsonc(readFileSync(paths.opencodeConfigComments, "utf8"), errors, { allowTrailingComma: true });
+    if (errors.length) throw new Error(`invalid OpenCode JSONC: ${paths.opencodeConfigComments}`);
+    if (jsonc === null || typeof jsonc !== "object" || Array.isArray(jsonc)) throw new Error(`OpenCode config must be a JSON object: ${paths.opencodeConfigComments}`);
+  }
+  return { jsonPresent, json, jsonc };
+}
+
+function openCodeConfigPlan(paths, home) {
+  const skillsPath = openCodeSkillsPath(home, basename(paths.opencode));
+  const { jsonPresent, json, jsonc } = readOpenCodeConfig(paths);
+  const registered = openCodeSkillRegistered(json, skillsPath, home) || openCodeSkillRegistered(jsonc, skillsPath, home);
+  const bytes = registered ? null : Buffer.from(`${JSON.stringify(updateOpenCodeDocument(json, skillsPath), null, 2)}\n`);
+  return {
+    skillsPath,
+    registered,
+    bytes,
+    original: jsonPresent ? readFileSync(paths.opencodeConfig) : null,
+    backup: persistentBackupPath(paths.opencodeConfig),
+  };
+}
+
+export function removeOwnOpenCodeEntries({ home, plugin, packageRoot, env = {} }) {
+  assertOpenCodeConfigDirectory(home, env);
+  const paths = deploymentPaths(home, plugin);
+  const skillsPath = openCodeSkillsPath(home, plugin);
+  const removedSkills = [];
+  const removedCommands = [];
+  const preserved = [];
+  if (lstatExists(paths.opencodeConfig)) {
+    const document = readJson(paths.opencodeConfig);
+    if (!document || typeof document !== "object" || Array.isArray(document) || !Array.isArray(document.skills)) {
+      throw new Error("OpenCode config must be a JSON object with a skills array");
+    }
+    const nextSkills = document.skills.filter((entry) => {
+      if (typeof entry === "string" && expandOpenCodePath(entry, home) === skillsPath) {
+        removedSkills.push(entry);
+        return false;
+      }
+      preserved.push(entry);
+      return true;
+    });
+    if (removedSkills.length > 0) {
+      ensurePersistentBackup(paths.opencodeConfig);
+      atomicWrite(paths.opencodeConfig, Buffer.from(`${JSON.stringify({ ...document, skills: nextSkills }, null, 2)}\n`));
+    }
+  }
+  if (lstatExists(paths.opencodeCommands)) {
+    const names = packageRoot && existsSync(join(packageRoot, "commands"))
+      ? readdirSync(join(packageRoot, "commands")).filter((name) => name.endsWith(".md"))
+      : ["design.md", "impeccable.md", "motion.md"];
+    for (const name of names) {
+      const destination = join(paths.opencodeCommands, name);
+      if (!lstatExists(destination)) continue;
+      const text = readFileSync(destination, "utf8");
+      if (!designCommand(name, text)) {
+        preserved.push(destination);
+        continue;
+      }
+      ensurePersistentBackup(destination);
+      rmSync(destination, { force: true });
+      removedCommands.push(name);
+    }
+  }
+  return { removedSkills, removedCommands, preserved, rule: OPENCODE_SHARED_CONFIG_RULE };
 }
 
 function assertDestination(path, expected, home) {
@@ -530,6 +693,7 @@ export function deployPreparedTargets({
   if (selectedHosts.length === 0 || selectedHosts.some((host) => !HOSTS.includes(host))) {
     throw new Error(`deployment hosts must be one or more of: ${HOSTS.join(", ")}`);
   }
+  if (selectedHosts.includes("opencode")) assertOpenCodeConfigDirectory(home, env);
   const paths = deploymentPaths(home, plugin);
   for (const host of selectedHosts) assertDestination(paths[host], paths[host], paths.home);
   const metadata = prepareMetadata({ root, plugin, baseVersion, gitHead, gitDirty, deployedAt });
@@ -538,6 +702,14 @@ export function deployPreparedTargets({
   let marketplaceBytes = null;
   let marketplaceChanged = false;
   let codexBefore = { current: true, skipped: true };
+  let opencodeConfig = null;
+  let opencodeCommands = null;
+  if (selectedHosts.includes("opencode")) {
+    assertDestination(paths.opencodeConfig, paths.opencodeConfig, paths.home);
+    assertDestination(join(paths.opencodeCommands, "command.md"), join(paths.opencodeCommands, "command.md"), paths.home);
+    opencodeConfig = openCodeConfigPlan(paths, home);
+    opencodeCommands = openCodeCommandPlan(metadata.opencode.path, paths.opencodeCommands);
+  }
   if (selectedHosts.includes("codex")) {
     marketplaceOriginal = lstatExists(paths.marketplace) ? readFileSync(paths.marketplace) : null;
     const marketplace = updateMarketplaceDocument(marketplaceOriginal ? JSON.parse(marketplaceOriginal) : null, plugin, paths.marketplaceSource);
@@ -573,14 +745,28 @@ export function deployPreparedTargets({
     codex: selectedHosts.includes("codex")
       ? { change: !codexBefore.current, cache_path: cachePath(resolve(env.CODEX_HOME || paths.codexHome), plugin, metadata.codex.localVersion) }
       : null,
+    opencode: selectedHosts.includes("opencode")
+      ? {
+        config: paths.opencodeConfig,
+        skills: opencodeConfig.skillsPath,
+        config_change: !opencodeConfig.registered,
+        config_backup: opencodeConfig.backup,
+        commands: paths.opencodeCommands,
+        command_change: opencodeCommands.change,
+        rule: OPENCODE_SHARED_CONFIG_RULE,
+      }
+      : null,
   };
   if (dryRun) return plan;
   const codexCurrent = !selectedHosts.includes("codex") || (!marketplaceChanged && codexBefore.current);
-  if (changedHosts.length === 0 && codexCurrent) return { ...plan, no_op: true };
+  const opencodeCurrent = !selectedHosts.includes("opencode") || (opencodeConfig.registered && !opencodeCommands.change);
+  if (changedHosts.length === 0 && codexCurrent && opencodeCurrent) return { ...plan, no_op: true };
 
   const staged = {};
   const swapped = [];
   let marketplaceWritten = false;
+  let opencodeConfigWritten = false;
+  const commandBackups = [];
   let codexActivationAttempted = false;
   let deploymentResult = null;
   try {
@@ -605,6 +791,21 @@ export function deployPreparedTargets({
       marketplaceWritten = true;
     }
     if (simulateFailure === "after-marketplace") throw new Error("simulated failure after Marketplace update");
+    if (selectedHosts.includes("opencode") && !opencodeConfig.registered) {
+      if (opencodeConfig.original !== null) ensurePersistentBackup(paths.opencodeConfig);
+      atomicWrite(paths.opencodeConfig, opencodeConfig.bytes);
+      opencodeConfigWritten = true;
+    }
+    if (simulateFailure === "after-opencode-config") throw new Error("simulated failure after OpenCode config update");
+    if (selectedHosts.includes("opencode")) {
+      mkdirSync(paths.opencodeCommands, { recursive: true });
+      for (const file of opencodeCommands.files.filter((item) => item.change)) {
+        if (file.current !== null) ensurePersistentBackup(file.destination);
+        commandBackups.push({ destination: file.destination, previous: file.current === null ? null : Buffer.from(file.current) });
+        atomicWrite(file.destination, file.source);
+      }
+    }
+    if (simulateFailure === "after-opencode-commands") throw new Error("simulated failure after OpenCode command update");
     let codex = null;
     if (selectedHosts.includes("codex")) {
       codexActivationAttempted = true;
@@ -629,6 +830,11 @@ export function deployPreparedTargets({
     for (const item of swapped) {
       const state = currentTarget(item.destination, metadata[item.host]);
       if (!state.current) throw new Error(`${item.host} target failed post-swap verification`);
+    }
+    if (selectedHosts.includes("opencode")) {
+      const config = openCodeConfigPlan(paths, home);
+      const commands = openCodeCommandPlan(paths.opencode, paths.opencodeCommands);
+      if (!config.registered || commands.change) throw new Error("OpenCode registration failed post-deploy verification");
     }
     deploymentResult = { ...plan, no_op: false, codex };
   } catch (error) {
@@ -655,6 +861,22 @@ export function deployPreparedTargets({
         else atomicWrite(paths.marketplace, marketplaceOriginal);
       } catch (rollbackError) {
         rollbackErrors.push(new Error(`Marketplace restore failed: ${rollbackError.message}`, { cause: rollbackError }));
+      }
+    }
+    for (const file of [...commandBackups].reverse()) {
+      try {
+        if (file.previous === null) rmSync(file.destination, { force: true });
+        else atomicWrite(file.destination, file.previous);
+      } catch (rollbackError) {
+        rollbackErrors.push(new Error(`OpenCode command restore failed: ${rollbackError.message}`, { cause: rollbackError }));
+      }
+    }
+    if (opencodeConfigWritten) {
+      try {
+        if (opencodeConfig.original === null) rmSync(paths.opencodeConfig, { force: true });
+        else atomicWrite(paths.opencodeConfig, opencodeConfig.original);
+      } catch (rollbackError) {
+        rollbackErrors.push(new Error(`OpenCode config restore failed: ${rollbackError.message}`, { cause: rollbackError }));
       }
     }
     if (codexActivationAttempted) {
@@ -715,7 +937,11 @@ async function expectedTargetMetadata(root, plugin, baseVersion) {
       const path = result[host]?.path || join(buildWorkspace.targets, host, plugin);
       validateBundle(path, { plugin, host, allowedVersions: [baseVersion] });
       const hash = contentHash(path, { host, baseVersion });
-      return [host, { hash, localVersion: localVersion(baseVersion, host, hash) }];
+      const commandDirectory = join(path, "commands");
+      const commands = host === "opencode" && existsSync(commandDirectory)
+        ? Object.fromEntries(readdirSync(commandDirectory).filter((name) => name.endsWith(".md")).sort().map((name) => [name, readFileSync(join(commandDirectory, name), "utf8")]))
+        : null;
+      return [host, { hash, localVersion: localVersion(baseVersion, host, hash), commands }];
     }));
   } finally {
     if (buildWorkspace) builderModule.removeTargetBuildWorkspace(buildWorkspace);
@@ -727,6 +953,7 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
   if (selectedHosts.length === 0 || selectedHosts.some((host) => !HOSTS.includes(host))) {
     throw new Error(`status hosts must be one or more of: ${HOSTS.join(", ")}`);
   }
+  if (selectedHosts.includes("opencode")) assertOpenCodeConfigDirectory(home, env);
   const packageManifest = readJson(join(root, "package.json"));
   const cursorManifest = readJson(join(root, ".cursor-plugin", "plugin.json"));
   const plugin = cursorManifest.name;
@@ -752,6 +979,23 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
     marketplaceCurrent = entries.length === 1 && entries[0].source?.source === "local" && entries[0].source.path === paths.marketplaceSource;
     codex = codexInstallationState({ home, plugin, version: expected.codex.localVersion, codexBinary, env });
   }
+  let opencode = null;
+  if (selectedHosts.includes("opencode")) {
+    const plan = openCodeConfigPlan(paths, home);
+    const commandsCurrent = expected.opencode.commands && Object.entries(expected.opencode.commands).every(([name, text]) => {
+      const destination = join(paths.opencodeCommands, name);
+      return lstatExists(destination) && !lstatSync(destination).isSymbolicLink() && readFileSync(destination, "utf8") === text;
+    });
+    opencode = {
+      config: paths.opencodeConfig,
+      skills: plan.skillsPath,
+      registered: plan.registered,
+      commands_current: commandsCurrent,
+      config_backup: plan.backup,
+      commands: paths.opencodeCommands,
+      rule: OPENCODE_SHARED_CONFIG_RULE,
+    };
+  }
   return {
     plugin,
     source_path: resolve(root),
@@ -763,8 +1007,10 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
       ? { path: paths.marketplace, expected_source: paths.marketplaceSource, current: marketplaceCurrent }
       : null,
     codex,
+    opencode,
     current: selectedHosts.every((host) => targets[host].current)
-      && (!selectedHosts.includes("codex") || (marketplaceCurrent && codex.current)),
+      && (!selectedHosts.includes("codex") || (marketplaceCurrent && codex.current))
+      && (!selectedHosts.includes("opencode") || (opencode.registered && opencode.commands_current)),
   };
 }
 
@@ -773,22 +1019,20 @@ function npmScript(name, root) {
 }
 
 function selectedHostsFromArguments(args) {
-  const cursorOnly = args.includes("--cursor-only");
-  const codexOnly = args.includes("--codex-only");
-  if (cursorOnly && codexOnly) throw new Error("--cursor-only and --codex-only are mutually exclusive");
-  if (cursorOnly) return ["cursor"];
-  if (codexOnly) return ["codex"];
+  const selected = [["--cursor-only", "cursor"], ["--codex-only", "codex"], ["--opencode-only", "opencode"]].filter(([flag]) => args.includes(flag));
+  if (selected.length > 1) throw new Error("--cursor-only, --codex-only, and --opencode-only are mutually exclusive");
+  if (selected.length === 1) return [selected[0][1]];
   return HOSTS;
 }
 
 function parseDeployArguments(args) {
-  const supported = new Set(["--dry-run", "--full", "--cursor-only", "--codex-only"]);
+  const supported = new Set(["--dry-run", "--full", "--cursor-only", "--codex-only", "--opencode-only"]);
   for (const arg of args) if (!supported.has(arg)) throw new Error(`unsupported deploy argument: ${arg}`);
   return { dryRun: args.includes("--dry-run"), full: args.includes("--full"), hosts: selectedHostsFromArguments(args) };
 }
 
 function parseStatusArguments(args) {
-  const supported = new Set(["--cursor-only", "--codex-only"]);
+  const supported = new Set(["--cursor-only", "--codex-only", "--opencode-only"]);
   for (const arg of args) if (!supported.has(arg)) throw new Error(`unsupported status argument: ${arg}`);
   return selectedHostsFromArguments(args);
 }
@@ -807,8 +1051,11 @@ async function main() {
   const packageManifest = readJson(join(repositoryRoot, "package.json"));
   const cursorManifest = readJson(join(repositoryRoot, ".cursor-plugin", "plugin.json"));
   const codexManifest = readJson(repositoryCodexManifestPath(repositoryRoot));
-  if (cursorManifest.name !== codexManifest.name) throw new Error("Cursor and Codex plugin names differ");
-  if (cursorManifest.version !== packageManifest.version || codexManifest.version !== packageManifest.version) {
+  const opencodeManifest = readJson(join(repositoryRoot, ".opencode-plugin", "plugin.json"));
+  if (cursorManifest.name !== codexManifest.name || cursorManifest.name !== opencodeManifest.name) {
+    throw new Error("Cursor, Codex, and OpenCode plugin names differ");
+  }
+  if ([cursorManifest, codexManifest, opencodeManifest].some((manifest) => manifest.version !== packageManifest.version)) {
     throw new Error("repository manifests must keep the regular package product version");
   }
   if (full) {
@@ -836,6 +1083,7 @@ async function main() {
     const nextSteps = [];
     if (hosts.includes("cursor")) nextSteps.push("reload Cursor");
     if (hosts.includes("codex")) nextSteps.push("start a new Codex task");
+    if (hosts.includes("opencode")) nextSteps.push("start a new OpenCode session");
     process.stderr.write(`${nextSteps.join(" and ")}; hosts were not restarted automatically.\n`);
   }
 }

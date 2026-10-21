@@ -51,6 +51,11 @@ const allowed = {
     "hooks/hooks.json",
     "hooks/impeccable-codex-hook.mjs",
   ],
+  opencode: [
+    ".opencode-plugin/plugin.json",
+    ...nativeShared,
+    "mcp.json",
+  ],
   "agent-plugin": [
     "LICENSE",
     "modules/design-core.json",
@@ -213,14 +218,15 @@ function narrowModules(destination, host) {
   const design = JSON.parse(readFileSync(designPath, "utf8"));
   const impeccablePath = join(destination, "modules", "impeccable.json");
   const impeccable = JSON.parse(readFileSync(impeccablePath, "utf8"));
-  if (host === "agent-plugin") {
+  if (host === "agent-plugin" || host === "opencode") {
     design.contributes.hooks = [];
     design.contributes.scripts = [
       "skills/design/scripts/design-cli.mjs",
       "skills/design/scripts/review-scope.mjs",
+      ...(host === "opencode" ? ["scripts/design-cli.mjs"] : []),
     ];
-    impeccable.contributes.agents = [];
-  } else {
+    if (host === "agent-plugin") impeccable.contributes.agents = [];
+  } else if (host === "cursor" || host === "codex") {
     design.contributes.hooks = [host === "cursor" ? "hooks/cursor-hooks.json" : "hooks/hooks.json"];
     design.contributes.scripts = [
       "skills/design/scripts/design-cli.mjs",
@@ -228,6 +234,8 @@ function narrowModules(destination, host) {
       "scripts/design-cli.mjs",
       host === "cursor" ? "hooks/impeccable-plugin-hook.mjs" : "hooks/impeccable-codex-hook.mjs",
     ];
+  } else {
+    throw new Error(`Unknown module host: ${host}`);
   }
   delete design.$schema;
   delete impeccable.$schema;
@@ -391,9 +399,24 @@ export function projectDesignSkill(source) {
   return `---\n${YAML.stringify(metadata)}---\n${body.slice(0, body.indexOf(start))}${contract}${body.slice(body.indexOf(end) + end.length)}`;
 }
 
+export const OPENCODE_COMPATIBILITY = "2.1.2";
+export const OPENCODE_SKILLS = Object.freeze(["design", "impeccable", "motion"]);
+
+export function openCodeCommand(name, description) {
+  return `---\ndescription: ${JSON.stringify(description)}\n---\n\nLoad the \`${name}\` skill and apply it to the current request.\n\n$ARGUMENTS\n`;
+}
+
+function withOpenCodeExplicitSkill(text) {
+  const match = text.match(/^---\n([\s\S]*?)\n---\n/);
+  const metadata = YAML.parse(match[1]);
+  const current = metadata.metadata && typeof metadata.metadata === "object" && !Array.isArray(metadata.metadata) ? metadata.metadata : {};
+  metadata.metadata = { ...current, "opencode/autoinvoke": false };
+  return `---\n${YAML.stringify(metadata)}---\n${text.slice(match[0].length)}`;
+}
+
 export function projectNativeSkill(text, host, allowImplicit) {
   text = text.replace(/\r\n/g, "\n");
-  if (!["cursor", "codex"].includes(host)) throw new Error(`Unknown native skill host: ${host}`);
+  if (!["cursor", "codex", "opencode"].includes(host)) throw new Error(`Unknown native skill host: ${host}`);
   if (typeof allowImplicit !== "boolean") throw new Error("Native skill invocation policy must be explicit.");
   const match = text.match(/^---\n([\s\S]*?)\n---\n/);
   if (!match) throw new Error("Native skill frontmatter is missing.");
@@ -401,15 +424,29 @@ export function projectNativeSkill(text, host, allowImplicit) {
   if (!["design", "impeccable", "motion"].includes(metadata.name)) throw new Error("Unknown native skill identity.");
   if (Object.hasOwn(metadata, "disable-model-invocation")) throw new Error("Shared runtime skill contains Cursor-only invocation metadata.");
   if (host === "cursor") text = text.replace(/^---\n/, `---\ndisable-model-invocation: ${!allowImplicit}\n`);
+  if (host === "opencode" && !allowImplicit) text = withOpenCodeExplicitSkill(text);
   if (metadata.name === "design") {
     const start = "<!-- design-host:start -->";
     const end = "<!-- design-host:end -->";
     if (text.split(start).length !== 2 || text.split(end).length !== 2 || text.indexOf(end) < text.indexOf(start)) {
       throw new Error("Design host markers must occur exactly once in order.");
     }
-    text = replaceRequired(text, `${start}\n## Host contract\n`, `${start}\n## Host contract\n\nThis package targets ${host === "cursor" ? "Cursor" : "Codex"}. Set \`<host>\` to \`${host}\` and pass \`IMPECCABLE_HOST=${host}\` when running the bundled Impeccable launcher, including after automatic skill selection.`, "native Design host");
+    const contract = host === "opencode"
+      ? "This package targets OpenCode 2.1.2. Set `<host>` to `opencode` and pass `IMPECCABLE_HOST=opencode` when running the bundled Impeccable launcher, including after automatic skill selection. Invoke this skill with `/design` or `@design`. This package does not install a hook adapter; report hooks as unavailable and do not write Claude, Cursor, or Codex hook files."
+      : `This package targets ${host === "cursor" ? "Cursor" : "Codex"}. Set \`<host>\` to \`${host}\` and pass \`IMPECCABLE_HOST=${host}\` when running the bundled Impeccable launcher, including after automatic skill selection.`;
+    text = replaceRequired(text, `${start}\n## Host contract\n`, `${start}\n## Host contract\n\n${contract}`, "native Design host");
   }
   return text;
+}
+
+function writeOpenCodeCommands(destination) {
+  mkdirSync(join(destination, "commands"), { recursive: true });
+  for (const name of OPENCODE_SKILLS) {
+    const skillPath = join(destination, "skills", name, "SKILL.md");
+    const metadata = YAML.parse(readFileSync(skillPath, "utf8").match(/^---\n([\s\S]*?)\n---\n/)[1]);
+    if (typeof metadata.description !== "string" || !metadata.description.trim()) throw new Error(`OpenCode command is missing a description: ${name}`);
+    writeFileSync(join(destination, "commands", `${name}.md`), openCodeCommand(name, metadata.description));
+  }
 }
 
 function adaptNativeSkills(destination, host) {
@@ -417,8 +454,18 @@ function adaptNativeSkills(destination, host) {
     const root = join(destination, "skills", name);
     const policy = YAML.parse(readFileSync(join(root, "agents", "openai.yaml"), "utf8")).policy;
     const path = join(root, "SKILL.md");
-    writeFileSync(path, projectNativeSkill(readFileSync(path, "utf8"), host, policy?.allow_implicit_invocation));
+    let text = projectNativeSkill(readFileSync(path, "utf8"), host, policy?.allow_implicit_invocation);
+    if (host === "opencode" && name === "impeccable") {
+      text = `${text.trimEnd()}\n\nOpenCode 2.1.2 invokes this skill with \`/impeccable\` or \`@impeccable\`. It is not auto-selected. Read the bundled role files under \`../../agents/\` and spawn them with OpenCode's subagent tool, with no model override and no forked conversation history. If that tool is unavailable, use the matching \`reference/degraded/\` contract and disclose it. This package does not install a hook adapter or a CLAUDE.md file.\n`;
+    }
+    if (host === "opencode" && name === "motion") {
+      const marker = "<!-- motion-host:end -->";
+      if (!text.includes(marker)) throw new Error("Motion host marker is missing from the OpenCode projection.");
+      text = text.replace(marker, "OpenCode 2.1.2 exposes `/motion` and `@motion`. This skill is not auto-selected. Local guidance ships in this package. The installer does not add an MCP entry to the shared OpenCode config; online documentation search needs the public Motion server at `https://mcp.motion.dev` configured separately.\n<!-- motion-host:end -->");
+    }
+    writeFileSync(path, text);
   }
+  if (host === "opencode") writeOpenCodeCommands(destination);
 }
 
 function adaptAgentPluginSkills(destination) {
@@ -559,7 +606,7 @@ function validateNative(destination, host, version) {
 
 function validateAgentPlugin(destination, version, sourceRoot) {
   for (const name of developmentRoots) if (existsSync(join(destination, name))) throw new Error(`agent-plugin target leaked ${name}`);
-  for (const name of [".agents", ".cursor-plugin", ".codex-plugin", "agents", "assets", "hooks", "mcp.json", "scripts"]) {
+  for (const name of [".agents", ".cursor-plugin", ".codex-plugin", ".opencode-plugin", "agents", "assets", "hooks", "mcp.json", "scripts"]) {
     if (existsSync(join(destination, name))) throw new Error(`agent-plugin target contains host-only or unsupported root ${name}`);
   }
   const manifest = JSON.parse(readFileSync(join(destination, "plugin.json"), "utf8"));
@@ -623,9 +670,45 @@ function validateAgentPlugin(destination, version, sourceRoot) {
   files(destination);
 }
 
+function validateOpenCode(destination, version) {
+  for (const name of developmentRoots) if (existsSync(join(destination, name))) throw new Error(`opencode target leaked ${name}`);
+  for (const foreign of [".cursor-plugin", ".codex-plugin", "hooks", "CLAUDE.md", "skills/CLAUDE.md"]) {
+    if (existsSync(join(destination, foreign))) throw new Error(`opencode target contains ${foreign}`);
+  }
+  const manifest = JSON.parse(readFileSync(join(destination, ".opencode-plugin/plugin.json"), "utf8"));
+  if (manifest.name !== plugin || manifest.version !== version) throw new Error("opencode manifest identity or version drifted");
+  if (manifest.skills !== "./skills/" || manifest.opencodeCompatibility !== OPENCODE_COMPATIBILITY) {
+    throw new Error(`OpenCode package must target OpenCode ${OPENCODE_COMPATIBILITY} and the packaged skills directory`);
+  }
+  if (manifest.hooks || manifest.agents) throw new Error("OpenCode manifest must not register Cursor or Codex hooks or agents");
+  const module = JSON.parse(readFileSync(join(destination, "modules", "design-core.json"), "utf8"));
+  if (module.contributes.hooks.length !== 0) throw new Error("OpenCode package must not contribute a hook adapter");
+  const commands = readdirSync(join(destination, "commands")).sort();
+  if (JSON.stringify(commands) !== JSON.stringify(OPENCODE_SKILLS.map((name) => `${name}.md`))) {
+    throw new Error("OpenCode command inventory drifted");
+  }
+  for (const name of OPENCODE_SKILLS) {
+    const skillPath = join(destination, "skills", name, "SKILL.md");
+    const text = readFileSync(skillPath, "utf8");
+    const metadata = YAML.parse(text.match(/^---\n([\s\S]*?)\n---\n/)[1]);
+    if (text.includes("disable-model-invocation") || text.includes("opencode/slash")) {
+      throw new Error(`${name}: OpenCode skill must not use Cursor invocation metadata or removed slash metadata`);
+    }
+    const explicit = metadata?.metadata?.["opencode/autoinvoke"] === false;
+    if (name === "design" ? explicit : !explicit) throw new Error(`${name}: OpenCode auto-selection does not match the shared skill policy`);
+    if (readFileSync(join(destination, "commands", `${name}.md`), "utf8") !== openCodeCommand(name, metadata.description)) {
+      throw new Error(`${name}: OpenCode command must load the skill by id`);
+    }
+  }
+  if (JSON.stringify(JSON.parse(readFileSync(join(destination, "mcp.json"), "utf8"))) !== JSON.stringify({ mcpServers: { motion: { url: "https://mcp.motion.dev" } } })) {
+    throw new Error("OpenCode package Motion declaration drifted");
+  }
+  files(destination);
+}
+
 function packageReadme(host) {
-  const invocation = host === "cursor" ? "/design" : "$design";
-  const editor = host === "cursor" ? "Cursor" : "Codex";
+  const invocation = host === "opencode" ? "/design" : host === "cursor" ? "/design" : "$design";
+  const editor = host === "opencode" ? "OpenCode" : host === "cursor" ? "Cursor" : "Codex";
   return [
     "# Design",
     "",
@@ -660,7 +743,9 @@ function packageReadme(host) {
     "",
     host === "cursor"
       ? "After installation, reload Cursor and review changed hook permissions before granting trust."
-      : "After installation, refresh the Marketplace entry as described in the guide, review any trust request, and start a new Codex task.",
+      : host === "opencode"
+        ? "After installation, start a new OpenCode 2.1.2 session. `/design` and `@design` load the same skill. This package does not install a hook adapter."
+        : "After installation, refresh the Marketplace entry as described in the guide, review any trust request, and start a new Codex task.",
     "",
     "Prefer asking your agent to install? Copy the [release installation prompt](docs/installation.md#ask-your-agent-to-install).",
     "",
@@ -668,7 +753,9 @@ function packageReadme(host) {
     "",
     "Download and verify the latest release ZIP, then follow the [manual update steps](docs/installation.md#update-manually) to replace the complete package and repeat activation.",
     "",
-    `For agent-assisted updates on macOS or Linux, open the Design source checkout and invoke \`${host === "cursor" ? "/" : "$"}install-new-release-from-repo\`. This skill installs the latest stable release and is available only in the source checkout. Use the [update prompt](docs/installation.md#update-through-your-agent) if you need the agent to prepare that checkout.`,
+    host === "opencode"
+      ? "For agent-assisted updates on macOS or Linux, open the Design source checkout and run `npm run install:release -- --opencode-only`, or ask the agent there to install the latest stable release for OpenCode. That installer is not part of this package. Use the [update prompt](docs/installation.md#update-through-your-agent) if you need the agent to prepare that checkout."
+      : `For agent-assisted updates on macOS or Linux, open the Design source checkout and invoke \`${host === "cursor" ? "/" : "$"}install-new-release-from-repo\`. This skill installs the latest stable release and is available only in the source checkout. Use the [update prompt](docs/installation.md#update-through-your-agent) if you need the agent to prepare that checkout.`,
     "",
     "## Your project, your decisions",
     "",
@@ -735,7 +822,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
   const version = JSON.parse(readFileSync(join(projectRoot, "package.json"), "utf8")).version;
   const impeccablePin = readPin(projectRoot);
   const result = { version };
-  for (const host of ["agent-plugin", "cursor", "codex"]) {
+  for (const host of ["agent-plugin", "cursor", "codex", "opencode"]) {
     const destination = join(output, host, plugin);
     for (const item of allowed[host]) copyAllowed(destination, item, projectRoot);
     projectSelfContainedReferences(destination);
@@ -749,6 +836,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
     packageThirdPartyProvenance(destination, projectRoot, impeccablePin);
     narrowModules(destination, host);
     if (host === "agent-plugin") validateAgentPlugin(destination, version, projectRoot);
+    else if (host === "opencode") validateOpenCode(destination, version);
     else validateNative(destination, host, version);
     result[host] = { path: destination, hash: digest(destination), files: files(destination).length };
   }
