@@ -80,7 +80,7 @@ Choose one host or deploy all of them:
 | OpenCode only | `npm run deploy:local -- --dry-run --opencode-only` | `npm run deploy:local -- --opencode-only` |
 | Cursor, Codex, and OpenCode | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
+OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries. Before a write that changes `opencode.json` or one of Design's command files, deploy saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-design/` and leaves it after success or failure. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package.
 
 `deploy:build` materializes the packages. The normal deploy uses `deploy:prepare` for its targeted checks; append `--full` to select the shared build followed by one complete `release-check`, without repeating the targeted suites. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
 

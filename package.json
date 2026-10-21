@@ -23,6 +23,7 @@
     "deploy:prepare": "npm run deploy:build && npm run check:targets && npm run check:english && npm run validate && node --test tests/plugin-targets.test.mjs tests/portable-runtime.test.mjs tests/local-plugin-deploy.test.mjs",
     "deploy:status": "node scripts/local-plugin-deploy.mjs status",
     "deploy:local": "node scripts/local-plugin-deploy.mjs deploy",
+    "deploy:uninstall": "node scripts/local-plugin-deploy.mjs uninstall --opencode-only",
     "install:release": "node scripts/install-release-from-repo.mjs",
     "check:english": "node scripts/check-english.mjs",
     "check:impeccable-upstream": "node scripts/check-impeccable-upstream.mjs",

@@ -191,9 +191,11 @@ OpenCode discovers the skills when that package's `skills/` directory is listed 
 
 OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
 
-Add only the Design skills path to an existing `skills` array. Keep every other key and every other plugin path, including Workflow and Efficiency. Do not write a second copy of those entries and do not remove them. Before the first change to `opencode.json`, save its original bytes beside it as `opencode.json.geldmacher-design-backup`. Before changing one of Design's own command files, save that file with the same `.geldmacher-design-backup` suffix. Never overwrite an existing backup. Leave `opencode.jsonc` comments untouched. If `design.md`, `impeccable.md`, or `motion.md` already exists and is not a Design command, stop.
+Add only the Design skills path to an existing `skills` array. Keep every other key and every other plugin path, including Workflow and Efficiency. Do not write a second copy of those entries and do not remove them. Leave `opencode.jsonc` comments untouched. If `design.md`, `impeccable.md`, or `motion.md` already exists and is not a Design command, stop.
 
-`npm run deploy:local -- --opencode-only` performs that merge, backup, and command copy, and rolls back only Design's own entries. Start a new OpenCode session after installation. This package does not install a hook adapter.
+Before a write that changes `opencode.json` or one of Design's own command files, deploy saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-design/` and leaves that backup in place after success or failure. A failed deploy restores the shared files from the backup taken for that attempt. A second deploy that changes nothing does not write and does not add another backup.
+
+`npm run deploy:local -- --opencode-only` performs that merge, backup, and command copy. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package. Start a new OpenCode session after installation. This package does not install a hook adapter.
 
 The ZIP checksum proves the downloaded bytes only. It does not prove Marketplace acceptance, cache currentness, Cursor reload, Hook Trust, OpenCode skill registration, or fresh-task activation.
 

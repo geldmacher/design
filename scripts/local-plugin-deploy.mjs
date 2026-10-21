@@ -24,7 +24,6 @@ import { parse as parseJsonc } from "jsonc-parser";
 
 export const RECEIPT_NAME = ".local-deploy.json";
 export const HOSTS = ["cursor", "codex", "opencode"];
-export const OPENCODE_BACKUP_SUFFIX = ".geldmacher-design-backup";
 export const OPENCODE_SHARED_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.";
 const DEVELOPMENT_ROOTS = new Set([".agents", ".build", ".cursor", ".git", "node_modules", "test", "tests"]);
 const scriptPath = fileURLToPath(import.meta.url);
@@ -204,6 +203,7 @@ export function deploymentPaths(home, plugin) {
     opencodeConfig: join(resolvedHome, ".config", "opencode", "opencode.json"),
     opencodeConfigComments: join(resolvedHome, ".config", "opencode", "opencode.jsonc"),
     opencodeCommands: join(resolvedHome, ".config", "opencode", "commands"),
+    opencodeBackups: join(resolvedHome, ".config", "opencode", ".local-deploy-backups", plugin),
   };
 }
 
@@ -230,7 +230,7 @@ export function openCodeSkillRegistered(document, skillsPath, home) {
   return Array.isArray(document?.skills) && document.skills.some((entry) => typeof entry === "string" && expandOpenCodePath(entry, home) === skillsPath);
 }
 
-export function updateOpenCodeDocument(document, skillsPath) {
+export function updateOpenCodeDocument(document, skillsPath, home = undefined) {
   if (document !== null && (typeof document !== "object" || Array.isArray(document))) {
     throw new Error("OpenCode config must be a JSON object");
   }
@@ -239,26 +239,9 @@ export function updateOpenCodeDocument(document, skillsPath) {
   if (!Array.isArray(next.skills) || next.skills.some((entry) => typeof entry !== "string")) {
     throw new Error("OpenCode skills entries must be strings");
   }
-  if (!next.skills.includes(skillsPath)) next.skills = [...next.skills, skillsPath];
+  const present = next.skills.some((entry) => entry === skillsPath || (home !== undefined && expandOpenCodePath(entry, home) === skillsPath));
+  if (!present) next.skills = [...next.skills, skillsPath];
   return next;
-}
-
-function persistentBackupPath(path) {
-  return `${path}${OPENCODE_BACKUP_SUFFIX}`;
-}
-
-function ensurePersistentBackup(path) {
-  if (!lstatExists(path)) return null;
-  const stat = lstatSync(path);
-  if (stat.isSymbolicLink() || !stat.isFile()) throw new Error(`OpenCode shared file is not a regular file: ${path}`);
-  const backup = persistentBackupPath(path);
-  if (lstatExists(backup)) {
-    const backupStat = lstatSync(backup);
-    if (backupStat.isSymbolicLink() || !backupStat.isFile()) throw new Error(`OpenCode backup is not a regular file: ${backup}`);
-    return backup;
-  }
-  atomicWrite(backup, readFileSync(path));
-  return backup;
 }
 
 function designCommand(name, text) {
@@ -287,12 +270,13 @@ function openCodeCommandPlan(packageRoot, commandsDir) {
   return { files, change: files.some((file) => file.change) };
 }
 
-function readOpenCodeConfig(paths) {
+function readOpenCodeConfigFiles(paths) {
   for (const path of [paths.opencodeConfig, paths.opencodeConfigComments]) {
     if (lstatExists(path) && lstatSync(path).isSymbolicLink()) throw new Error(`OpenCode config escaped through a symlink: ${path}`);
   }
   const jsonPresent = lstatExists(paths.opencodeConfig);
-  const json = jsonPresent ? readJson(paths.opencodeConfig) : null;
+  const original = jsonPresent ? readFileSync(paths.opencodeConfig) : null;
+  const json = original === null ? null : JSON.parse(original.toString("utf8"));
   let jsonc = null;
   if (lstatExists(paths.opencodeConfigComments)) {
     const errors = [];
@@ -300,66 +284,222 @@ function readOpenCodeConfig(paths) {
     if (errors.length) throw new Error(`invalid OpenCode JSONC: ${paths.opencodeConfigComments}`);
     if (jsonc === null || typeof jsonc !== "object" || Array.isArray(jsonc)) throw new Error(`OpenCode config must be a JSON object: ${paths.opencodeConfigComments}`);
   }
-  return { jsonPresent, json, jsonc };
+  return { json, jsonc, original };
 }
 
 function openCodeConfigPlan(paths, home) {
   const skillsPath = openCodeSkillsPath(home, basename(paths.opencode));
-  const { jsonPresent, json, jsonc } = readOpenCodeConfig(paths);
+  const { json, jsonc, original } = readOpenCodeConfigFiles(paths);
   const registered = openCodeSkillRegistered(json, skillsPath, home) || openCodeSkillRegistered(jsonc, skillsPath, home);
-  const bytes = registered ? null : Buffer.from(`${JSON.stringify(updateOpenCodeDocument(json, skillsPath), null, 2)}\n`);
-  return {
-    skillsPath,
-    registered,
-    bytes,
-    original: jsonPresent ? readFileSync(paths.opencodeConfig) : null,
-    backup: persistentBackupPath(paths.opencodeConfig),
-  };
+  const bytes = registered ? null : Buffer.from(`${JSON.stringify(updateOpenCodeDocument(json, skillsPath, home), null, 2)}\n`);
+  return { skillsPath, registered, bytes, original };
 }
 
-export function removeOwnOpenCodeEntries({ home, plugin, packageRoot, env = {} }) {
+function openCodeBackupFiles(paths, config, commands) {
+  const files = [];
+  if (!config.registered) {
+    files.push({
+      kind: "opencode-config",
+      path: paths.opencodeConfig,
+      existed: config.original !== null,
+      bytes: config.original,
+      backup: "opencode.json",
+    });
+  }
+  for (const file of commands.files.filter((item) => item.change)) {
+    files.push({
+      kind: "opencode-command",
+      path: file.destination,
+      existed: file.current !== null,
+      bytes: file.current === null ? null : readFileSync(file.destination),
+      backup: `commands/${file.name}`,
+    });
+  }
+  return files;
+}
+
+function assertOpenCodePath(path, home) {
+  assertDestination(path, path, home);
+}
+
+function backupStamp(createdAt) {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) throw new Error("OpenCode backup timestamp is invalid");
+  return `${date.toISOString().replaceAll(":", "-")}-${randomUUID()}`;
+}
+
+function safeBackupName(name) {
+  if (typeof name !== "string" || name === "" || name.startsWith("/") || name.startsWith("\\") || name.split(/[\\/]/).includes("..")) {
+    throw new Error(`OpenCode backup name is not safe: ${name}`);
+  }
+  return name;
+}
+
+function writeOpenCodeBackup({ home, plugin, root, createdAt, reason, files }) {
+  assertOpenCodePath(join(root, "manifest.json"), home);
+  mkdirSync(root, { recursive: true });
+  const rootStat = lstatSync(root);
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error(`OpenCode backup directory is not a physical directory: ${root}`);
+  const directory = join(root, backupStamp(createdAt));
+  if (lstatExists(directory)) throw new Error(`OpenCode backup already exists: ${directory}`);
+  const stage = mkdtempSync(join(root, ".staging-"));
+  try {
+    const manifestFiles = [];
+    for (const file of files) {
+      const backup = safeBackupName(file.backup);
+      const target = resolve(stage, backup);
+      if (!isInside(stage, target)) throw new Error(`OpenCode backup escapes its directory: ${backup}`);
+      assertOpenCodePath(file.path, home);
+      if (file.existed) {
+        if (file.bytes === null || file.bytes === undefined) throw new Error(`OpenCode backup is missing bytes for ${file.path}`);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, file.bytes);
+      }
+      manifestFiles.push({ kind: file.kind, path: file.path, existed: Boolean(file.existed), backup: file.existed ? backup : null });
+    }
+    writeJson(join(stage, "manifest.json"), {
+      schema: 1,
+      plugin,
+      created_at: new Date(createdAt).toISOString(),
+      reason,
+      files: manifestFiles,
+    });
+    renameSync(stage, directory);
+    return directory;
+  } catch (error) {
+    rmSync(stage, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function restoreOpenCodeBackup(directory, { plugin, home }) {
+  const manifest = readJson(join(directory, "manifest.json"));
+  if (manifest?.schema !== 1 || manifest.plugin !== plugin || !Array.isArray(manifest.files)) {
+    throw new Error(`OpenCode backup is not usable: ${directory}`);
+  }
+  const configPath = join(resolve(home), ".config", "opencode", "opencode.json");
+  const commandsRoot = join(resolve(home), ".config", "opencode", "commands");
+  for (const file of manifest.files) {
+    const target = resolve(file.path);
+    if (target !== configPath && !isInside(commandsRoot, target)) throw new Error(`OpenCode backup restore target is outside the shared config: ${file.path}`);
+    assertOpenCodePath(target, home);
+    if (lstatExists(target) && lstatSync(target).isSymbolicLink()) throw new Error(`OpenCode restore target is a symlink: ${target}`);
+    if (file.existed) {
+      const backup = safeBackupName(file.backup);
+      const source = resolve(directory, backup);
+      if (!isInside(directory, source) || !lstatExists(source) || !lstatSync(source).isFile() || lstatSync(source).isSymbolicLink()) {
+        throw new Error(`OpenCode backup file is missing: ${file.backup}`);
+      }
+      atomicWrite(target, readFileSync(source));
+    } else if (lstatExists(target)) {
+      rmSync(target, { force: true });
+    }
+  }
+}
+
+function ownedOpenCodeCommands(packageRoot, plugin) {
+  if (!lstatExists(packageRoot)) return { present: false, names: [] };
+  const stat = lstatSync(packageRoot);
+  if (stat.isSymbolicLink()) throw new Error(`OpenCode package is a symlink: ${packageRoot}`);
+  if (!stat.isDirectory()) throw new Error(`OpenCode package is not a directory: ${packageRoot}`);
+  const manifestPath = join(packageRoot, ".opencode-plugin", "plugin.json");
+  if (!existsSync(manifestPath)) throw new Error(`OpenCode package has no plugin manifest: ${packageRoot}`);
+  const manifest = readJson(manifestPath);
+  if (manifest.name !== plugin) throw new Error(`OpenCode package belongs to ${manifest.name || "<unknown>"}`);
+  const sourceDir = join(packageRoot, "commands");
+  if (!lstatExists(sourceDir)) return { present: true, names: [] };
+  const commandStat = lstatSync(sourceDir);
+  if (commandStat.isSymbolicLink() || !commandStat.isDirectory()) throw new Error(`OpenCode package commands are not a directory: ${sourceDir}`);
+  const names = readdirSync(sourceDir).filter((name) => name.endsWith(".md")).sort();
+  for (const name of names) {
+    if (basename(name) !== name || name.includes("..")) throw new Error(`OpenCode command name is not safe: ${name}`);
+  }
+  return { present: true, names };
+}
+
+function planOpenCodeRemoval(paths, home, plugin, commandNames) {
+  const skillsPath = openCodeSkillsPath(home, plugin);
+  const { json, jsonc, original } = readOpenCodeConfigFiles(paths);
+  const removed = [];
+  let nextBytes = null;
+  if (json !== null) {
+    if (typeof json !== "object" || Array.isArray(json)) throw new Error("OpenCode config must be a JSON object");
+    if (json.skills !== undefined && (!Array.isArray(json.skills) || json.skills.some((entry) => typeof entry !== "string"))) {
+      throw new Error("OpenCode skills entries must be strings");
+    }
+    if (Array.isArray(json.skills)) {
+      const skills = json.skills.filter((entry) => {
+        const match = entry === skillsPath || expandOpenCodePath(entry, home) === skillsPath;
+        if (match) removed.push(entry);
+        return !match;
+      });
+      if (removed.length) {
+        const next = structuredClone(json);
+        next.skills = skills;
+        nextBytes = Buffer.from(`${JSON.stringify(next, null, 2)}\n`);
+      }
+    }
+  }
+  const commands = [];
+  for (const name of commandNames) {
+    const destination = join(paths.opencodeCommands, name);
+    if (!lstatExists(destination)) continue;
+    const stat = lstatSync(destination);
+    if (stat.isSymbolicLink()) throw new Error(`OpenCode command is a symlink: ${destination}`);
+    if (!stat.isFile()) throw new Error(`OpenCode command is not a file: ${destination}`);
+    if (!designCommand(name, readFileSync(destination, "utf8"))) continue;
+    commands.push({ name, destination, bytes: readFileSync(destination) });
+  }
+  return { skillsPath, removed, nextBytes, original, commands, jsoncRegistered: openCodeSkillRegistered(jsonc, skillsPath, home), configChange: nextBytes !== null };
+}
+
+export function uninstallOpenCodeDeployment({ plugin, home, env = process.env, deployedAt = new Date().toISOString() } = {}) {
+  if (!plugin || typeof plugin !== "string") throw new Error("OpenCode uninstall requires a plugin name");
   assertOpenCodeConfigDirectory(home, env);
   const paths = deploymentPaths(home, plugin);
-  const skillsPath = openCodeSkillsPath(home, plugin);
-  const removedSkills = [];
-  const removedCommands = [];
-  const preserved = [];
-  if (lstatExists(paths.opencodeConfig)) {
-    const document = readJson(paths.opencodeConfig);
-    if (!document || typeof document !== "object" || Array.isArray(document) || !Array.isArray(document.skills)) {
-      throw new Error("OpenCode config must be a JSON object with a skills array");
-    }
-    const nextSkills = document.skills.filter((entry) => {
-      if (typeof entry === "string" && expandOpenCodePath(entry, home) === skillsPath) {
-        removedSkills.push(entry);
-        return false;
-      }
-      preserved.push(entry);
-      return true;
-    });
-    if (removedSkills.length > 0) {
-      ensurePersistentBackup(paths.opencodeConfig);
-      atomicWrite(paths.opencodeConfig, Buffer.from(`${JSON.stringify({ ...document, skills: nextSkills }, null, 2)}\n`));
-    }
+  assertOpenCodePath(paths.opencodeConfig, paths.home);
+  assertOpenCodePath(join(paths.opencodeCommands, "command.md"), paths.home);
+  assertOpenCodePath(join(paths.opencodeBackups, "manifest.json"), paths.home);
+  const owned = ownedOpenCodeCommands(paths.opencode, plugin);
+  const plan = planOpenCodeRemoval(paths, paths.home, plugin, owned.names);
+  const files = [];
+  if (plan.configChange) {
+    files.push({ kind: "opencode-config", path: paths.opencodeConfig, existed: true, bytes: plan.original, backup: "opencode.json" });
   }
-  if (lstatExists(paths.opencodeCommands)) {
-    const names = packageRoot && existsSync(join(packageRoot, "commands"))
-      ? readdirSync(join(packageRoot, "commands")).filter((name) => name.endsWith(".md"))
-      : ["design.md", "impeccable.md", "motion.md"];
-    for (const name of names) {
-      const destination = join(paths.opencodeCommands, name);
-      if (!lstatExists(destination)) continue;
-      const text = readFileSync(destination, "utf8");
-      if (!designCommand(name, text)) {
-        preserved.push(destination);
-        continue;
-      }
-      ensurePersistentBackup(destination);
-      rmSync(destination, { force: true });
-      removedCommands.push(name);
-    }
+  for (const file of plan.commands) {
+    files.push({ kind: "opencode-command", path: file.destination, existed: true, bytes: file.bytes, backup: `commands/${file.name}` });
   }
-  return { removedSkills, removedCommands, preserved, rule: OPENCODE_SHARED_CONFIG_RULE };
+  const result = {
+    plugin,
+    no_op: false,
+    backup: null,
+    opencode: {
+      config: paths.opencodeConfig,
+      skills: plan.skillsPath,
+      skills_removed: plan.removed,
+      commands_removed: plan.commands.map((file) => file.name),
+      package_removed: owned.present,
+      jsonc_registered: plan.jsoncRegistered,
+      backup_root: paths.opencodeBackups,
+      backup: null,
+      rule: OPENCODE_SHARED_CONFIG_RULE,
+    },
+  };
+  if (!files.length && !owned.present) return { ...result, no_op: true };
+  const backup = files.length
+    ? writeOpenCodeBackup({ home: paths.home, plugin, root: paths.opencodeBackups, createdAt: deployedAt, reason: "uninstall", files })
+    : null;
+  try {
+    if (plan.configChange) atomicWrite(paths.opencodeConfig, plan.nextBytes);
+    for (const file of plan.commands) rmSync(file.destination, { force: true });
+    if (owned.present) rmSync(paths.opencode, { recursive: true, force: true });
+    result.backup = backup;
+    result.opencode.backup = backup;
+    return result;
+  } catch (error) {
+    if (backup) restoreOpenCodeBackup(backup, { plugin, home: paths.home });
+    throw new Error(`OpenCode uninstall rolled back: ${error.message}`, { cause: error });
+  }
 }
 
 function assertDestination(path, expected, home) {
@@ -750,9 +890,10 @@ export function deployPreparedTargets({
         config: paths.opencodeConfig,
         skills: opencodeConfig.skillsPath,
         config_change: !opencodeConfig.registered,
-        config_backup: opencodeConfig.backup,
         commands: paths.opencodeCommands,
         command_change: opencodeCommands.change,
+        backup_root: paths.opencodeBackups,
+        backup: null,
         rule: OPENCODE_SHARED_CONFIG_RULE,
       }
       : null,
@@ -765,8 +906,7 @@ export function deployPreparedTargets({
   const staged = {};
   const swapped = [];
   let marketplaceWritten = false;
-  let opencodeConfigWritten = false;
-  const commandBackups = [];
+  let opencodeBackup = null;
   let codexActivationAttempted = false;
   let deploymentResult = null;
   try {
@@ -791,19 +931,24 @@ export function deployPreparedTargets({
       marketplaceWritten = true;
     }
     if (simulateFailure === "after-marketplace") throw new Error("simulated failure after Marketplace update");
-    if (selectedHosts.includes("opencode") && !opencodeConfig.registered) {
-      if (opencodeConfig.original !== null) ensurePersistentBackup(paths.opencodeConfig);
-      atomicWrite(paths.opencodeConfig, opencodeConfig.bytes);
-      opencodeConfigWritten = true;
+    if (selectedHosts.includes("opencode")) {
+      const files = openCodeBackupFiles(paths, opencodeConfig, opencodeCommands);
+      if (files.length) {
+        opencodeBackup = writeOpenCodeBackup({
+          home: paths.home,
+          plugin,
+          root: paths.opencodeBackups,
+          createdAt: deployedAt || new Date().toISOString(),
+          reason: "deploy",
+          files,
+        });
+      }
+      if (!opencodeConfig.registered) atomicWrite(paths.opencodeConfig, opencodeConfig.bytes);
     }
     if (simulateFailure === "after-opencode-config") throw new Error("simulated failure after OpenCode config update");
     if (selectedHosts.includes("opencode")) {
       mkdirSync(paths.opencodeCommands, { recursive: true });
-      for (const file of opencodeCommands.files.filter((item) => item.change)) {
-        if (file.current !== null) ensurePersistentBackup(file.destination);
-        commandBackups.push({ destination: file.destination, previous: file.current === null ? null : Buffer.from(file.current) });
-        atomicWrite(file.destination, file.source);
-      }
+      for (const file of opencodeCommands.files.filter((item) => item.change)) atomicWrite(file.destination, file.source);
     }
     if (simulateFailure === "after-opencode-commands") throw new Error("simulated failure after OpenCode command update");
     let codex = null;
@@ -836,7 +981,12 @@ export function deployPreparedTargets({
       const commands = openCodeCommandPlan(paths.opencode, paths.opencodeCommands);
       if (!config.registered || commands.change) throw new Error("OpenCode registration failed post-deploy verification");
     }
-    deploymentResult = { ...plan, no_op: false, codex };
+    deploymentResult = {
+      ...plan,
+      no_op: false,
+      codex,
+      opencode: plan.opencode ? { ...plan.opencode, backup: opencodeBackup } : null,
+    };
   } catch (error) {
     const rollbackErrors = [];
     const newCache = cachePath(resolve(env.CODEX_HOME || paths.codexHome), plugin, metadata.codex.localVersion);
@@ -863,20 +1013,11 @@ export function deployPreparedTargets({
         rollbackErrors.push(new Error(`Marketplace restore failed: ${rollbackError.message}`, { cause: rollbackError }));
       }
     }
-    for (const file of [...commandBackups].reverse()) {
+    if (opencodeBackup) {
       try {
-        if (file.previous === null) rmSync(file.destination, { force: true });
-        else atomicWrite(file.destination, file.previous);
+        restoreOpenCodeBackup(opencodeBackup, { plugin, home: paths.home });
       } catch (rollbackError) {
-        rollbackErrors.push(new Error(`OpenCode command restore failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-    }
-    if (opencodeConfigWritten) {
-      try {
-        if (opencodeConfig.original === null) rmSync(paths.opencodeConfig, { force: true });
-        else atomicWrite(paths.opencodeConfig, opencodeConfig.original);
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`OpenCode config restore failed: ${rollbackError.message}`, { cause: rollbackError }));
+        rollbackErrors.push(new Error(`OpenCode shared config restore failed: ${rollbackError.message}`, { cause: rollbackError }));
       }
     }
     if (codexActivationAttempted) {
@@ -991,7 +1132,7 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
       skills: plan.skillsPath,
       registered: plan.registered,
       commands_current: commandsCurrent,
-      config_backup: plan.backup,
+      backup_root: paths.opencodeBackups,
       commands: paths.opencodeCommands,
       rule: OPENCODE_SHARED_CONFIG_RULE,
     };
@@ -1037,6 +1178,16 @@ function parseStatusArguments(args) {
   return selectedHostsFromArguments(args);
 }
 
+function parseUninstallArguments(args) {
+  const supported = new Set(["--cursor-only", "--codex-only", "--opencode-only"]);
+  for (const arg of args) if (!supported.has(arg)) throw new Error(`unsupported uninstall argument: ${arg}`);
+  if (args.includes("--cursor-only") || args.includes("--codex-only")) {
+    throw new Error("uninstall removes only this plugin's OpenCode config entries, commands, and package; use --opencode-only");
+  }
+  const hosts = selectedHostsFromArguments(args);
+  return hosts.includes("opencode") ? ["opencode"] : hosts;
+}
+
 async function main() {
   const [command = "deploy", ...args] = process.argv.slice(2);
   const home = process.env.LOCAL_PLUGIN_HOME || homedir();
@@ -1044,6 +1195,14 @@ async function main() {
   if (command === "status") {
     const hosts = parseStatusArguments(args);
     process.stdout.write(`${JSON.stringify(await deploymentStatus({ root: repositoryRoot, home, codexBinary, hosts }), null, 2)}\n`);
+    return;
+  }
+  if (command === "uninstall") {
+    parseUninstallArguments(args);
+    assertOpenCodeConfigDirectory(home, process.env);
+    const cursorManifest = readJson(join(repositoryRoot, ".cursor-plugin", "plugin.json"));
+    const result = uninstallOpenCodeDeployment({ plugin: cursorManifest.name, home, env: process.env });
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     return;
   }
   if (command !== "deploy") throw new Error(`unsupported command: ${command}`);
