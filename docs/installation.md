@@ -36,10 +36,10 @@ The [release installer workflow](#release-installer-for-agent-assisted-installat
 
 1. Download the ZIP for your editor, `SHA256SUMS`, and `provenance.json` from the [latest stable release](https://github.com/geldmacher/design/releases/latest).
 2. Follow the [verification steps](#2-verify-the-downloads), just as for the first installation.
-3. Retain the previous complete plugin directory and its matching verification files. Replace it with the complete verified package; never merge files from different releases.
+3. Replace the installed directory with the complete verified package; never merge files from different releases. Do not keep a copy of the previous directory.
 4. Follow the [Cursor](#3a-install-the-cursor-archive), [Codex](#3b-install-the-codex-archive), or [OpenCode](#3c-install-the-opencode-archive) activation steps again, including Codex Marketplace/cache refresh when applicable.
 
-For rollback, use the retained verified package or download and verify an older release, then repeat the same replacement and activation steps.
+To roll back, install an older GitHub release: download and verify that release, then repeat the same replacement and activation steps. `npm run install:release` installs the latest stable release and does not select an older tag.
 
 ### Update through your agent
 
@@ -150,7 +150,7 @@ Install the complete extracted directory at:
 - macOS/Linux: `~/.cursor/plugins/local/geldmacher-design`
 - Windows: `%USERPROFILE%\.cursor\plugins\local\geldmacher-design`
 
-For an update, retain the old complete directory and its matching verification files, then replace the directory atomically instead of merging versions. Reload Cursor, verify the installed manifest version, and review Hook Trust. To roll back, restore the retained old directory, reload Cursor, and repeat the same version and trust checks.
+For an update, replace the directory with the complete verified package instead of merging versions. Do not keep a copy of the previous directory. Reload Cursor, verify the installed manifest version, and review Hook Trust. To roll back, install an older verified GitHub release, reload Cursor, and repeat the same version and trust checks.
 
 ### 3b. Install the Codex archive
 
@@ -176,7 +176,7 @@ Reference that directory from an existing personal Marketplace entry without rep
 }
 ```
 
-Source placement is not activation. Fully restart the desktop app when required, refresh or reinstall **geldmacher-design** from its Marketplace, verify the cached manifest version, review any trust request, and start a new Codex task. For update or rollback, replace the complete source directory with the separately verified version and repeat every cache and new-task check. Never merge files from different releases.
+Source placement is not activation. Fully restart the desktop app when required, refresh or reinstall **geldmacher-design** from its Marketplace, verify the cached manifest version, review any trust request, and start a new Codex task. For an update or rollback, install the complete verified package for the selected release, including an older GitHub release when rolling back, and repeat every cache and new-task check. Never merge files from different releases.
 
 ### 3c. Install the OpenCode archive
 
@@ -189,13 +189,13 @@ Place the complete extracted directory at:
 
 OpenCode discovers the skills when that package's `skills/` directory is listed in the global `skills` array. It loads an explicit skill with `@design`, `@impeccable`, or `@motion`. The matching files in `~/.config/opencode/commands/` provide `/design`, `/impeccable`, and `/motion`. Design is autodiscovered. Impeccable and Motion stay explicit, matching Cursor and Codex.
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
+OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.
 
 Add only the Design skills path to an existing `skills` array. Keep every other key and every other plugin path, including Workflow and Efficiency. Do not write a second copy of those entries and do not remove them. Leave `opencode.jsonc` comments untouched. If `design.md`, `impeccable.md`, or `motion.md` already exists and is not a Design command, stop.
 
-Before a write that changes `opencode.json` or one of Design's own command files, deploy saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-design/` and leaves that backup in place after success or failure. A failed deploy restores the shared files from the backup taken for that attempt. A second deploy that changes nothing does not write and does not add another backup.
+Deploy keeps the original shared text in memory. If a write of `opencode.json` or one of Design's command files fails in the same run, deploy rewrites that original text from memory. It does not copy those files, the command directory, or the previous plugin directory to disk. A second deploy that changes nothing does not write. The OpenCode package is replaced only after the new directory is staged and validated. A failure before that replacement leaves the previous package in place. A failure after it stops and reports. Recover by installing an older GitHub release.
 
-`npm run deploy:local -- --opencode-only` performs that merge, backup, and command copy. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package. Start a new OpenCode session after installation. This package does not install a hook adapter.
+`npm run deploy:local -- --opencode-only` performs that merge and command copy. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package. Start a new OpenCode session after installation. This package does not install a hook adapter.
 
 The ZIP checksum proves the downloaded bytes only. It does not prove Marketplace acceptance, cache currentness, Cursor reload, Hook Trust, OpenCode skill registration, or fresh-task activation.
 
@@ -307,7 +307,7 @@ A normal invocation authorizes installation into the selected editor without a s
 | Codex | `~/.codex/plugins/geldmacher-design`, registered through this plugin's entry in the `personal` Marketplace |
 | OpenCode | `~/.config/opencode/geldmacher-design`, merged into the shared `skills` array and command directory |
 
-The local installer handles replacement, rollback, and Codex cache verification. Local versions have a `+local.<host>.<digest>` suffix identifying the editor and a hash of the packaged content. They are built from released source and need not be byte-identical to the published ZIP.
+The local installer replaces the selected plugin directory and verifies the Codex cache when Codex is selected. It does not copy the previous directory or shared OpenCode files to disk. If replacement has started and the run fails, it stops and reports the changes. Recover by installing an older GitHub release. Local versions have a `+local.<host>.<digest>` suffix identifying the editor and a hash of the packaged content. They are built from released source and need not be byte-identical to the published ZIP.
 
 The final report includes the release URL, tag, commit, destinations, local versions, content hashes, and verification result. Successful temporary workspaces are removed: the source path in a deployment receipt records where preparation happened, while the commit and hashes identify its content. The helper does not restart the editor, grant trust, enable project checks, or publish anything.
 
@@ -318,8 +318,8 @@ Missing prerequisites, release lookup failures, version mismatches, build failur
 Before retrying:
 
 1. Read the recorded phase and original error.
-2. Check whether installation had started and whether rollback completed.
-3. Resolve the reported cause; recover an incomplete rollback before another attempt.
+2. Check whether installation had started and which paths changed. The retained directory is an installation record, including `installation.json`, not a copy of the previous plugin.
+3. Resolve the reported cause. If the plugin directory was replaced, recover by installing an older GitHub release, or the same release again, before another attempt.
 4. Rerun explicitly when recovery is complete.
 
 A verification failure after installation can leave the new version installed. The helper preserves failure evidence and does not retry automatically.

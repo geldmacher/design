@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Install and deploy no longer copy the previous plugin directory or shared OpenCode files to disk. A failed shared-config write in the same run is restored from memory. Rollback means installing an older GitHub release.
+
 ## 0.19.0 - 2026-10-21
 
 - Add an OpenCode 2.1.2 package beside Cursor and Codex, with skill discovery through the global `skills` list, `/name` and `@name` commands, local deploy, and provenance schema 2. Shared OpenCode config is merge-only: a timestamped backup is written before every changing update, and uninstall removes only Design's own entries.

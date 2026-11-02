@@ -80,11 +80,11 @@ Choose one host or deploy all of them:
 | OpenCode only | `npm run deploy:local -- --dry-run --opencode-only` | `npm run deploy:local -- --opencode-only` |
 | Cursor, Codex, and OpenCode | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries. Before a write that changes `opencode.json` or one of Design's command files, deploy saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-design/` and leaves it after success or failure. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package.
+OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release. If a write of `opencode.json` or one of Design's command files fails in the same run, deploy rewrites the original text from memory and does not copy it to disk. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package.
 
 `deploy:build` materializes the packages. The normal deploy uses `deploy:prepare` for its targeted checks; append `--full` to select the shared build followed by one complete `release-check`, without repeating the targeted suites. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
 
-The deploy command builds and validates the packages, but deploys only the native bundles under `.build/plugins/{cursor,codex,opencode}/geldmacher-design`. It then atomically replaces only the selected physical host copies:
+The deploy command builds and validates the packages, but deploys only the native bundles under `.build/plugins/{cursor,codex,opencode}/geldmacher-design`. It stages each selected bundle beside its destination, validates that copy, then removes the previous directory and moves the new one into place:
 
 - Cursor: `~/.cursor/plugins/local/geldmacher-design`
 - Codex source: `~/.codex/plugins/geldmacher-design`
@@ -109,4 +109,4 @@ npm run deploy:local
 npm run deploy:status
 ```
 
-Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last commands above update every selected host; use `--cursor-only`, `--codex-only`, or `--opencode-only` when only one host is installed. An unchanged bundle is a verified no-op; changed content receives a new host-specific local version and replaces the previous copy transactionally.
+Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last commands above update every selected host; use `--cursor-only`, `--codex-only`, or `--opencode-only` when only one host is installed. An unchanged bundle is a verified no-op. Changed content receives a new host-specific local version. Deploy removes the previous directory only after the new directory is staged and validated. A failure before that replacement leaves the previous install in place. A failure after it stops and reports what changed. Recover by installing an older GitHub release.

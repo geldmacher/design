@@ -149,6 +149,17 @@ function retained(item) {
   return readdirSync(item.directory).filter(name => name.startsWith("design-release-install-")).map(name => join(item.directory, name));
 }
 
+function backupArtifactPaths(directory) {
+  if (!existsSync(directory)) return [];
+  const result = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.name.includes(".backup-") || entry.name.includes("local-deploy-backups") || entry.name.includes("geldmacher-release-backups")) result.push(path);
+    if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...backupArtifactPaths(path));
+  }
+  return result.sort();
+}
+
 test("CLI requires exactly one explicit supported host", () => {
   assert.deepEqual(parseInstallArguments(["--codex-only", "--dry-run"]), { host: "codex", dryRun: true });
   assert.deepEqual(parseInstallArguments(["--cursor-only"]), { host: "cursor", dryRun: false });
@@ -220,6 +231,7 @@ test("first installation pins the tag and preserves staged, unstaged and untrack
   assert.equal(readFileSync(join(item.root, "payload.txt"), "utf8"), "unstaged local work");
   assert.equal(existsSync(join(item.home, ".codex")), false);
   assert.deepEqual(retained(item), []);
+  assert.deepEqual(backupArtifactPaths(item.home), []);
 });
 
 for (const host of ["cursor", "codex"]) {
@@ -248,24 +260,31 @@ for (const host of ["cursor", "codex"]) {
       assert.equal(JSON.parse(readFileSync(item.statePath, "utf8")).adds, 2);
     }
     assert.deepEqual(retained(item), []);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
   });
 }
 
-test("Codex failure after mutation restores the previous source and cache and retains evidence", async t => {
+test("Codex failure after mutation leaves the new source in place and retains evidence", async t => {
   const item = fixture(t);
   await installRelease({ ...item.options, host: "codex" });
   const oldReceipt = readFileSync(target(item, "codex", ".local-deploy.json"), "utf8");
   const oldState = JSON.parse(readFileSync(item.statePath, "utf8"));
   item.cut("1.1.0");
   json(item.statePath, { ...oldState, failNextAdd: true });
-  await assert.rejects(installRelease({ ...item.options, host: "codex", resolveRelease: async () => release("1.1.0") }), /rolled back.*simulated add failure/s);
-  assert.equal(readFileSync(target(item, "codex", ".local-deploy.json"), "utf8"), oldReceipt);
-  assert.deepEqual(JSON.parse(readFileSync(item.statePath, "utf8")).installed, oldState.installed);
+  await assert.rejects(installRelease({ ...item.options, host: "codex", resolveRelease: async () => release("1.1.0") }), /stopped after replacing codex[\s\S]*Reinstall an older GitHub release[\s\S]*simulated add failure/);
+  assert.notEqual(readFileSync(target(item, "codex", ".local-deploy.json"), "utf8"), oldReceipt);
+  assert.equal(readFileSync(target(item, "codex"), "utf8"), "1.1.0");
+  const state = JSON.parse(readFileSync(item.statePath, "utf8"));
+  assert.notEqual(state.installed.version, oldState.installed.version);
+  assert.match(state.installed.version, /^1\.1\.0\+local\.codex\./);
   const [workspace] = retained(item);
   const evidence = JSON.parse(readFileSync(join(workspace, "installation.json"), "utf8"));
   assert.equal(evidence.phase, "install");
-  assert.match(evidence.error, /rolled back/);
+  assert.match(evidence.error, /stopped after replacing/);
+  assert.match(evidence.error, /Reinstall an older GitHub release/);
   assert.equal(existsSync(join(workspace, "source")), true);
+  assert.equal(existsSync(join(workspace, "installation.json")), true);
+  assert.deepEqual(backupArtifactPaths(item.home), []);
 });
 
 test("lookup, missing tag and version mismatch fail without host changes", async t => {
@@ -339,17 +358,22 @@ test("wrong origin and unavailable Codex prerequisites stop before release resol
   assert.deepEqual(retained(item), []);
 });
 
-test("failed first Codex install restores absence and preserves unrelated Marketplace entries", async t => {
+test("failed first Codex install leaves the new source and preserves unrelated Marketplace entries", async t => {
   const item = fixture(t);
   const marketplacePath = join(item.home, ".agents/plugins/marketplace.json");
   const marketplace = { name: "personal", plugins: [{ name: "unrelated", source: { source: "local", path: "./other" } }] };
   json(marketplacePath, marketplace);
-  const original = readFileSync(marketplacePath, "utf8");
   json(item.statePath, { installed: null, adds: 0, failNextAdd: true });
-  await assert.rejects(installRelease({ ...item.options, host: "codex" }), /rolled back/);
-  assert.equal(existsSync(target(item, "codex")), false);
-  assert.equal(readFileSync(marketplacePath, "utf8"), original);
-  assert.equal(JSON.parse(readFileSync(item.statePath, "utf8")).installed, null);
+  await assert.rejects(installRelease({ ...item.options, host: "codex" }), /stopped after replacing codex[\s\S]*Reinstall an older GitHub release/);
+  assert.equal(readFileSync(target(item, "codex"), "utf8"), "1.0.0");
+  const updated = JSON.parse(readFileSync(marketplacePath, "utf8"));
+  assert.equal(updated.plugins[0].name, "unrelated");
+  assert.equal(updated.plugins[0].source.path, "./other");
+  assert.equal(updated.plugins.some((entry) => entry.name === plugin), true);
+  assert.match(JSON.parse(readFileSync(item.statePath, "utf8")).installed.version, /^1\.0\.0\+local\.codex\./);
+  assert.deepEqual(backupArtifactPaths(item.home), []);
+  const [workspace] = retained(item);
+  assert.equal(existsSync(join(workspace, "installation.json")), true);
 });
 
 test("real Design source builds, validates and installs through the release path in an isolated host", async t => {

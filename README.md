@@ -40,7 +40,7 @@ Use the [latest stable GitHub Release](https://github.com/geldmacher/design/rele
 - **Manually:** follow the [release ZIP instructions](docs/installation.md#install-from-a-github-release) to verify and install the complete package. The OpenCode archive is `geldmacher-design-opencode-v<version>.zip`.
 - **Through your agent:** copy the [installation prompt](docs/installation.md#ask-your-agent-to-install) and check the listed prerequisites. This route uses the source checkout's installer on macOS or Linux. For OpenCode, the command is `npm run install:release -- --opencode-only`.
 
-Complete the guide's activation steps: reload Cursor, refresh the Codex Marketplace installation and start a new task, or start a new OpenCode session. Review changed hook permissions or trust requests when the host has a hook adapter. OpenCode config (`opencode.json` and `commands/`) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
+Complete the guide's activation steps: reload Cursor, refresh the Codex Marketplace installation and start a new task, or start a new OpenCode session. Review changed hook permissions or trust requests when the host has a hook adapter. OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.
 
 ## Update from a release
 
