@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.20.0 - 2026-11-02
+
 - Install and deploy no longer copy the previous plugin directory or shared OpenCode files to disk. A failed shared-config write in the same run is restored from memory. Rollback means installing an older GitHub release.
 
 ## 0.19.0 - 2026-10-21
