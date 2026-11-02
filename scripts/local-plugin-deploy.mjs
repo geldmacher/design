@@ -24,7 +24,7 @@ import { applyEdits, createScanner, findNodeAtLocation, parse as parseJsonc, par
 
 export const RECEIPT_NAME = ".local-deploy.json";
 export const HOSTS = ["cursor", "codex", "opencode"];
-export const OPENCODE_SHARED_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.";
+export const OPENCODE_SHARED_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.";
 const DEVELOPMENT_ROOTS = new Set([".agents", ".build", ".cursor", ".git", "node_modules", "test", "tests"]);
 const scriptPath = fileURLToPath(import.meta.url);
 const repositoryRoot = dirname(dirname(scriptPath));
@@ -203,7 +203,6 @@ export function deploymentPaths(home, plugin) {
     opencodeConfig: join(resolvedHome, ".config", "opencode", "opencode.json"),
     opencodeConfigComments: join(resolvedHome, ".config", "opencode", "opencode.jsonc"),
     opencodeCommands: join(resolvedHome, ".config", "opencode", "commands"),
-    opencodeBackups: join(resolvedHome, ".config", "opencode", ".local-deploy-backups", plugin),
   };
 }
 
@@ -296,105 +295,62 @@ function openCodeConfigPlan(paths, home) {
   return { skillsPath, registered, bytes, original };
 }
 
-function openCodeBackupFiles(paths, config, commands) {
-  const files = [];
-  if (!config.registered) {
-    files.push({
-      kind: "opencode-config",
-      path: paths.opencodeConfig,
-      existed: config.original !== null,
-      bytes: config.original,
-      backup: "opencode.json",
-    });
-  }
-  for (const file of commands.files.filter((item) => item.change)) {
-    files.push({
-      kind: "opencode-command",
-      path: file.destination,
-      existed: file.current !== null,
-      bytes: file.current === null ? null : readFileSync(file.destination),
-      backup: `commands/${file.name}`,
-    });
-  }
-  return files;
-}
-
 function assertOpenCodePath(path, home) {
   assertDestination(path, path, home);
 }
 
-function backupStamp(createdAt) {
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) throw new Error("OpenCode backup timestamp is invalid");
-  return `${date.toISOString().replaceAll(":", "-")}-${randomUUID()}`;
-}
-
-function safeBackupName(name) {
-  if (typeof name !== "string" || name === "" || name.startsWith("/") || name.startsWith("\\") || name.split(/[\\/]/).includes("..")) {
-    throw new Error(`OpenCode backup name is not safe: ${name}`);
+function revertSharedConfigFiles(entries) {
+  const errors = [];
+  for (const entry of [...entries].reverse()) {
+    try {
+      if (lstatExists(entry.path) && lstatSync(entry.path).isSymbolicLink()) {
+        throw new Error(`shared config restore target is a symlink: ${entry.path}`);
+      }
+      if (entry.existed) {
+        if (entry.bytes === null || entry.bytes === undefined) throw new Error(`shared config restore is missing the original bytes for ${entry.path}`);
+        atomicWrite(entry.path, entry.bytes);
+      } else if (lstatExists(entry.path)) {
+        rmSync(entry.path, { force: true });
+      }
+    } catch (error) {
+      errors.push(error);
+    }
   }
-  return name;
+  return errors;
 }
 
-function writeOpenCodeBackup({ home, plugin, root, createdAt, reason, files }) {
-  assertOpenCodePath(join(root, "manifest.json"), home);
-  mkdirSync(root, { recursive: true });
-  const rootStat = lstatSync(root);
-  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error(`OpenCode backup directory is not a physical directory: ${root}`);
-  const directory = join(root, backupStamp(createdAt));
-  if (lstatExists(directory)) throw new Error(`OpenCode backup already exists: ${directory}`);
-  const stage = mkdtempSync(join(root, ".staging-"));
+function restoreSharedConfigOrThrow(entries, error) {
+  const restoreErrors = revertSharedConfigFiles(entries);
+  if (restoreErrors.length > 0) {
+    throw new AggregateError(
+      [error, ...restoreErrors],
+      `OpenCode shared config write failed and restoring it from memory was incomplete: ${error.message}; ${restoreErrors.map((item) => item.message).join("; ")}`,
+      { cause: error },
+    );
+  }
+  throw new Error(`OpenCode shared config write failed and was restored from memory: ${error.message}. Nothing was copied to disk.`, { cause: error });
+}
+
+function installOpenCodeSharedConfig({ paths, opencodeConfig, opencodeCommands, simulateFailure }) {
+  const written = [];
   try {
-    const manifestFiles = [];
-    for (const file of files) {
-      const backup = safeBackupName(file.backup);
-      const target = resolve(stage, backup);
-      if (!isInside(stage, target)) throw new Error(`OpenCode backup escapes its directory: ${backup}`);
-      assertOpenCodePath(file.path, home);
-      if (file.existed) {
-        if (file.bytes === null || file.bytes === undefined) throw new Error(`OpenCode backup is missing bytes for ${file.path}`);
-        mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, file.bytes);
-      }
-      manifestFiles.push({ kind: file.kind, path: file.path, existed: Boolean(file.existed), backup: file.existed ? backup : null });
+    if (!opencodeConfig.registered) {
+      atomicWrite(paths.opencodeConfig, opencodeConfig.bytes);
+      written.push({ path: paths.opencodeConfig, existed: opencodeConfig.original !== null, bytes: opencodeConfig.original });
     }
-    writeJson(join(stage, "manifest.json"), {
-      schema: 1,
-      plugin,
-      created_at: new Date(createdAt).toISOString(),
-      reason,
-      files: manifestFiles,
-    });
-    renameSync(stage, directory);
-    return directory;
+    if (simulateFailure === "after-opencode-config") throw new Error("simulated failure after OpenCode config update");
+    if (opencodeCommands.files.some((file) => file.change)) mkdirSync(paths.opencodeCommands, { recursive: true });
+    for (const file of opencodeCommands.files.filter((item) => item.change)) {
+      atomicWrite(file.destination, Buffer.from(file.source));
+      written.push({
+        path: file.destination,
+        existed: file.current !== null,
+        bytes: file.current === null ? null : Buffer.from(file.current),
+      });
+    }
+    if (simulateFailure === "after-opencode-commands") throw new Error("simulated failure after OpenCode command update");
   } catch (error) {
-    rmSync(stage, { recursive: true, force: true });
-    throw error;
-  }
-}
-
-function restoreOpenCodeBackup(directory, { plugin, home }) {
-  const manifest = readJson(join(directory, "manifest.json"));
-  if (manifest?.schema !== 1 || manifest.plugin !== plugin || !Array.isArray(manifest.files)) {
-    throw new Error(`OpenCode backup is not usable: ${directory}`);
-  }
-  const configPaths = ["opencode.json", "opencode.jsonc"].map((name) => join(resolve(home), ".config", "opencode", name));
-  const commandsRoot = join(resolve(home), ".config", "opencode", "commands");
-  for (const file of manifest.files) {
-    const target = resolve(file.path);
-    if (!configPaths.includes(target) && !isInside(commandsRoot, target)) throw new Error(`OpenCode backup restore target is outside the shared config: ${file.path}`);
-    assertOpenCodePath(target, home);
-    if (lstatExists(target) && lstatSync(target).isSymbolicLink()) throw new Error(`OpenCode restore target is a symlink: ${target}`);
-    if (file.existed) {
-      const backup = safeBackupName(file.backup);
-      const source = resolve(directory, backup);
-      if (!isInside(directory, source) || !lstatExists(source) || !lstatSync(source).isFile() || lstatSync(source).isSymbolicLink()) {
-        throw new Error(`OpenCode backup file is missing: ${file.backup}`);
-      }
-      atomicWrite(target, readFileSync(source));
-    } else if (lstatExists(target)) {
-      rmSync(target, { force: true });
-    }
+    restoreSharedConfigOrThrow(written, error);
   }
 }
 
@@ -475,57 +431,63 @@ function planOpenCodeRemoval(paths, home, plugin, commandNames) {
   return { skillsPath, removed, configs, commands, jsoncRegistered: openCodeSkillRegistered(jsonc, skillsPath, home) };
 }
 
-export function uninstallOpenCodeDeployment({ plugin, home, env = process.env, deployedAt = new Date().toISOString() } = {}) {
+export function uninstallOpenCodeDeployment({ plugin, home, env = process.env } = {}) {
   if (!plugin || typeof plugin !== "string") throw new Error("OpenCode uninstall requires a plugin name");
   assertOpenCodeConfigDirectory(home, env);
   const paths = deploymentPaths(home, plugin);
   assertOpenCodePath(paths.opencodeConfig, paths.home);
   assertOpenCodePath(join(paths.opencodeCommands, "command.md"), paths.home);
-  assertOpenCodePath(join(paths.opencodeBackups, "manifest.json"), paths.home);
   const owned = ownedOpenCodeCommands(paths.opencode, plugin);
   const plan = planOpenCodeRemoval(paths, paths.home, plugin, owned.names);
-  const files = [];
-  for (const config of plan.configs) {
-    files.push({ kind: "opencode-config", path: config.path, existed: true, bytes: config.original, backup: basename(config.path) });
-  }
-  for (const file of plan.commands) {
-    files.push({ kind: "opencode-command", path: file.destination, existed: true, bytes: file.bytes, backup: `commands/${file.name}` });
-  }
   const result = {
     plugin,
     no_op: false,
-    backup: null,
     opencode: {
       config: paths.opencodeConfig,
       skills: plan.skillsPath,
       skills_removed: plan.removed,
       commands_removed: plan.commands.map((file) => file.name),
-      package_removed: owned.present,
+      package_removed: false,
       jsonc_registered: plan.jsoncRegistered,
-      backup_root: paths.opencodeBackups,
-      backup: null,
       rule: OPENCODE_SHARED_CONFIG_RULE,
     },
   };
-  if (!files.length && !owned.present) return { ...result, no_op: true };
-  const backup = files.length
-    ? writeOpenCodeBackup({ home: paths.home, plugin, root: paths.opencodeBackups, createdAt: deployedAt, reason: "uninstall", files })
-    : null;
+  if (!plan.configs.length && !plan.commands.length && !owned.present) return { ...result, no_op: true };
+  const written = [];
+  let packageRemoved = false;
   try {
-    for (const config of plan.configs) atomicWrite(config.path, config.nextBytes);
-    for (const file of plan.commands) rmSync(file.destination, { force: true });
+    for (const config of plan.configs) {
+      atomicWrite(config.path, config.nextBytes);
+      written.push({ path: config.path, existed: true, bytes: config.original });
+    }
+    for (const file of plan.commands) {
+      rmSync(file.destination, { force: true });
+      written.push({ path: file.destination, existed: true, bytes: file.bytes });
+    }
     const { json, jsonc } = readOpenCodeConfigFiles(paths);
     if (openCodeSkillRegistered(json, plan.skillsPath, paths.home) || openCodeSkillRegistered(jsonc, plan.skillsPath, paths.home)) {
       throw new Error("OpenCode skills remained registered after uninstall");
     }
     result.opencode.jsonc_registered = false;
-    if (owned.present) rmSync(paths.opencode, { recursive: true, force: true });
-    result.backup = backup;
-    result.opencode.backup = backup;
+    if (owned.present) {
+      rmSync(paths.opencode, { recursive: true, force: true });
+      packageRemoved = true;
+    }
+    result.opencode.package_removed = packageRemoved;
     return result;
   } catch (error) {
-    if (backup) restoreOpenCodeBackup(backup, { plugin, home: paths.home });
-    throw new Error(`OpenCode uninstall rolled back: ${error.message}`, { cause: error });
+    const restoreErrors = revertSharedConfigFiles(written);
+    const packageNote = packageRemoved
+      ? ` The OpenCode package at ${paths.opencode} was removed. Reinstall an older GitHub release to recover it.`
+      : "";
+    if (restoreErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...restoreErrors],
+        `OpenCode uninstall stopped and restoring shared config from memory was incomplete: ${error.message}.${packageNote} ${restoreErrors.map((item) => item.message).join("; ")}`,
+        { cause: error },
+      );
+    }
+    throw new Error(`OpenCode uninstall stopped and restored shared config from memory: ${error.message}.${packageNote} Nothing was copied to disk.`, { cause: error });
   }
 }
 
@@ -704,8 +666,25 @@ function stageTarget(source, destination, metadata, { simulateFailure } = {}) {
   }
 }
 
-function backupPath(destination) {
-  return join(dirname(destination), `.${basename(destination)}.backup-${process.pid}-${randomUUID()}`);
+function removeInstalledPath(destination) {
+  const stat = lstatSync(destination);
+  if (stat.isSymbolicLink()) {
+    rmSync(destination);
+    return;
+  }
+  rmSync(destination, { recursive: true, force: true });
+}
+
+function replaceInstalledDirectory(destination, payload, { host, previous }) {
+  if (previous) removeInstalledPath(destination);
+  try {
+    renameSync(payload, destination);
+  } catch (error) {
+    const detail = previous
+      ? `the previous ${host} install at ${destination} was removed and the new plugin could not be moved into place`
+      : `the new ${host} plugin could not be moved into place at ${destination}`;
+    throw new Error(`${detail}: ${error.message}. Reinstall an older GitHub release to recover.`, { cause: error });
+  }
 }
 
 function cachePath(codexHome, plugin, version) {
@@ -919,8 +898,6 @@ export function deployPreparedTargets({
         config_change: !opencodeConfig.registered,
         commands: paths.opencodeCommands,
         command_change: opencodeCommands.change,
-        backup_root: paths.opencodeBackups,
-        backup: null,
         rule: OPENCODE_SHARED_CONFIG_RULE,
       }
       : null,
@@ -933,24 +910,22 @@ export function deployPreparedTargets({
   const staged = {};
   const swapped = [];
   let marketplaceWritten = false;
-  let opencodeBackup = null;
+  let opencodeApplied = false;
   let codexActivationAttempted = false;
   let deploymentResult = null;
   try {
     for (const host of changedHosts) staged[host] = stageTarget(metadata[host].path, paths[host], metadata[host], { simulateFailure });
     if (simulateFailure === "after-stage") throw new Error("simulated failure after stage");
+    if (selectedHosts.includes("opencode") && (!opencodeConfig.registered || opencodeCommands.change)) {
+      installOpenCodeSharedConfig({ paths, opencodeConfig, opencodeCommands, simulateFailure });
+      opencodeApplied = true;
+    }
     for (const host of changedHosts) {
       const destination = paths[host];
       const previous = existingBundle(destination, { plugin, host });
-      const backup = previous ? backupPath(destination) : null;
-      if (backup) renameSync(destination, backup);
-      try {
-        renameSync(staged[host].payload, destination);
-      } catch (error) {
-        if (backup && !lstatExists(destination)) renameSync(backup, destination);
-        throw error;
-      }
-      swapped.push({ host, destination, backup });
+      if (previous) swapped.push({ host, destination });
+      replaceInstalledDirectory(destination, staged[host].payload, { host, previous });
+      if (!previous) swapped.push({ host, destination });
       if (simulateFailure === `after-${host}-swap`) throw new Error(`simulated failure after ${host} swap`);
     }
     if (selectedHosts.includes("codex") && marketplaceChanged) {
@@ -958,26 +933,6 @@ export function deployPreparedTargets({
       marketplaceWritten = true;
     }
     if (simulateFailure === "after-marketplace") throw new Error("simulated failure after Marketplace update");
-    if (selectedHosts.includes("opencode")) {
-      const files = openCodeBackupFiles(paths, opencodeConfig, opencodeCommands);
-      if (files.length) {
-        opencodeBackup = writeOpenCodeBackup({
-          home: paths.home,
-          plugin,
-          root: paths.opencodeBackups,
-          createdAt: deployedAt || new Date().toISOString(),
-          reason: "deploy",
-          files,
-        });
-      }
-      if (!opencodeConfig.registered) atomicWrite(paths.opencodeConfig, opencodeConfig.bytes);
-    }
-    if (simulateFailure === "after-opencode-config") throw new Error("simulated failure after OpenCode config update");
-    if (selectedHosts.includes("opencode")) {
-      mkdirSync(paths.opencodeCommands, { recursive: true });
-      for (const file of opencodeCommands.files.filter((item) => item.change)) atomicWrite(file.destination, file.source);
-    }
-    if (simulateFailure === "after-opencode-commands") throw new Error("simulated failure after OpenCode command update");
     let codex = null;
     if (selectedHosts.includes("codex")) {
       codexActivationAttempted = true;
@@ -1012,81 +967,30 @@ export function deployPreparedTargets({
       ...plan,
       no_op: false,
       codex,
-      opencode: plan.opencode ? { ...plan.opencode, backup: opencodeBackup } : null,
+      opencode: plan.opencode,
     };
   } catch (error) {
-    const rollbackErrors = [];
-    const newCache = cachePath(resolve(env.CODEX_HOME || paths.codexHome), plugin, metadata.codex.localVersion);
-    if (codexActivationAttempted) {
-      try {
-        codexLifecycle.remove({ home, plugin, version: metadata.codex.localVersion, source: paths.codex, cache: newCache });
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`Codex remove failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-    }
-    for (const item of [...swapped].reverse()) {
-      try {
-        if (lstatExists(item.destination)) rmSync(item.destination, { recursive: true, force: true });
-        if (item.backup && lstatExists(item.backup)) renameSync(item.backup, item.destination);
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`${item.host} source restore failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-    }
-    if (marketplaceWritten) {
-      try {
-        if (marketplaceOriginal === null) rmSync(paths.marketplace, { force: true });
-        else atomicWrite(paths.marketplace, marketplaceOriginal);
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`Marketplace restore failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-    }
-    if (opencodeBackup) {
-      try {
-        restoreOpenCodeBackup(opencodeBackup, { plugin, home: paths.home });
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`OpenCode shared config restore failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-    }
-    if (codexActivationAttempted) {
-      try {
-        codexLifecycle.restore({ home, plugin, version: metadata.codex.localVersion, source: paths.codex, cache: newCache, before: codexBefore });
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`Codex prior installation restore failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-      try {
-        codexLifecycle.verify({ home, plugin, version: metadata.codex.localVersion, source: paths.codex, cache: newCache, before: codexBefore });
-      } catch (rollbackError) {
-        rollbackErrors.push(new Error(`Codex rollback verification failed: ${rollbackError.message}`, { cause: rollbackError }));
-      }
-    }
-    if (rollbackErrors.length > 0) {
-      throw new AggregateError(
-        [error, ...rollbackErrors],
-        `local plugin deployment failed and rollback was incomplete: original failure: ${error.message}; rollback failures: ${rollbackErrors.map((item) => item.message).join("; ")}`,
+    if (swapped.length === 0) {
+      const configNote = opencodeApplied ? " Shared OpenCode config was updated and left in place." : "";
+      throw new Error(
+        `local plugin deployment stopped before replacing the installed plugin: ${error.message} The previous plugin directory is unchanged.${configNote}`,
         { cause: error },
       );
     }
-    throw new Error(`local plugin deployment rolled back: ${error.message}`, { cause: error });
+    const replaced = swapped.map((item) => item.host).join(", ");
+    const changes = [];
+    if (opencodeApplied) changes.push("shared OpenCode config was updated and left in place");
+    if (marketplaceWritten) changes.push("the personal Marketplace entry was updated and left in place");
+    if (codexActivationAttempted) changes.push("Codex activation was attempted and left in place");
+    const also = changes.length ? ` ${changes.join("; ")}.` : "";
+    throw new Error(
+      `local plugin deployment stopped after replacing ${replaced}. Previous plugin directories were not kept.${also} Reinstall an older GitHub release to recover. Original failure: ${error.message}`,
+      { cause: error },
+    );
   } finally {
     for (const stage of Object.values(staged)) if (lstatExists(stage.stageRoot)) rmSync(stage.stageRoot, { recursive: true, force: true });
   }
 
-  const backupCleanupErrors = [];
-  for (const item of swapped) {
-    if (!item.backup) continue;
-    try {
-      if (simulateFailure === `during-${item.host}-backup-cleanup`) throw new Error(`simulated ${item.host} backup cleanup failure`);
-      rmSync(item.backup, { recursive: true, force: true });
-    } catch (cleanupError) {
-      backupCleanupErrors.push(new Error(`${item.host} backup cleanup failed: ${cleanupError.message}`, { cause: cleanupError }));
-    }
-  }
-  if (backupCleanupErrors.length > 0) {
-    throw new AggregateError(
-      backupCleanupErrors,
-      `local plugin deployment committed but backup cleanup was incomplete: ${backupCleanupErrors.map((item) => item.message).join("; ")}`,
-    );
-  }
   return deploymentResult;
 }
 
@@ -1159,7 +1063,6 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
       skills: plan.skillsPath,
       registered: plan.registered,
       commands_current: commandsCurrent,
-      backup_root: paths.opencodeBackups,
       commands: paths.opencodeCommands,
       rule: OPENCODE_SHARED_CONFIG_RULE,
     };

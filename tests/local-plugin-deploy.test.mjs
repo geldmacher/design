@@ -150,6 +150,21 @@ function deploymentTemporaryArtifacts(directory) {
   return result.sort();
 }
 
+function backupArtifactPaths(directory) {
+  if (!existsSync(directory)) return [];
+  const result = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.name.includes(".backup-") || entry.name.includes("local-deploy-backups") || entry.name.includes("geldmacher-release-backups")) result.push(path);
+    if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...backupArtifactPaths(path));
+  }
+  return result.sort();
+}
+
+function assertNoBackupArtifacts(directory) {
+  assert.deepEqual(backupArtifactPaths(directory), []);
+}
+
 function metadata(root) {
   return {
     root,
@@ -497,7 +512,7 @@ test("changed bundles replace both targets", () => {
   }
 });
 
-test("a failure after both swaps restores both targets and Marketplace", () => {
+test("a failure after both swaps keeps the new directories and does not create a backup", () => {
   const item = fixture();
   try {
     const codex = mutatingCodexFixture(item);
@@ -513,28 +528,30 @@ test("a failure after both swaps restores both targets and Marketplace", () => {
     const oldCodex = readFileSync(join(paths.codex, ".local-deploy.json"), "utf8");
     const oldMarketplace = readFileSync(item.marketplace, "utf8");
     for (const host of ["cursor", "codex"]) {
-      writeFileSync(join(item.repository, ".build", "plugins", host, plugin, "payload.txt"), "rollback-candidate\n");
+      writeFileSync(join(item.repository, ".build", "plugins", host, plugin, "payload.txt"), "replacement-candidate\n");
     }
     assert.throws(() => deployPreparedTargets({
       ...options,
       deployedAt: "2026-08-10T12:02:00.000Z",
       simulateFailure: "after-codex-add",
-    }), /deployment rolled back/);
-    assert.equal(readFileSync(join(paths.cursor, ".local-deploy.json"), "utf8"), oldCursor);
-    assert.equal(readFileSync(join(paths.codex, ".local-deploy.json"), "utf8"), oldCodex);
+    }), /stopped after replacing cursor, codex[\s\S]*Reinstall an older GitHub release[\s\S]*simulated failure after Codex add/);
+    assert.notEqual(readFileSync(join(paths.cursor, ".local-deploy.json"), "utf8"), oldCursor);
+    assert.notEqual(readFileSync(join(paths.codex, ".local-deploy.json"), "utf8"), oldCodex);
     assert.equal(readFileSync(item.marketplace, "utf8"), oldMarketplace);
-    assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "first\n");
-    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "first\n");
-    assert.equal(codex.state.installed.version, JSON.parse(oldCodex).local_version);
-    assert.equal(codex.state.calls.remove, 1);
-    assert.equal(codex.state.calls.restore, 1);
+    assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "replacement-candidate\n");
+    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "replacement-candidate\n");
+    assert.equal(codex.state.installed.version, JSON.parse(readFileSync(join(paths.codex, ".codex-plugin", "plugin.json"))).version);
+    assert.notEqual(codex.state.installed.version, JSON.parse(oldCodex).local_version);
+    assert.equal(codex.state.calls.remove, 0);
+    assert.equal(codex.state.calls.restore, 0);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
     assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
 
-test("post-commit backup cleanup failure preserves every verified destination", () => {
+test("a successful replacement creates no backup directory", () => {
   const item = fixture();
   try {
     const codex = mutatingCodexFixture(item);
@@ -546,39 +563,25 @@ test("post-commit backup cleanup failure preserves every verified destination", 
     };
     deployPreparedTargets({ ...options, deployedAt: "2026-08-10T12:00:00.000Z" });
     for (const host of ["cursor", "codex"]) {
-      writeFileSync(join(item.repository, ".build", "plugins", host, plugin, "payload.txt"), "committed-with-cleanup-error\n");
+      writeFileSync(join(item.repository, ".build", "plugins", host, plugin, "payload.txt"), "committed-without-a-copy\n");
     }
-    assert.throws(() => deployPreparedTargets({
-      ...options,
-      deployedAt: "2026-08-10T12:01:00.000Z",
-      simulateFailure: "during-codex-backup-cleanup",
-    }), (error) => {
-      assert.equal(error instanceof AggregateError, true);
-      assert.match(error.message, /deployment committed but backup cleanup was incomplete/);
-      assert.doesNotMatch(error.message, /rolled back|rollback was incomplete/);
-      return true;
-    });
+    const replaced = deployPreparedTargets({ ...options, deployedAt: "2026-08-10T12:01:00.000Z" });
     const paths = deploymentPaths(item.home, plugin);
-    assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "committed-with-cleanup-error\n");
-    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "committed-with-cleanup-error\n");
+    assert.equal(replaced.no_op, false);
+    assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "committed-without-a-copy\n");
+    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "committed-without-a-copy\n");
     const currentCodexVersion = JSON.parse(readFileSync(join(paths.codex, ".codex-plugin", "plugin.json"))).version;
     assert.equal(codex.state.installed.version, currentCodexVersion);
-    const backups = deploymentTemporaryArtifacts(item.home).filter((path) => path.includes(".backup-"));
-    assert.equal(backups.length, 1);
-    assert.match(backups[0], /\.codex\/plugins\/\.geldmacher-test\.backup-/);
+    assert.equal(backupArtifactPaths(item.home).length, 0);
+    assert.deepEqual(deploymentTemporaryArtifacts(item.home), []);
     assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
 
-test("staging and Marketplace helpers clean owned temporaries on internal failure", () => {
-  for (const simulateFailure of [
-    "during-cursor-stage-copy",
-    "during-cursor-stage-patch",
-    "during-marketplace-write",
-    "during-marketplace-rename",
-  ]) {
+test("staging failures leave the previous install untouched and create no backup", () => {
+  for (const simulateFailure of ["during-cursor-stage-copy", "during-cursor-stage-patch"]) {
     const item = fixture();
     try {
       const marketplaceBefore = readFileSync(item.marketplace, "utf8");
@@ -589,12 +592,14 @@ test("staging and Marketplace helpers clean owned temporaries on internal failur
         env: codex.env,
         codexLifecycle: codex.lifecycle,
         simulateFailure,
-      }), /deployment rolled back: simulated/);
+      }), /stopped before replacing the installed plugin: simulated[\s\S]*previous plugin directory is unchanged/);
       const paths = deploymentPaths(item.home, plugin);
       assert.equal(existsSync(paths.cursor), false, `${simulateFailure} left a Cursor destination`);
       assert.equal(existsSync(paths.codex), false, `${simulateFailure} left a Codex destination`);
+      assert.equal(existsSync(paths.opencode), false, `${simulateFailure} left an OpenCode destination`);
       assert.equal(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
       assert.deepEqual(deploymentTemporaryArtifacts(item.home), [], `${simulateFailure} left an owned temporary artifact`);
+      assert.deepEqual(backupArtifactPaths(item.home), []);
       assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
     } finally {
       rmSync(item.root, { recursive: true, force: true });
@@ -602,7 +607,36 @@ test("staging and Marketplace helpers clean owned temporaries on internal failur
   }
 });
 
-test("a partially mutating Codex install failure restores prior absence", () => {
+test("a Marketplace write failure after replacement stops without a backup directory", () => {
+  for (const simulateFailure of ["during-marketplace-write", "during-marketplace-rename"]) {
+    const item = fixture();
+    try {
+      const marketplaceBefore = readFileSync(item.marketplace, "utf8");
+      const codex = mutatingCodexFixture(item);
+      assert.throws(() => deployPreparedTargets({
+        ...metadata(item.repository),
+        home: item.home,
+        env: codex.env,
+        codexLifecycle: codex.lifecycle,
+        simulateFailure,
+      }), /stopped after replacing cursor, codex, opencode[\s\S]*Reinstall an older GitHub release[\s\S]*simulated Marketplace/);
+      const paths = deploymentPaths(item.home, plugin);
+      assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "first\n");
+      assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "first\n");
+      assert.equal(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
+      assert.equal(codex.state.calls.install, 0);
+      assert.equal(codex.state.calls.remove, 0);
+      assert.equal(codex.state.calls.restore, 0);
+      assert.deepEqual(deploymentTemporaryArtifacts(item.home), [], `${simulateFailure} left an owned temporary artifact`);
+      assert.deepEqual(backupArtifactPaths(item.home), []);
+      assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
+    } finally {
+      rmSync(item.root, { recursive: true, force: true });
+    }
+  }
+});
+
+test("a partially mutating Codex install failure leaves the new source and reports recovery", () => {
   const item = fixture();
   try {
     const marketplaceBefore = readFileSync(item.marketplace, "utf8");
@@ -613,20 +647,22 @@ test("a partially mutating Codex install failure restores prior absence", () => 
       hosts: ["codex"],
       env: codex.env,
       codexLifecycle: codex.lifecycle,
-    }), /deployment rolled back: activation exploded after mutation/);
+    }), /stopped after replacing codex[\s\S]*Marketplace entry was updated and left in place[\s\S]*Codex activation was attempted and left in place[\s\S]*Reinstall an older GitHub release[\s\S]*activation exploded after mutation/);
     const paths = deploymentPaths(item.home, plugin);
-    assert.equal(existsSync(paths.codex), false);
-    assert.equal(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
-    assert.equal(codex.state.installed, null);
-    assert.equal(codex.state.calls.remove, 1);
-    assert.equal(codex.state.calls.restore, 1);
+    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "first\n");
+    assert.notEqual(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
+    assert.equal(JSON.parse(readFileSync(item.marketplace, "utf8")).plugins.some((entry) => entry.name === "unrelated"), true);
+    assert.equal(codex.state.installed.version.includes("+local.codex."), true);
+    assert.equal(codex.state.calls.remove, 0);
+    assert.equal(codex.state.calls.restore, 0);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
     assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
 
-test("Codex rollback failures are aggregated with the activation failure", () => {
+test("a failure after Codex activation does not restore the previous registration", () => {
   const item = fixture();
   try {
     const codex = mutatingCodexFixture(item, { restoreError: "restore exploded", rollbackVerifyError: "verification exploded" });
@@ -638,19 +674,23 @@ test("Codex rollback failures are aggregated with the activation failure", () =>
       codexLifecycle: codex.lifecycle,
       simulateFailure: "after-codex-add",
     }), (error) => {
-      assert.equal(error instanceof AggregateError, true);
-      assert.match(error.message, /rollback was incomplete/);
+      assert.equal(error instanceof AggregateError, false);
+      assert.match(error.message, /stopped after replacing codex/);
+      assert.match(error.message, /Reinstall an older GitHub release/);
       assert.match(error.message, /simulated failure after Codex add/);
-      assert.match(error.message, /restore exploded/);
-      assert.match(error.message, /verification exploded/);
+      assert.doesNotMatch(error.message, /restore exploded|verification exploded/);
       return true;
     });
+    assert.equal(codex.state.calls.remove, 0);
+    assert.equal(codex.state.calls.restore, 0);
+    assert.equal(existsSync(deploymentPaths(item.home, plugin).codex), true);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
 
-test("the production Codex lifecycle restores prior absence after a mutating fixture failure", () => {
+test("the production Codex lifecycle leaves a failed first install in place", () => {
   const item = fixture();
   try {
     const codex = executableCodexFixture(item, { failNextAdd: true });
@@ -661,20 +701,21 @@ test("the production Codex lifecycle restores prior absence after a mutating fix
       hosts: ["codex"],
       env: codex.env,
       codexBinary: codex.binary,
-    }), /deployment rolled back: .*fixture activation failed after mutation/);
+    }), /stopped after replacing codex[\s\S]*Reinstall an older GitHub release[\s\S]*fixture activation failed after mutation/);
     const state = codex.readState();
-    assert.equal(state.installed, null);
-    assert.deepEqual(state.events.map((event) => event.action), ["add", "remove"]);
-    assert.equal(existsSync(join(codex.env.CODEX_HOME, "plugins", "cache", "personal", plugin, state.events[0].version)), false);
-    assert.equal(existsSync(deploymentPaths(item.home, plugin).codex), false);
-    assert.equal(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
+    assert.equal(state.installed.version.includes("+local.codex."), true);
+    assert.deepEqual(state.events.map((event) => event.action), ["add"]);
+    assert.equal(existsSync(join(codex.env.CODEX_HOME, "plugins", "cache", "personal", plugin, state.events[0].version)), true);
+    assert.equal(readFileSync(join(deploymentPaths(item.home, plugin).codex, "payload.txt"), "utf8"), "first\n");
+    assert.notEqual(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
     assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
 
-test("the production Codex lifecycle restores a prior installation through a fixture executable", () => {
+test("the production Codex lifecycle leaves a failed update in place", () => {
   const item = fixture();
   try {
     const codex = executableCodexFixture(item);
@@ -689,27 +730,28 @@ test("the production Codex lifecycle restores a prior installation through a fix
     const source = deploymentPaths(item.home, plugin).codex;
     const receiptBefore = readFileSync(join(source, ".local-deploy.json"), "utf8");
     const marketplaceBefore = readFileSync(item.marketplace, "utf8");
-    writeFileSync(join(item.repository, ".build", "plugins", "codex", plugin, "payload.txt"), "production-rollback-candidate\n");
+    writeFileSync(join(item.repository, ".build", "plugins", "codex", plugin, "payload.txt"), "production-replacement-candidate\n");
     assert.throws(() => deployPreparedTargets({
       ...options,
       deployedAt: "2026-08-10T12:01:00.000Z",
       simulateFailure: "after-codex-add",
-    }), /deployment rolled back: simulated failure after Codex add/);
+    }), /stopped after replacing codex[\s\S]*Reinstall an older GitHub release[\s\S]*simulated failure after Codex add/);
     const state = codex.readState();
-    assert.equal(state.installed.version, first.targets.codex.local_version);
-    assert.deepEqual(state.events.map((event) => event.action), ["add", "add", "remove", "add"]);
-    assert.equal(state.events[0].version, state.events[3].version);
+    assert.notEqual(state.installed.version, first.targets.codex.local_version);
+    assert.deepEqual(state.events.map((event) => event.action), ["add", "add"]);
     assert.notEqual(state.events[1].version, state.events[0].version);
-    assert.equal(existsSync(join(codex.env.CODEX_HOME, "plugins", "cache", "personal", plugin, state.events[1].version)), false);
-    assert.equal(readFileSync(join(source, ".local-deploy.json"), "utf8"), receiptBefore);
+    assert.equal(existsSync(join(codex.env.CODEX_HOME, "plugins", "cache", "personal", plugin, state.events[1].version)), true);
+    assert.notEqual(readFileSync(join(source, ".local-deploy.json"), "utf8"), receiptBefore);
+    assert.equal(readFileSync(join(source, "payload.txt"), "utf8"), "production-replacement-candidate\n");
     assert.equal(readFileSync(item.marketplace, "utf8"), marketplaceBefore);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
     assert.equal(readFileSync(item.sentinel, "utf8"), "unchanged\n");
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
 
-test("the production Codex lifecycle rejects a symlinked cache ancestor before deletion", () => {
+test("a failed Codex activation does not delete through a symlinked cache", () => {
   const item = fixture();
   try {
     const codex = executableCodexFixture(item, { failNextAdd: true });
@@ -725,16 +767,12 @@ test("the production Codex lifecycle rejects a symlinked cache ancestor before d
       hosts: ["codex"],
       env: codex.env,
       codexBinary: codex.binary,
-    }), (error) => {
-      assert.equal(error instanceof AggregateError, true);
-      assert.match(error.message, /rollback was incomplete/);
-      assert.match(error.message, /Codex plugin cache crosses a symlink/);
-      return true;
-    });
+    }), /stopped after replacing codex[\s\S]*fixture activation failed after mutation/);
     const state = codex.readState();
     assert.deepEqual(state.events.map((event) => event.action), ["add"]);
     assert.equal(readFileSync(externalSentinel, "utf8"), "unchanged\n");
     assert.equal(existsSync(join(externalCache, state.events[0].version, ".codex-plugin", "plugin.json")), true);
+    assert.deepEqual(backupArtifactPaths(item.home), []);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
@@ -778,11 +816,7 @@ test("fixture deployments ignore inherited OpenCode and XDG config paths", () =>
   }
 });
 
-function backupDirectories(root) {
-  return readdirSync(root).filter((name) => !name.startsWith(".")).sort();
-}
-
-test("OpenCode install merges shared skills, backs up every changing write, and uninstalls only its own entries", () => {
+test("OpenCode install merges shared skills, writes no backup, and uninstalls only its own entries", () => {
   const item = fixture();
   try {
     const env = { XDG_CONFIG_HOME: join(item.home, ".config") };
@@ -816,12 +850,10 @@ test("OpenCode install merges shared skills, backs up every changing write, and 
     assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
     assert.equal(readFileSync(join(paths.opencodeCommands, "efficiency-review.md"), "utf8"), "efficiency command\n");
     assert.match(readFileSync(join(paths.opencodeCommands, "design.md"), "utf8"), /Load the `design` skill/);
-    const backups = backupDirectories(paths.opencodeBackups);
-    assert.equal(backups.length, 1);
-    assert.equal(isInside(item.home, join(paths.opencodeBackups, backups[0])), true);
-    assert.equal(readFileSync(join(paths.opencodeBackups, backups[0], "opencode.json"), "utf8"), original);
-    assert.equal(JSON.parse(readFileSync(join(paths.opencodeBackups, backups[0], "manifest.json"), "utf8")).reason, "deploy");
-    assert.equal(first.opencode.backup, join(paths.opencodeBackups, backups[0]));
+    assert.equal(Object.hasOwn(first.opencode, "backup"), false);
+    assert.equal(Object.hasOwn(first.opencode, "backup_root"), false);
+    assert.equal(existsSync(join(item.home, ".config", "opencode", ".local-deploy-backups")), false);
+    assertNoBackupArtifacts(item.home);
     const second = deployPreparedTargets({
       ...metadata(item.repository),
       home: item.home,
@@ -830,9 +862,9 @@ test("OpenCode install merges shared skills, backs up every changing write, and 
       deployedAt: "2026-08-10T12:05:00.000Z",
     });
     assert.equal(second.no_op, true);
-    assert.equal(second.opencode.backup, null);
+    assert.equal(Object.hasOwn(second.opencode, "backup"), false);
     assert.ok(readFileSync(paths.opencodeConfig).equals(installedBytes));
-    assert.deepEqual(backupDirectories(paths.opencodeBackups), backups);
+    assertNoBackupArtifacts(item.home);
     config.skills.push(skillsPath);
     config.skills.push("/opt/geldmacher-efficiency/extra");
     config.theme = "dark";
@@ -856,14 +888,14 @@ test("OpenCode install merges shared skills, backs up every changing write, and 
     assert.equal(readFileSync(join(paths.opencodeCommands, "efficiency-review.md"), "utf8"), "efficiency command\n");
     assert.equal(existsSync(paths.opencode), false);
     assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
-    const afterBackups = backupDirectories(paths.opencodeBackups);
-    assert.equal(afterBackups.length, 2);
-    const uninstallName = afterBackups.find((name) => name !== backups[0]);
-    assert.equal(JSON.parse(readFileSync(join(paths.opencodeBackups, uninstallName, "manifest.json"), "utf8")).reason, "uninstall");
+    assert.equal(Object.hasOwn(removed, "backup"), false);
+    assert.equal(Object.hasOwn(removed.opencode, "backup"), false);
+    assert.equal(Object.hasOwn(removed.opencode, "backup_root"), false);
+    assertNoBackupArtifacts(item.home);
     const again = uninstallOpenCodeDeployment({ plugin, home: item.home, env, deployedAt: "2026-08-10T14:00:00.000Z" });
     assert.equal(again.no_op, true);
-    assert.equal(again.backup, null);
-    assert.deepEqual(backupDirectories(paths.opencodeBackups), afterBackups);
+    assert.equal(Object.hasOwn(again, "backup"), false);
+    assertNoBackupArtifacts(item.home);
     assert.equal(existsSync(leaked), leakedBefore);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
@@ -898,19 +930,19 @@ test("OpenCode uninstall removes JSONC registrations while preserving all commen
       assert.deepEqual(after.match(/\/\*[\s\S]*?\*\//g), original.match(/\/\*[\s\S]*?\*\//g));
       assert.equal(removed.opencode.jsonc_registered, false);
       assert.equal(removed.opencode.skills_removed.length, entries.filter((entry) => entry === "design").length);
-      assert.equal(readFileSync(join(removed.backup, "opencode.jsonc"), "utf8"), original);
+      assert.equal(Object.hasOwn(removed, "backup"), false);
       assert.equal(existsSync(paths.opencode), false);
-      const backups = backupDirectories(paths.opencodeBackups);
+      assertNoBackupArtifacts(item.home);
       assert.equal(uninstallOpenCodeDeployment({ plugin, home: item.home, env: {} }).no_op, true);
       assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), after);
-      assert.deepEqual(backupDirectories(paths.opencodeBackups), backups);
+      assertNoBackupArtifacts(item.home);
     } finally {
       rmSync(item.root, { recursive: true, force: true });
     }
   }
 });
 
-test("failed OpenCode deploy restores the shared config and replaced command from its timestamped backup", () => {
+test("failed OpenCode deploy restores the shared config and replaced command from memory", () => {
   const item = fixture();
   try {
     const env = { XDG_CONFIG_HOME: join(item.home, ".config") };
@@ -929,17 +961,15 @@ test("failed OpenCode deploy restores the shared config and replaced command fro
       env,
       deployedAt: "2026-08-10T12:00:00.000Z",
       simulateFailure: "after-opencode-commands",
-    }), /rolled back/);
+    }), /restored from memory[\s\S]*Nothing was copied to disk[\s\S]*previous plugin directory is unchanged/);
     assert.equal(readFileSync(paths.opencodeConfig, "utf8"), original);
     assert.equal(readFileSync(join(paths.opencodeCommands, "design.md"), "utf8"), previous);
     assert.equal(existsSync(join(paths.opencodeCommands, "impeccable.md")), false);
     assert.equal(existsSync(paths.opencode), false);
     assert.equal(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), "workflow command\n");
-    const backups = backupDirectories(paths.opencodeBackups);
-    assert.equal(backups.length, 1);
-    assert.equal(readFileSync(join(paths.opencodeBackups, backups[0], "opencode.json"), "utf8"), original);
-    assert.equal(readFileSync(join(paths.opencodeBackups, backups[0], "commands", "design.md"), "utf8"), previous);
+    assert.equal(existsSync(join(item.home, ".config", "opencode", ".local-deploy-backups")), false);
     assert.equal(existsSync(paths.opencodeConfig + ".geldmacher-design-backup"), false);
+    assertNoBackupArtifacts(item.home);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
@@ -986,13 +1016,14 @@ test("OpenCode uninstall CLI removes only this plugin under an isolated XDG_CONF
     `);
     const failed = spawnSync(process.execPath, ["--import", pathToFileURL(preload).href, script, "uninstall"], { env, encoding: "utf8" });
     assert.equal(failed.status, 1, failed.stderr);
-    assert.match(failed.stderr, /rolled back: fixture package removal failure/);
+    assert.match(failed.stderr, /restored shared config from memory: fixture package removal failure/);
+    assert.match(failed.stderr, /Nothing was copied to disk/);
     assert.equal(readFileSync(paths.opencodeConfig, "utf8"), original);
     assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
     assert.equal(readFileSync(join(paths.opencodeCommands, "design.md"), "utf8"), command);
     assert.equal(existsSync(paths.opencode), true);
-    const [failedBackup] = backupDirectories(paths.opencodeBackups);
-    assert.equal(readFileSync(join(paths.opencodeBackups, failedBackup, "opencode.jsonc"), "utf8"), jsonc);
+    assert.equal(existsSync(join(home, ".config", "opencode", ".local-deploy-backups")), false);
+    assertNoBackupArtifacts(home);
     const removed = spawnSync(process.execPath, [script, "uninstall", "--opencode-only"], { env, encoding: "utf8" });
     assert.equal(removed.status, 0, removed.stderr);
     const payload = JSON.parse(removed.stdout);
@@ -1007,11 +1038,13 @@ test("OpenCode uninstall CLI removes only this plugin under an isolated XDG_CONF
     assert.equal(readFileSync(join(paths.opencodeCommands, "efficiency-review.md"), "utf8"), "leave me\n");
     assert.match(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), /Load the `plan-work` skill/);
     assert.equal(existsSync(paths.opencode), false);
-    assert.equal(backupDirectories(paths.opencodeBackups).length, 2);
+    assert.equal(Object.hasOwn(payload, "backup"), false);
+    assert.equal(Object.hasOwn(payload.opencode, "backup"), false);
+    assertNoBackupArtifacts(home);
     const again = spawnSync(process.execPath, [script, "uninstall"], { env, encoding: "utf8" });
     assert.equal(again.status, 0, again.stderr);
     assert.equal(JSON.parse(again.stdout).no_op, true);
-    assert.equal(backupDirectories(paths.opencodeBackups).length, 2);
+    assertNoBackupArtifacts(home);
     assert.equal(existsSync(leaked), leakedBefore);
   } finally {
     rmSync(parent, { recursive: true, force: true });
