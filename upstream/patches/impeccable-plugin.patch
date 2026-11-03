@@ -1,18 +1,18 @@
 diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
-index 43e1253..e9e2b4d 100644
+index 96aa029..0141949 100644
 --- a/skills/impeccable/SKILL.md
 +++ b/skills/impeccable/SKILL.md
 @@ -1,10 +1,18 @@
  ---
  name: impeccable
 -description: "Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, settings, onboarding, empty states, and native iOS or Android screens. Handles UX review, hierarchy, layout, typography, color, motion, UX copy, accessibility, responsive behavior, edge cases, and capturing or documenting design systems (DESIGN.md, tokens). Also for making bland UI bolder, loud UI quieter, or ambitious visual effects. Not for backend-only or non-UI tasks."
--version: 4.7.0
+-version: 4.8.0
 -license: Apache 2.0
 +description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.
 +license: Apache-2.0
 +compatibility: Requires Node.js 22 or newer.
 +metadata:
-+  version: "4.7.0"
++  version: "4.8.0"
  ---
  
 +## Geldmacher Design host contract
@@ -43,7 +43,7 @@ index 43e1253..e9e2b4d 100644
  **Hooks:** `/impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project (auto-runs the detector after UI file edits and surfaces findings). Load [reference/hooks.md](reference/hooks.md) when the user invokes it with any argument.
  
 diff --git a/skills/impeccable/reference/audit.md b/skills/impeccable/reference/audit.md
-index c1e1506..bb2676a 100644
+index d8f79f2..e847d9e 100644
 --- a/skills/impeccable/reference/audit.md
 +++ b/skills/impeccable/reference/audit.md
 @@ -59,7 +59,7 @@ Run comprehensive checks across 5 dimensions. Score each dimension 0-4 using the
@@ -258,7 +258,7 @@ index ca75f0d..439f48e 100644
  5. A frame plate (a window, a doorway, an arch) is a transparent cutout with an opening: generate it with a transparent background and keep the opening fully transparent. Verify the alpha inside the opening before saving: no baked view, no glow or vignette halo across it. The content seen through the opening is its own image region; produce it separately at the opening's size.
  
 diff --git a/skills/impeccable/reference/doctor.md b/skills/impeccable/reference/doctor.md
-index 7dc23b6..4462231 100644
+index a09e343..4462231 100644
 --- a/skills/impeccable/reference/doctor.md
 +++ b/skills/impeccable/reference/doctor.md
 @@ -1,4 +1,4 @@
@@ -271,7 +271,7 @@ index 7dc23b6..4462231 100644
  
  Three kinds of drift travel under "out of date". Keep them apart:
  
--- **Tool version.** The installed skill is older than the published one. `impeccable context` reports that at boot as `UPDATE_AVAILABLE` and `npx impeccable update` fixes it. Not this command's job.
+-- **Tool version.** The installed skill is older than the published one. `impeccable context` reports that at boot as `UPDATE_AVAILABLE` and `npx impeccable update` fixes it, or the harness's plugin manager for a plugin install. Not this command's job.
 -- **Schema drift.** An artifact was written by an older Impeccable: fields nothing reads, fields now expected, files in retired locations. Mechanical, and this command repairs most of it.
 +- **Tool version.** The plugin bundles a pinned skill and engine. Runtime update checks and self-update are disabled. Updating the bundle is a separate Design maintainer task.
 +- **Schema drift.** Report fields and files from older versions, then describe proposed changes. Do not migrate project context automatically.
@@ -301,7 +301,7 @@ index 7dc23b6..4462231 100644
 -`impeccable context` reports the cheap subset of these findings at session start, throttled to once a week per project. Set `"stalenessCheck": false` in `.impeccable/config.json` to silence that, or `IMPECCABLE_NO_STALENESS_CHECK=1` for one session. This command still works with the check disabled, and that is the combination to suggest for a user who wants the report only when they ask for it.
 +`impeccable context` reports the cheap subset at session start. Its notice cache is isolated per invocation and removed afterward; report findings once per task. Set `"stalenessCheck": false` in `.impeccable/config.json` or `IMPECCABLE_NO_STALENESS_CHECK=1` to disable that check. Explicit doctor remains available.
 diff --git a/skills/impeccable/reference/document.md b/skills/impeccable/reference/document.md
-index 9da0bc7..9765acb 100644
+index ec75b7c..16aa535 100644
 --- a/skills/impeccable/reference/document.md
 +++ b/skills/impeccable/reference/document.md
 @@ -1,10 +1,10 @@
@@ -327,7 +327,7 @@ index 9da0bc7..9765acb 100644
  typography:
 @@ -22,7 +23,10 @@ typography:
      lineHeight: 1
-     letterSpacing: "normal"
+     letterSpacing: "0em"
    body:
 -    # ...
 +    fontFamily: "Georgia, serif"
@@ -516,18 +516,21 @@ index bedfa84..30847f6 100644
  
  Done when the helper is stopped and the dev site still answers with the accepted design.
 diff --git a/skills/impeccable/reference/hooks.md b/skills/impeccable/reference/hooks.md
-index 71c4d44..ab6307a 100644
+index 6544c7f..a91e1f0 100644
 --- a/skills/impeccable/reference/hooks.md
 +++ b/skills/impeccable/reference/hooks.md
-@@ -1,5 +1,7 @@
+@@ -1,24 +1,24 @@
  # /impeccable hooks
  
 +> Geldmacher Design integration: Cursor and Codex use plugin-registered host adapters. This command changes only `.impeccable/` config and never installs or edits a project-local hook manifest.
 +
  Manage the **design detector hook** for the current project.
  
- The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Cursor uses `preToolUse` to block bad proposed writes before they land and stays silent when it allows a clean write. Grok Build fires the same PostToolUse scan to mark touched files, then surfaces findings on Stop `additionalContext`. Do not expect a Grok per-edit reminder: Grok discards that stdout.
-@@ -8,18 +10,16 @@ The detector rules run in two tiers. The per-edit hook surfaces only the immedia
+-The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, Cursor, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Grok Build fires the same PostToolUse scan to mark touched files, then surfaces findings on Stop `additionalContext`. Do not expect a Grok per-edit reminder: Grok discards that stdout.
++The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Cursor uses `preToolUse` to block bad proposed writes before they land and stays silent when it allows a clean write. Grok Build fires the same PostToolUse scan to mark touched files, then surfaces findings on Stop `additionalContext`. Do not expect a Grok per-edit reminder: Grok discards that stdout.
+ 
+-The detector rules run in two tiers. The per-edit hook surfaces only the immediate tier: mechanical, unambiguous problems worth interrupting an edit for, such as broken images, overflowing content, contrast and legibility failures, gradient text, glow shadows, and design-system drift. Everything else (copy cadence, palette and typography taste, layout rhythm) is deferred to a deep pass on the `Stop` hook event, which runs the full rule set over every UI file touched in the session and surfaces the remaining findings once, deduplicated against what the per-edit pass already reported. A session with nothing left to report stops silently. Set `hook.perEditRules` to `"all"` in `.impeccable/config.json` to restore the full rule set on every edit. The Stop deep pass is wired for Claude Code, Codex, and Grok Build, which dispatch a native `Stop` hook event. Cursor does not get one (its `stop` hook can only answer with a follow-up user message), and GitHub Copilot's stop-style events do not feed context back to the model, so they keep the full detector per edit. Grok also fires an observe-only Stop with `reason: "shutdown"` after `end_turn`; skip that one, scan only `end_turn`.
++The detector rules run in two tiers. The per-edit hook surfaces only the immediate tier: mechanical, unambiguous problems worth interrupting an edit for, such as broken images, overflowing content, contrast and legibility failures, gradient text, glow shadows, and design-system drift. Everything else (copy cadence, palette and typography taste, layout rhythm) is deferred to a deep pass on the `Stop` hook event, which runs the full rule set over every UI file touched in the session and surfaces the remaining findings once, deduplicated against what the per-edit pass already reported. A session with nothing left to report stops silently. Set `hook.perEditRules` to `"all"` in `.impeccable/config.json` to restore the full rule set on every edit. The Stop deep pass is wired for Claude Code, Codex, and Grok Build, which dispatch a native `Stop` hook event. Cursor does not get one (its stop hook is not consistently dispatched; the pre-write gate covers it), and GitHub Copilot's stop-style events do not feed context back to the model, so they keep the full detector per edit. Grok also fires an observe-only Stop with `reason: "shutdown"` after `end_turn`; skip that one, scan only `end_turn`.
  
  Every hook is a mechanical pass. The reflexes no scanner catches live in [craft-floor.md](craft-floor.md), which the skill loads before it edits UI, so they apply whether or not a hook is wired. A session with no automatic hook gets one `MANUAL_DETECTOR_REQUIRED` directive from `impeccable context` asking for a single detector run at the end.
  
@@ -537,18 +540,18 @@ index 71c4d44..ab6307a 100644
  Declare server-side template extensions under **`detector.extensions`** when the project uses Blade, Twig, ERB, or Handlebars files; the hook skips them otherwise because they sit outside the built-in extension list. One entry per extension, `{ "ext": ".blade.php", "engine": "html" }`. `engine` picks the analyzer (`html` for markup templates, `text` for JS/TS/CSS-like files) and defaults to `html`. Match against the end of the filename, so double extensions like `.blade.php` and `.html.erb` work. Config only adds extensions; the built-in list always applies.
  
 -Manual `.cursor/skills/impeccable/scripts/impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `.cursor/skills/impeccable/scripts/impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `.cursor/skills/impeccable/scripts/impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
+-
+-Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `~/.claude/settings.json` for a user-scope install; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.
 +Manual `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
  
--Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `~/.claude/settings.json` for a user-scope install; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.
+-On **Cursor**, the hook runs on `postToolUse` for the `Write` tool (every agent file edit) and returns its reminder as `additional_context`, which Cursor adds after the tool result. Projects set up before this ran a `preToolUse` gate (`hook-before-edit`) that blocked bad writes before they landed; that gate still works until `hooks on`, `impeccable update`, or `impeccable doctor --fix` moves the entry to `postToolUse`.
 +Geldmacher Design provides Cursor pre-write and Codex post-write/Stop adapters registered by the plugin. Project-local Impeccable installations and hook manifests are conflicts to diagnose. Agent Plugins v1 has no native hook integration.
  
- On **Cursor**, `preToolUse` checks proposed Write/Edit/Shell write content and denies only when the real detector finds an issue. The denial message is visible to the agent as the tool error, so the agent can reconsider before the bad write lands.
- 
 -Gemini installs session and completion hooks in `.gemini/settings.json`, merged into the settings already there (comments are tolerated; a commented file is backed up to `settings.json.bak` before the rewrite, and a file that is not valid JSON is left alone). It does not install a per-edit detector hook. The `BeforeTool` hook only rewrites shell commands that run `build-phase`, and only on macOS and Linux; on Windows (where Gemini runs hooks through PowerShell) no session id reaches the shell, so a comp build is not tied to the session and the completion reminder stays silent.
--
++On **Cursor**, `preToolUse` checks proposed Write/Edit/Shell write content and denies only when the real detector finds an issue. The denial message is visible to the agent as the tool error, so the agent can reconsider before the bad write lands.
+ 
  ## Routing
  
- The first argument is the action. Defaults to `status`.
 @@ -27,14 +27,14 @@ The first argument is the action. Defaults to `status`.
  | Action | What it does |
  |---|---|
@@ -584,7 +587,7 @@ index 71c4d44..ab6307a 100644
  - Reach for `ignore-file <path>` only when the whole file is out of scope for design review: a fixture, a generated artifact, a deliberate slop demo. It silences every rule for that file permanently, including rules that have not been written yet. A real UI surface with one noisy rule wants the file-scoped value ignore above.
  - Use `ignore-rule <id>` only when the user asks to suppress that whole rule across the project. For broad overused-font suppression, use `ignore-rule overused-font --all-values` only when the user asks to ignore overused fonts generally.
  - Prefer config ignores (the commands above) by default; they keep suppressions in one reviewable place. Reach for an inline comment only when the waiver must travel with a single file that leaves the repo (a generated/exported standalone document, an emailed HTML file). The supported marker is `impeccable-disable <rule>` (whole file) or `impeccable-disable-line` / `impeccable-disable-next-line` (one line), in any comment syntax, with an optional reason after `:` or `--`. The detector honors it by default; `--no-inline-ignores` or `--no-config` bypasses it.
-@@ -72,32 +72,32 @@ Prefer the narrowest exception:
+@@ -72,43 +72,43 @@ Prefer the narrowest exception:
  Example value-specific exception:
  
  ```bash
@@ -622,11 +625,14 @@ index 71c4d44..ab6307a 100644
  ```
  
  ## Constraints
-@@ -105,9 +105,9 @@ Example whole-file exception, for a file that is out of scope entirely:
+ 
  - Never modify `.impeccable/config.json` or `.impeccable/config.local.json` by hand from this command. Always go through `impeccable hooks` so writes stay validated and the file shape stays consistent. One exception: `detector.extensions` has no admin action, so when the user asks to cover a template stack, edit that one field in `.impeccable/config.json` directly and leave the rest of the file untouched.
  - Do not edit the launcher or the binary behind `impeccable hook` and `impeccable hook-before-edit` from this flow. Those are skill plumbing.
- - Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.
+-- When a user asks how far to trust the hook, say it runs the engine unsandboxed with the agent's environment and network access (in the Copilot cloud agent too, once `.github/hooks/impeccable.json` is committed), and that the launcher checks a downloaded engine against `.cursor/skills/impeccable/scripts/engine-checksums.txt` before its first run; **never** call it sandboxed.
+-- The hook never blocks an edit; it emits a post-edit reminder. (A Cursor project still on the old `preToolUse` gate can block a write until its manifest is migrated.) Disabling stops the reminders.
 -- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses `~/.claude/settings.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.
++- When a user asks how far to trust the hook, say it runs the verified in-package engine with the agent's environment. It does not download a binary. Do not call it sandboxed.
++- Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.
 +- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.
  
  ## Failure modes
@@ -662,7 +668,7 @@ index 1f3b581..7a3095e 100644
  
  Output `{ shape, signals }`; the shape names the *patch mechanism*, so one template covers many frameworks:
 diff --git a/skills/impeccable/reference/live.md b/skills/impeccable/reference/live.md
-index 54d8974..ee61498 100644
+index 0e4b975..7b8e164 100644
 --- a/skills/impeccable/reference/live.md
 +++ b/skills/impeccable/reference/live.md
 @@ -4,13 +4,13 @@ Interactive live variant mode: select elements in the browser, pick a design act
@@ -775,7 +781,7 @@ index 54d8974..ee61498 100644
  
  Stops the helper and runs `impeccable live-inject --remove` to strip the injected script (use `stop --keep-inject` to keep it for a quick restart; `.impeccable/live/config.json` persists as project config). Then search for and remove any leftover `impeccable-variants-start` wrappers and `impeccable-carbonize-start` blocks.
 diff --git a/skills/impeccable/reference/new-work.md b/skills/impeccable/reference/new-work.md
-index 85862f9..23f0192 100644
+index 46910b3..ea1a12e 100644
 --- a/skills/impeccable/reference/new-work.md
 +++ b/skills/impeccable/reference/new-work.md
 @@ -36,7 +36,7 @@ Inherit its world and composition. Resolve only the new purpose, content, hierar
@@ -793,7 +799,7 @@ index 85862f9..23f0192 100644
  3. Turn that material into complete directions: each joins a reusable visual world to a concrete first-surface experience.
 -4. Run `.cursor/skills/impeccable/scripts/impeccable concept-seed --scope direction --mode <mode>` and follow what it prints. No substitute, no skip: on a new or replacement world, writing artifact code before this script has run and its assignment is acknowledged is a contract violation, whatever the harness, the model, or the time pressure; the roll is what keeps every run from converging on the category default. The script assigns the direction to build and deals catalog challengers. Fuse each challenger before judging it: the challenger supplies the form and its system grammar, the product supplies every fact, clarity wins conflicts. Weigh fused challengers against the assigned direction on exactly two axes, audience identification and product clarity. Losing to strong grounded material is a valid outcome; beating a thin or tool-monoculture list is the point. Close with a verdict per challenger, decided before any borrowing: wins (beats the assigned direction on both axes; becomes the build candidate), competitive (holds one axis; stays a full alternate), or declined (loses both). A declined challenger is not spent: name the one discipline of its system the assigned direction lacks, and raise the assigned direction to match before presenting it. A donation transfers ambition and system discipline (a palette's total commitment, a grid's density courage, a form's structural honesty), never the challenger's clothes. A component treatment, such as a button's shadow or a display face, is clothes, not discipline; a lifted motif is a costume note, not a raise, and one world owns the page. Write each raise into the presented direction as its own line, named for its donor; a raise nobody can read did not happen.
 +4. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable concept-seed --scope direction --mode <mode>` and follow what it prints. No substitute, no skip: on a new or replacement world, writing artifact code before this script has run and its assignment is acknowledged is a contract violation, whatever the harness, the model, or the time pressure; the roll is what keeps every run from converging on the category default. The script assigns the direction to build and deals catalog challengers. Fuse each challenger before judging it: the challenger supplies the form and its system grammar, the product supplies every fact, clarity wins conflicts. Weigh fused challengers against the assigned direction on exactly two axes, audience identification and product clarity. Losing to strong grounded material is a valid outcome; beating a thin or tool-monoculture list is the point. Close with a verdict per challenger, decided before any borrowing: wins (beats the assigned direction on both axes; becomes the build candidate), competitive (holds one axis; stays a full alternate), or declined (loses both). A declined challenger is not spent: name the one discipline of its system the assigned direction lacks, and raise the assigned direction to match before presenting it. A donation transfers ambition and system discipline (a palette's total commitment, a grid's density courage, a form's structural honesty), never the challenger's clothes. A component treatment, such as a button's shadow or a display face, is clothes, not discipline; a lifted motif is a costume note, not a raise, and one world owns the page. Write each raise into the presented direction as its own line, named for its donor; a raise nobody can read did not happen.
- 5. Present one direction, fully committed and already raised by the hand it beat, raises visible as named lines: world, first viewport, visitor path, signature interaction, cross-surface reach, honest risk. Route each challenger by verdict: winning and competitive challengers are full alternates with their QUALITY BAR cards and one-line case; declined challengers render demoted, compact and quiet, each carrying its verdict and what the direction kept from it, never full-size, never silently dropped, still adoptable on request. The verdict informs the user's choice, never pre-empts it; the demoted row is the hand's proof of judgment. A hand holds at most three full-card challengers: when the roll deals more, the three strongest join and the rest wait in the re-roll pool, noted in one line; dropping a challenger from the hand itself takes a named product-truth failure, disclosed. Add one card for your own top-ranked grounded candidate when it is not the assigned direction, kicker IMPECCABLE’S PICK, same anatomy as every card, with an honest risk line naming its familiarity when true: the strongest grounded direction is often where most runs in this category land, and the user deciding that trade is the point of showing it. Familiar and effective is a legitimate destination, not a failure of nerve; the pick card and the standing exit serve it at two depths. One pick card, never two, never a ranked list: a lineup of your candidates hands selection back to a taste function and invites the safest card. The pick never takes the lead position; when the dice assign your top candidate there is no pick card, and the assigned card notes it topped your list. Add re-roll with an optional one-line steer, in three registers: plain (a fresh hand, same spread), safer (your remaining conventional grounded candidates plus the canon against named competitors), bolder (foreign forms only, at full commitment). The register is the user's steering on the familiar-to-bold axis, never yours to pre-select; when the answer carries one, re-run the seed with `--register <value>` and the next `--reroll` round, and follow what it prints. A user saying "bolder" or "safer" while a direction round is open means these registers, never the bolder or harden commands. The two channels share this structure and differ only in richness: cards and boards on the decision page, names and one-liners through the structured tool, whose option list carries the assigned direction, the pick, the winning and competitive challengers, and the standing exit last; declined challengers fold into the assigned option's description as their kept lines, so the raise survives the text channel.
+ 5. Present one direction, fully committed and already raised by the hand it beat, raises visible as named lines: world, first viewport, visitor path, signature interaction, cross-surface reach, honest risk. Route each challenger by verdict: winning and competitive challengers are full alternates with their QUALITY BAR cards and one-line case; declined challengers render demoted, compact and quiet, each carrying its verdict and what the direction kept from it, never full-size, never silently dropped, still adoptable on request. The verdict informs the user's choice, never pre-empts it; the demoted row is the hand's proof of judgment. A hand holds at most three full-card challengers: when the roll deals more, the three strongest join and the rest wait in the re-roll pool, noted in one line; dropping a challenger from the hand itself takes a named product-truth failure, disclosed. The hand's size follows the verdicts, never a number the user named: when the weighing yields fewer full cards than asked, deliver the honest hand, say in one line why it is smaller, and offer a re-roll to deal candidates that could earn full cards. A declined challenger is never promoted to fill a slot; a promoted card looks exactly like a competitive one, so the promotion leaves no trace. The standing exit does not count toward a requested number once the user has seen and rejected it; it stays present as the quiet door. Add one card for your own top-ranked grounded candidate when it is not the assigned direction, kicker IMPECCABLE’S PICK, same anatomy as every card, with an honest risk line naming its familiarity when true: the strongest grounded direction is often where most runs in this category land, and the user deciding that trade is the point of showing it. Familiar and effective is a legitimate destination, not a failure of nerve; the pick card and the standing exit serve it at two depths. One pick card, never two, never a ranked list: a lineup of your candidates hands selection back to a taste function and invites the safest card. The pick never takes the lead position; when the dice assign your top candidate there is no pick card, and the assigned card notes it topped your list. Add re-roll with an optional one-line steer, in three registers: plain (a fresh hand, same spread), safer (your remaining conventional grounded candidates plus the canon against named competitors), bolder (foreign forms only, at full commitment). The register is the user's steering on the familiar-to-bold axis, never yours to pre-select; when the answer carries one, re-run the seed with `--register <value>` and the next `--reroll` round, and follow what it prints. A user saying "bolder" or "safer" while a direction round is open means these registers, never the bolder or harden commands. The two channels share this structure and differ only in richness: cards and boards on the decision page, names and one-liners through the structured tool, whose option list carries the assigned direction, the pick, the winning and competitive challengers, and the standing exit last; declined challengers fold into the assigned option's description as their kept lines, so the raise survives the text channel.
  
 -The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in the build-path paragraph below). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, or `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `.cursor/skills/impeccable/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
 +The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in the build-path paragraph below). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, or `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
@@ -924,7 +930,7 @@ index e03cb05..140c0a4 100644
  
  Also inspect dynamic or arbitrary font values the detector cannot interpret. Synthesize both assessments before editing, noting what each caught alone. A clean scan is a floor, not proof of good typography.
 diff --git a/skills/impeccable/reference/visualize.md b/skills/impeccable/reference/visualize.md
-index 48c2681..ff96964 100644
+index f628950..67c35b1 100644
 --- a/skills/impeccable/reference/visualize.md
 +++ b/skills/impeccable/reference/visualize.md
 @@ -40,7 +40,7 @@ What the comp shows is measured, not remembered. new-work.md section 6 runs the
@@ -937,10 +943,10 @@ index 48c2681..ff96964 100644
  Convert images with a converter `impeccable context` reported at boot (the IMAGE_TOOLS line); probe only when it reported none, at most once per session, never per image.
  
 diff --git a/skills/impeccable/scripts/impeccable b/skills/impeccable/scripts/impeccable
-index 224028c..26b0f9c 100755
+index 92d8cca..26b0f9c 100755
 --- a/skills/impeccable/scripts/impeccable
 +++ b/skills/impeccable/scripts/impeccable
-@@ -1,212 +1,4 @@
+@@ -1,249 +1,4 @@
  #!/bin/sh
 -# Impeccable launcher. Runs the platform binary shipped next to this script:
 -#   <this dir>/bin/<os>-<arch>/impeccable
@@ -951,7 +957,10 @@ index 224028c..26b0f9c 100755
 -# named `impeccable`, and exec'ing it would fail every verb with
 -# "Unknown command". Trusted candidates (IMPECCABLE_BIN, the sibling binary,
 -# the version-pinned cache) are exec'd without a probe: hooks run them on
--# every edit and must stay fast.
+-# every edit and must stay fast. The version-pinned cache and the download are
+-# verified against engine-checksums.txt (next to this script), never against
+-# anything published beside the binary; a <binary>.verified stamp records that
+-# a cached binary passed, so only the first run hashes it.
  set -eu
 -
 -# True when the candidate answers the engine handshake (prints
@@ -961,14 +970,51 @@ index 224028c..26b0f9c 100755
 -# then skips its own probes and refuses to download, so probing stays cheap
 -# and can never loop.
 -probe_ok() {
--  case "$(IMPECCABLE_LAUNCHER_PROBE=1 "$1" engine-probe 2>/dev/null || true)" in
+-  probe_out=$(IMPECCABLE_LAUNCHER_PROBE=1 "$1" engine-probe 2>/dev/null) || return 1
+-  case "$probe_out" in
 -    impeccable-engine*) return 0 ;;
 -  esac
 -  return 1
 -}
 -probing=${IMPECCABLE_LAUNCHER_PROBE:-}
 -
+-# Prints the digest engine-checksums.txt records for engine version $1 and
+-# asset $2 (lines are "<version> <asset> <sha256>"), nothing when there is none.
+-# A CR is a separator too (CRLF checkouts), and a last line with no newline
+-# still counts.
+-manifest_digest() {
+-  [ -f "$manifest" ] || return 0
+-  while IFS="$(printf ' \t\r')" read -r m_version m_asset m_sum _ || [ -n "$m_version" ]; do
+-    case "$m_version" in ''|'#'*) continue ;; esac
+-    if [ "$m_version" = "$1" ] && [ "$m_asset" = "$2" ]; then
+-      printf '%s' "$m_sum"
+-      return 0
+-    fi
+-  done < "$manifest"
+-  return 0
+-}
+-# Sets $expected (and, on Windows on ARM, which runs x64 binaries,
+-# $expected_x64) from engine-checksums.txt. Only called off the stamped fast
+-# path: hooks run this launcher on every edit.
+-read_expected() {
+-  expected=$(manifest_digest "$version" "$asset")
+-  expected_x64=""
+-  if [ "$os" = windows ] && [ "$arch" = arm64 ]; then
+-    expected_x64=$(manifest_digest "$version" impeccable-windows-x64.exe)
+-  fi
+-}
+-# Sets $actual to the sha256 of $1, empty when no hash tool works.
+-hash_file() {
+-  actual=""
+-  if command -v shasum >/dev/null 2>&1; then
+-    if digest=$(shasum -a 256 "$1" 2>/dev/null); then actual=${digest%% *}; fi
+-  elif command -v sha256sum >/dev/null 2>&1; then
+-    if digest=$(sha256sum "$1" 2>/dev/null); then actual=${digest%% *}; fi
+-  fi
+-}
+-
  dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+-manifest="$dir/engine-checksums.txt"
 -
 -# What the binary needs to know about its home: the skill directory (for
 -# reference/*.md and command-metadata.json) and how to name itself in the
@@ -1020,8 +1066,19 @@ index 224028c..26b0f9c 100755
 -[ -f "$dir/VERSION" ] && version=$(tr -d '[:space:]' < "$dir/VERSION")
 -cache_root="${IMPECCABLE_HOME:-${HOME:-/nonexistent}/.impeccable}"
 -cached="$cache_root/bin/$version/impeccable$exe"
+-asset="impeccable-$os-$arch"
+-[ "$os" = windows ] && asset="$asset.exe"
 -if [ -n "$version" ] && [ -x "$cached" ]; then
--  exec "$cached" "$@"
+-  if [ -f "$cached.verified" ]; then
+-    exec "$cached" "$@"
+-  fi
+-  read_expected
+-  hash_file "$cached"
+-  if [ -n "$actual" ] && { [ "$actual" = "$expected" ] || [ "$actual" = "$expected_x64" ]; }; then
+-    { echo "$actual" > "$cached.verified"; } 2>/dev/null || :
+-    exec "$cached" "$@"
+-  fi
+-  echo "impeccable: cannot verify the cached engine $cached against $manifest; not using it" >&2
 -fi
 -if [ -z "$probing" ] && command -v impeccable >/dev/null 2>&1 && probe_ok impeccable; then
 -  exec impeccable "$@"
@@ -1047,12 +1104,11 @@ index 224028c..26b0f9c 100755
 -check_download() {
 -  download_file=${1:-$tmp}
 -  if [ ! -f "$download_file" ]; then
--    rm -f "$tmp.sha256"
 -    echo "impeccable: download completed but the file was removed before execution: $url; check your antivirus quarantine or logs. Refusing to continue; do not disable protection." >&2
 -    exit 127
 -  fi
 -  if [ ! -s "$download_file" ]; then
--    rm -f "$download_file" "$tmp.sha256"
+-    rm -f "$download_file"
 -    echo "impeccable: downloaded file is empty: $url; refusing the unverified download" >&2
 -    exit 127
 -  fi
@@ -1063,13 +1119,17 @@ index 224028c..26b0f9c 100755
 -fi
 -if [ -n "$version" ] && [ "$os" != unknown ] && [ "$arch" != unknown ]; then
 -  base="${IMPECCABLE_DOWNLOAD_BASE:-https://github.com/pbakaus/impeccable/releases/download}"
--  asset="impeccable-$os-$arch"
--  [ "$os" = windows ] && asset="$asset.exe"
 -  url="$base/engine-v$version/$asset"
+-  read_expected
+-  # Fail closed before any network traffic or cache write.
+-  if [ -z "$expected" ] && [ -z "$expected_x64" ]; then
+-    echo "impeccable: no checksum for engine $version ($asset) in $manifest; refusing the unverified download" >&2
+-    exit 127
+-  fi
 -  tmp="$cache_root/bin/$version/.impeccable.part.$$"
 -  # An interrupted download (Ctrl-C, a hook timeout) would otherwise leave the
 -  # PID-named staging file behind for good. The handlers must exit explicitly.
--  cleanup() { rm -f "$tmp" "$tmp.sha256" 2>/dev/null || :; }
+-  cleanup() { rm -f "$tmp" 2>/dev/null || :; }
 -  trap 'cleanup; exit 129' HUP
 -  trap 'cleanup; exit 130' INT
 -  trap 'cleanup; exit 143' TERM
@@ -1086,40 +1146,22 @@ index 224028c..26b0f9c 100755
 -    exit 127
 -  fi
 -  fetched=0
--  if fetch_url "$url"; then
+-  if [ -n "$expected" ] && fetch_url "$url"; then
 -    fetched=1
--  elif [ "$os" = windows ] && [ "$arch" = arm64 ]; then
+-  elif [ -n "$expected_x64" ]; then
 -    # Windows on ARM runs x64 binaries; fall back when no arm64 asset exists.
 -    url="$base/engine-v$version/impeccable-windows-x64.exe"
+-    expected=$expected_x64
 -    fetch_url "$url" && fetched=1
 -  fi
 -  if [ "$fetched" = 1 ]; then
 -    check_download
--    # Fail closed: a freshly downloaded binary runs only after verifying
--    # against its .sha256 sidecar. A sidecar that cannot be fetched, or a
--    # machine with no sha256 tool, refuses the download instead of exec'ing
--    # an unverified binary. (A binary already on PATH or in the cache that
--    # passes engine-probe is unaffected.)
--    sidecar_ok=0
--    if command -v curl >/dev/null 2>&1; then
--      curl -fsSL --retry 2 -o "$tmp.sha256" "$url.sha256" 2>/dev/null && sidecar_ok=1
--    elif command -v wget >/dev/null 2>&1; then
--      wget -q -O "$tmp.sha256" "$url.sha256" 2>/dev/null && sidecar_ok=1
--    fi
+-    # No sha256 tool refuses the download too.
+-    hash_file "$tmp"
 -    check_download
--    expected=""
--    [ "$sidecar_ok" = 1 ] && expected=$(cut -d' ' -f1 < "$tmp.sha256")
--    actual=""
--    if command -v shasum >/dev/null 2>&1; then
--      if digest=$(shasum -a 256 "$tmp" 2>/dev/null); then actual=${digest%% *}; fi
--    elif command -v sha256sum >/dev/null 2>&1; then
--      if digest=$(sha256sum "$tmp" 2>/dev/null); then actual=${digest%% *}; fi
--    fi
--    check_download
--    rm -f "$tmp.sha256"
--    if [ -z "$expected" ] || [ -z "$actual" ]; then
+-    if [ -z "$actual" ]; then
 -      rm -f "$tmp"
--      echo "impeccable: cannot verify $url against $url.sha256 (sidecar unavailable or hashing failed); refusing the unverified download" >&2
+-      echo "impeccable: cannot verify $url (no sha256 tool, or hashing failed); refusing the unverified download" >&2
 -      exit 127
 -    fi
 -    if [ "$actual" != "$expected" ]; then
@@ -1142,6 +1184,7 @@ index 224028c..26b0f9c 100755
 -      exit 127
 -    fi
 -    check_download "$cached"
+-    { echo "$actual" > "$cached.verified"; } 2>/dev/null || :
 -    exec "$cached" "$@"
 -  fi
 -  rm -f "$tmp" 2>/dev/null
@@ -1155,11 +1198,11 @@ index 224028c..26b0f9c 100755
 -exit 127
 +exec node "$dir/../../../src/impeccable-launcher.mjs" "$@"
 diff --git a/skills/impeccable/scripts/impeccable.cmd b/skills/impeccable/scripts/impeccable.cmd
-index 789a96f..ec5768f 100644
+index 09abf6b..ec5768f 100644
 --- a/skills/impeccable/scripts/impeccable.cmd
 +++ b/skills/impeccable/scripts/impeccable.cmd
-@@ -1,239 +1,6 @@
- @echo off
+@@ -1,278 +1,6 @@
+-@echo off
 -setlocal
 -rem Impeccable launcher (Windows). Runs bin\windows-<arch>\impeccable.exe next
 -rem to this file, else a cached or freshly downloaded engine binary.
@@ -1174,10 +1217,11 @@ index 789a96f..ec5768f 100644
 -rem   the engine-probe handshake (see :probe) so the retired 3.x npm CLI,
 -rem   whose bin is also named impeccable, is never exec'd. IMPECCABLE_BIN,
 -rem   the sibling binary, and the version-pinned cache stay trusted.
--rem - Downloads are verified against the .sha256 sidecar via certutil and
--rem   fail closed: a missing sidecar or hash tool refuses the download. On
--rem   ARM64 the arm64 asset is tried first and the x64 asset is the
--rem   fallback (Windows on ARM runs x64 binaries).
+-rem - Downloads and the version-pinned cache are verified via certutil
+-rem   against engine-checksums.txt next to this file, and fail closed; a
+-rem   .verified stamp lets later runs skip hashing the cache. On ARM64 the
+-rem   arm64 asset is tried first and the x64 asset is the fallback (Windows on
+-rem   ARM runs x64 binaries), each only when the manifest has a line for it.
 -if not defined IMPECCABLE_SKILL_DIR set "IMPECCABLE_SKILL_DIR=%~dp0.."
 -if not defined IMPECCABLE_SELF set "IMPECCABLE_SELF=%~f0"
 -set "arch=x64"
@@ -1208,8 +1252,22 @@ index 789a96f..ec5768f 100644
 -if exist "%~dp0VERSION" set /p version=<"%~dp0VERSION"
 -if not defined IMPECCABLE_HOME set "IMPECCABLE_HOME=%USERPROFILE%\.impeccable"
 -set "cached=%IMPECCABLE_HOME%\bin\%version%\impeccable.exe"
+-set "asset=impeccable-windows-%arch%.exe"
+-set "manifest=%~dp0engine-checksums.txt"
 -if not defined version goto no_cache
 -if not exist "%cached%" goto no_cache
+-if exist "%cached%.verified" goto cache_trusted
+-call :read_expected
+-call :sha256 "%cached%" "%TEMP%\impeccable-hash-%RANDOM%%RANDOM%.txt"
+-if not defined actual goto cache_unverified
+-if /I "%actual%"=="%expected%" goto cache_verified
+-if /I "%actual%"=="%expected_x64%" goto cache_verified
+-:cache_unverified
+-echo impeccable: cannot verify the cached engine "%cached%" against "%manifest%"; not using it 1>&2
+-goto no_cache
+-:cache_verified
+-(>"%cached%.verified" echo %actual%) 2>nul
+-:cache_trusted
 -set "run=%cached%"
 -goto run
 -:no_cache
@@ -1220,11 +1278,7 @@ index 789a96f..ec5768f 100644
 -call :probe impeccable
 -if not "%probe_ok%"=="1" goto download
 -impeccable %*
-+setlocal EnableExtensions
-+rem Do not set PLUGIN_ROOT here; that env var selects the Codex host in resolveHost.
-+for %%I in ("%~dp0..\..\..") do set "DESIGN_LAUNCHER_ROOT=%%~fI"
-+node "%DESIGN_LAUNCHER_ROOT%\src\impeccable-launcher.mjs" %*
- exit /b %errorlevel%
+-exit /b %errorlevel%
 -
 -:download
 -rem Last resort: fetch this version's binary from the release channel into
@@ -1232,6 +1286,8 @@ index 789a96f..ec5768f 100644
 -rem another launcher's probe: fail fast and quiet instead.
 -if defined IMPECCABLE_LAUNCHER_PROBE exit /b 127
 -if not defined version goto fail
+-call :read_expected
+-if not defined expected if not defined expected_x64 goto no_checksum
 -where curl.exe >nul 2>nul
 -if errorlevel 1 goto curl_missing
 -if not defined IMPECCABLE_DOWNLOAD_BASE set "IMPECCABLE_DOWNLOAD_BASE=https://github.com/pbakaus/impeccable/releases/download"
@@ -1258,16 +1314,17 @@ index 789a96f..ec5768f 100644
 -mkdir "%staging%" >nul 2>nul
 -if errorlevel 1 goto claim_staging
 -set "part=%staging%\impeccable.exe"
--set "sidecar=%staging%\impeccable.sha256"
 -rem Redirection failures do not reliably update ERRORLEVEL in cmd.exe;
 -rem branch on the command's failure directly.
 -(type nul >"%part%") 2>nul || goto staging_write_failed
--set "asset=impeccable-windows-%arch%.exe"
 -set "url=%IMPECCABLE_DOWNLOAD_BASE%/engine-v%version%/%asset%"
+-if not defined expected goto fetch_x64
 -curl.exe -fsSL -o "%part%" "%url%" >nul 2>nul
 -if not errorlevel 1 goto verify
--if not "%arch%"=="arm64" goto download_failed
+-:fetch_x64
+-if not defined expected_x64 goto download_failed
 -set "asset=impeccable-windows-x64.exe"
+-set "expected=%expected_x64%"
 -set "url=%IMPECCABLE_DOWNLOAD_BASE%/engine-v%version%/%asset%"
 -curl.exe -fsSL -o "%part%" "%url%" >nul 2>nul
 -if errorlevel 1 goto download_failed
@@ -1276,28 +1333,13 @@ index 789a96f..ec5768f 100644
 -call :check_download
 -if errorlevel 1 exit /b 127
 -rem Mirrors the sh launcher and fails closed: a freshly downloaded binary
--rem runs only after verifying against its .sha256 sidecar. A sidecar that
--rem cannot be fetched, or an empty certutil result, refuses the download
--rem instead of running an unverified binary.
--curl.exe -fsSL -o "%sidecar%" "%url%.sha256" >nul 2>nul
--if errorlevel 1 goto verify_refuse
--set "expected="
--set /p expected=<"%sidecar%"
--for /f "tokens=1" %%h in ("%expected%") do set "expected=%%h"
+-rem runs only after its hash matches the digest read from engine-checksums.txt.
+-rem An empty certutil result refuses the download instead of running an
+-rem unverified binary.
+-call :sha256 "%part%" "%staging%\hash.txt"
 -call :check_download
 -if errorlevel 1 exit /b 127
--set "actual="
--rem Reuse the sidecar staging file after reading expected. Check certutil's
--rem status before parsing: its error text on stdout is not a digest.
--certutil -hashfile "%part%" SHA256 >"%sidecar%" 2>nul
--if errorlevel 1 goto verify_refuse
--call :check_download
--if errorlevel 1 exit /b 127
--for /f "usebackq skip=1 delims=" %%h in ("%sidecar%") do if not defined actual set "actual=%%h"
--del "%sidecar%" >nul 2>nul
--if not defined expected goto verify_refuse
 -if not defined actual goto verify_refuse
--set "actual=%actual: =%"
 -if /I "%actual%"=="%expected%" goto place
 -call :discard_staging
 -echo impeccable: checksum mismatch downloading %url% 1>&2
@@ -1307,8 +1349,39 @@ index 789a96f..ec5768f 100644
 -call :check_download
 -if errorlevel 1 exit /b 127
 -call :discard_staging
--echo impeccable: cannot verify %url% against %url%.sha256; refusing the unverified download 1>&2
+-echo impeccable: cannot verify %url% (certutil could not hash it); refusing the unverified download 1>&2
 -exit /b 127
+-
+-:read_expected
+-rem Sets expected (and, on ARM64, expected_x64: Windows on ARM runs x64
+-rem binaries) from engine-checksums.txt. Only called off the stamped path:
+-rem hooks run this launcher on every edit.
+-call :manifest_digest "%asset%" expected
+-set "expected_x64="
+-if "%arch%"=="arm64" call :manifest_digest impeccable-windows-x64.exe expected_x64
+-exit /b 0
+-
+-:manifest_digest
+-rem Sets the variable named %2 to the digest the first engine-checksums.txt
+-rem line for this version and asset %1 records, empty when there is none.
+-set "%~2="
+-if not exist "%manifest%" exit /b 0
+-for /f "usebackq tokens=1-3" %%a in ("%manifest%") do if "%%a"=="%version%" if /I "%%b"=="%~1" if not defined %~2 set "%~2=%%c"
+-exit /b 0
+-
+-:sha256
+-rem Sets actual to the sha256 of %~1, empty when certutil fails. %~2 is the
+-rem scratch file for its output. Check certutil's status before parsing: its
+-rem error text on stdout is not a digest.
+-set "actual="
+-certutil -hashfile "%~1" SHA256 >"%~2" 2>nul
+-if errorlevel 1 goto sha256_done
+-for /f "usebackq skip=1 delims=" %%h in ("%~2") do if not defined actual set "actual=%%h"
+-if not defined actual goto sha256_done
+-set "actual=%actual: =%"
+-:sha256_done
+-del "%~2" >nul 2>nul
+-exit /b 0
 -
 -:check_download
 -set "download_file=%~1"
@@ -1342,6 +1415,7 @@ index 789a96f..ec5768f 100644
 -call :discard_staging
 -call :check_download "%cached%"
 -if errorlevel 1 exit /b 127
+-(>"%cached%.verified" echo %actual%) 2>nul
 -set "run=%cached%"
 -goto run
 -
@@ -1373,6 +1447,10 @@ index 789a96f..ec5768f 100644
 -del "%probe_tmp%" >nul 2>nul
 -exit /b 0
 -
+-:no_checksum
+-echo impeccable: no checksum for engine %version% (%asset%) in "%manifest%"; refusing the unverified download 1>&2
+-exit /b 127
+-
 -:cache_directory_failed
 -echo impeccable: engine %version% is not installed; cannot create cache directory: "%IMPECCABLE_HOME%\bin\%version%" 1>&2
 -goto setup_failed
@@ -1402,6 +1480,12 @@ index 789a96f..ec5768f 100644
 -echo impeccable: no engine binary found (looked in %bin%, %cached%, PATH). 1>&2
 -echo Download impeccable-windows-%arch%.exe from https://github.com/pbakaus/impeccable/releases (tag engine-v%version%) and save it as %cached%, or set IMPECCABLE_BIN to a preinstalled engine binary. Docs: https://impeccable.style 1>&2
 -exit /b 127
++@echo off
++setlocal EnableExtensions
++rem Do not set PLUGIN_ROOT here; that env var selects the Codex host in resolveHost.
++for %%I in ("%~dp0..\..\..") do set "DESIGN_LAUNCHER_ROOT=%%~fI"
++node "%DESIGN_LAUNCHER_ROOT%\src\impeccable-launcher.mjs" %*
++exit /b %errorlevel%
 diff --git a/agents/impeccable-asset-producer.md b/agents/impeccable-asset-producer.md
 index 9229261..4b920b6 100644
 --- a/agents/impeccable-asset-producer.md
