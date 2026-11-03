@@ -237,7 +237,7 @@ export function transformSkillFile(relativePath, original, version) {
     "Report drift in this project's canonical Impeccable context and propose bounded repairs. The plugin doctor is read-only; project migrations require explicit user authorization before edits."
   ],
   [
-    "- **Tool version.** The installed skill is older than the published one. `impeccable context` reports that at boot as `UPDATE_AVAILABLE` and `npx impeccable update` fixes it. Not this command's job.",
+    "- **Tool version.** The installed skill is older than the published one. `impeccable context` reports that at boot as `UPDATE_AVAILABLE` and `npx impeccable update` fixes it, or the harness's plugin manager for a plugin install. Not this command's job.",
     "- **Tool version.** The plugin bundles a pinned skill and engine. Runtime update checks and self-update are disabled. Updating the bundle is a separate Design maintainer task."
   ],
   [
@@ -326,6 +326,42 @@ export function transformSkillFile(relativePath, original, version) {
         "- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses `~/.claude/settings.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.\n",
         "- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.\n",
         "standalone hook install paths",
+      );
+      text = mustReplace(
+        text,
+        "Claude Code, Codex, Cursor, and GitHub Copilot use a post-tool-use hook",
+        "Claude Code, Codex, and GitHub Copilot use a post-tool-use hook",
+        "cursor pre-write grouping",
+      );
+      text = mustReplace(
+        text,
+        "unless the detector finds something. Grok Build fires the same PostToolUse scan",
+        "unless the detector finds something. Cursor uses `preToolUse` to block bad proposed writes before they land and stays silent when it allows a clean write. Grok Build fires the same PostToolUse scan",
+        "cursor pre-write insertion",
+      );
+      text = mustReplace(
+        text,
+        "Cursor does not get one (its `stop` hook can only answer with a follow-up user message)",
+        "Cursor does not get one (its stop hook is not consistently dispatched; the pre-write gate covers it)",
+        "cursor stop deep pass",
+      );
+      text = mustReplace(
+        text,
+        "On **Cursor**, the hook runs on `postToolUse` for the `Write` tool (every agent file edit) and returns its reminder as `additional_context`, which Cursor adds after the tool result. Projects set up before this ran a `preToolUse` gate (`hook-before-edit`) that blocked bad writes before they landed; that gate still works until `hooks on`, `impeccable update`, or `impeccable doctor --fix` moves the entry to `postToolUse`.",
+        "On **Cursor**, `preToolUse` checks proposed Write/Edit/Shell write content and denies only when the real detector finds an issue. The denial message is visible to the agent as the tool error, so the agent can reconsider before the bad write lands.",
+        "cursor pre-write denial",
+      );
+      text = mustReplace(
+        text,
+        "- When a user asks how far to trust the hook, say it runs the engine unsandboxed with the agent's environment and network access (in the Copilot cloud agent too, once `.github/hooks/impeccable.json` is committed), and that the launcher checks a downloaded engine against `.cursor/skills/impeccable/scripts/engine-checksums.txt` before its first run; **never** call it sandboxed.",
+        "- When a user asks how far to trust the hook, say it runs the verified in-package engine with the agent's environment. It does not download a binary. Do not call it sandboxed.",
+        "bundled engine trust",
+      );
+      text = mustReplace(
+        text,
+        "- The hook never blocks an edit; it emits a post-edit reminder. (A Cursor project still on the old `preToolUse` gate can block a write until its manifest is migrated.) Disabling stops the reminders.",
+        "- Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.",
+        "cursor write denial",
       );
       operations.push("replace-project-hook-installation-with-plugin-hook");
     }
@@ -789,7 +825,48 @@ export function syncPinned({ root = pluginRoot, source, archive, apply = false, 
   }
 }
 
+function cmdCheckoutUsesCrlf(attributes) {
+  let enabled = false;
+  for (const rawLine of String(attributes).split("\n")) {
+    const line = rawLine.replace(/\r$/, "").trim();
+    if (!line || line.startsWith("#")) continue;
+    const tokens = line.split(/[ \t]+/);
+    if (tokens[0] !== "*.cmd") continue;
+    const attrs = new Set(tokens.slice(1));
+    if (attrs.has("-text") || attrs.has("eol=lf") || attrs.has("-eol")) enabled = false;
+    else if (attrs.has("eol=crlf")) enabled = true;
+  }
+  return enabled;
+}
+
+function checkoutCrlf(bytes) {
+  const input = Buffer.from(bytes);
+  let extra = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    if (input[index] === 0x0a && (index === 0 || input[index - 1] !== 0x0d)) extra += 1;
+  }
+  if (extra === 0) return input;
+  const output = Buffer.alloc(input.length + extra);
+  let cursor = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    if (input[index] === 0x0a && (index === 0 || input[index - 1] !== 0x0d)) output[cursor++] = 0x0d;
+    output[cursor++] = input[index];
+  }
+  return output;
+}
+
+function taggedCmdCheckoutUsesCrlf(repository, commit) {
+  try {
+    const attributes = commandOutput(execFileSync, "git", ["-C", repository, "cat-file", "blob", `${commit}:.gitattributes`], { encoding: null, maxBuffer: 1024 * 1024 });
+    return cmdCheckoutUsesCrlf(Buffer.from(attributes).toString("utf8"));
+  } catch (error) {
+    if (/path '.gitattributes' does not exist/.test(String(error.message))) return false;
+    throw error;
+  }
+}
+
 export function materializeGitSource(repository, commit, destination) {
+  const cmdCrlf = taggedCmdCheckoutUsesCrlf(repository, commit);
   const requested = [
     ".cursor/skills/impeccable",
     ...agentNames.map((name) => `.cursor/agents/${name}`),
@@ -808,7 +885,8 @@ export function materializeGitSource(repository, commit, destination) {
     if (!allowed || type !== "blob" || !["100644", "100755"].includes(mode)) throw new Error(`Unsupported Git tree entry in Impeccable candidate: ${path}`);
     if (seen.has(path)) throw new Error(`Duplicate Git tree entry in Impeccable candidate: ${path}`);
     seen.add(path);
-    const bytes = commandOutput(execFileSync, "git", ["-C", repository, "cat-file", "blob", object], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
+    const blob = commandOutput(execFileSync, "git", ["-C", repository, "cat-file", "blob", object], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
+    const bytes = cmdCrlf && path.endsWith(".cmd") ? checkoutCrlf(blob) : blob;
     const output = join(destination, path);
     mkdirSync(dirname(output), { recursive: true });
     writeFileSync(output, bytes, { mode: mode === "100755" ? 0o755 : 0o644 });

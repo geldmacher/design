@@ -14,9 +14,11 @@ const sidecar = JSON.parse(document.match(/```json\n([\s\S]*?)```/)[1]);
 test('document example has valid YAML and resolvable token references', () => {
   const expected = YAML.parse(example.replace(/^---\n/, '').replace(/\n---\s*$/, ''));
   const panel = expected;
-  assert.equal(panel.typography.display.fontSize, 'clamp(2.5rem, 7vw, 4.5rem)');
-  assert.equal(panel.typography.display.letterSpacing, 'normal');
+  assert.equal(panel.typography.display.fontSize, '4.5rem');
+  assert.equal(panel.typography.display.letterSpacing, '0em');
   assert.equal(panel.components['button-primary'].padding, '16px 48px');
+  assert.match(document, /clamp\(2\.5rem, 7vw, 4\.5rem\)/);
+  assert.match(document, /`normal`/);
   const checkRefs = (value) => {
     if (value && typeof value === 'object') return Object.values(value).forEach(checkRefs);
     if (typeof value !== 'string') return;

@@ -68,6 +68,23 @@ test("guidance transformations reproduce locked files and reject upstream anchor
       const anchor = { "reference/document.md": "Rules that matter:", "reference/critique.md": "#### The Working Memory Rule", "reference/hooks.md": "Supported harnesses:", "reference/doctor.md": "- **`auto`**", "reference/generate.md": "**No browser tool** (Codex, others):" }[path];
       assert.ok(original.includes(anchor));
       assert.throws(() => transformSkillFile(path, original.replace(anchor, "Changed upstream section"), version), /Upstream structure drift/);
+      if (path === "reference/doctor.md") {
+        assert.match(original, /harness's plugin manager for a plugin install/);
+        assert.match(first.text, /Runtime update checks and self-update are disabled/);
+        assert.doesNotMatch(first.text, /npx impeccable update/);
+        assert.throws(
+          () => transformSkillFile(path, original.replace(", or the harness's plugin manager for a plugin install", ""), version),
+          /Tool version/,
+        );
+      }
+      if (path === "reference/hooks.md") {
+        assert.match(first.text, /Cursor pre-write/);
+        assert.match(first.text, /`preToolUse` checks proposed Write\/Edit\/Shell write content and denies/);
+        assert.match(first.text, /verified in-package engine/);
+        assert.doesNotMatch(first.text, /postToolUse/);
+        assert.doesNotMatch(first.text, /engine-checksums\.txt/);
+        assert.doesNotMatch(first.text, /The hook never blocks an edit/);
+      }
     }
   } finally {
     rmSync(workspace, { recursive: true, force: true });
@@ -468,6 +485,83 @@ test("tag objects are materialized as bytes without a Git checkout", (t) => {
     Buffer.from([0x00, 0x7f, 0x80, 0xff]),
   );
   assert.throws(() => readFileSync(join(materialized, ".git")), /EISDIR|ENOENT/);
+});
+
+function commitMaterializationFixture(directory, files) {
+  for (const [relativePath, contents] of Object.entries(files)) write(join(directory, relativePath), contents);
+  execFileSync("git", ["init", "--quiet", directory]);
+  execFileSync("git", ["-C", directory, "config", "user.name", "Fixture"]);
+  execFileSync("git", ["-C", directory, "config", "user.email", "fixture@example.invalid"]);
+  execFileSync("git", ["-C", directory, "config", "core.autocrlf", "false"]);
+  execFileSync("git", ["-C", directory, "add", "."]);
+  execFileSync("git", ["-C", directory, "commit", "--quiet", "-m", "fixture"]);
+  return execFileSync("git", ["-C", directory, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+}
+
+function materializationFiles(attributes) {
+  const files = {
+    LICENSE: "license\n",
+    ".cursor/skills/impeccable/SKILL.md": "skill\n",
+    ".cursor/skills/impeccable/scripts/impeccable.cmd": "echo kept\n",
+    ".cursor/skills/impeccable/assets/binary.bin": Buffer.from([0x00, 0x0a, 0xff]),
+  };
+  if (attributes !== undefined) files[".gitattributes"] = attributes;
+  for (const name of agentNames) files[`.cursor/agents/${name}`] = `${name}\n`;
+  return files;
+}
+
+function vendoredArchiveEntries(source, cmdBytes) {
+  const entries = [
+    [".cursor/skills/impeccable/SKILL.md", readFileSync(join(source, ".cursor/skills/impeccable/SKILL.md"))],
+    [".cursor/skills/impeccable/scripts/impeccable.cmd", cmdBytes],
+    [".cursor/skills/impeccable/assets/binary.bin", readFileSync(join(source, ".cursor/skills/impeccable/assets/binary.bin"))],
+  ];
+  for (const name of agentNames) entries.push([`.cursor/agents/${name}`, readFileSync(join(source, ".cursor/agents", name))]);
+  return entries;
+}
+
+test("materialized cmd files follow the tagged eol=crlf checkout rule and still reject content drift", (t) => {
+  const base = mkdtempSync(join(tmpdir(), "impeccable-cmd-eol-"));
+  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const crlfRepo = join(base, "crlf");
+  const crlfCommit = commitMaterializationFixture(crlfRepo, materializationFiles("# cmd.exe requires CRLF\n*.cmd text eol=crlf\n"));
+  assert.deepEqual(
+    execFileSync("git", ["-C", crlfRepo, "cat-file", "blob", `${crlfCommit}:.cursor/skills/impeccable/scripts/impeccable.cmd`]),
+    Buffer.from("echo kept\n"),
+  );
+  const crlfTree = join(base, "crlf-tree");
+  materializeGitSource(crlfRepo, crlfCommit, crlfTree);
+  const crlfCmd = Buffer.from("echo kept\r\n");
+  assert.deepEqual(readFileSync(join(crlfTree, ".cursor/skills/impeccable/scripts/impeccable.cmd")), crlfCmd);
+  assert.deepEqual(readFileSync(join(crlfTree, ".cursor/skills/impeccable/assets/binary.bin")), Buffer.from([0x00, 0x0a, 0xff]));
+  assert.deepEqual(readFileSync(join(crlfTree, ".cursor/skills/impeccable/SKILL.md")), Buffer.from("skill\n"));
+  const matchingArchive = join(base, "matching.zip");
+  writeFileSync(matchingArchive, storedZip(vendoredArchiveEntries(crlfTree, crlfCmd)));
+  const matched = verifyArchiveMatchesSource({ archive: matchingArchive, source: crlfTree });
+  assert.deepEqual(matched.excluded, []);
+  assert.equal(matched.files, 3 + agentNames.length);
+  const driftedArchive = join(base, "drifted.zip");
+  writeFileSync(driftedArchive, storedZip(vendoredArchiveEntries(crlfTree, Buffer.from("echo drift\r\n"))));
+  assert.throws(() => verifyArchiveMatchesSource({ archive: driftedArchive, source: crlfTree }), /differs from tag checkout: \.cursor\/skills\/impeccable\/scripts\/impeccable\.cmd/);
+
+  const plainRepo = join(base, "plain");
+  const plainCommit = commitMaterializationFixture(plainRepo, materializationFiles());
+  const plainTree = join(base, "plain-tree");
+  materializeGitSource(plainRepo, plainCommit, plainTree);
+  const lfCmd = Buffer.from("echo kept\n");
+  assert.deepEqual(readFileSync(join(plainTree, ".cursor/skills/impeccable/scripts/impeccable.cmd")), lfCmd);
+  const lfArchive = join(base, "lf.zip");
+  writeFileSync(lfArchive, storedZip(vendoredArchiveEntries(plainTree, lfCmd)));
+  verifyArchiveMatchesSource({ archive: lfArchive, source: plainTree });
+  const forcedCrlfArchive = join(base, "forced-crlf.zip");
+  writeFileSync(forcedCrlfArchive, storedZip(vendoredArchiveEntries(plainTree, crlfCmd)));
+  assert.throws(() => verifyArchiveMatchesSource({ archive: forcedCrlfArchive, source: plainTree }), /differs from tag checkout/);
+
+  const unsetRepo = join(base, "unset");
+  const unsetCommit = commitMaterializationFixture(unsetRepo, materializationFiles("*.cmd text eol=crlf\n*.cmd -text\n"));
+  const unsetTree = join(base, "unset-tree");
+  materializeGitSource(unsetRepo, unsetCommit, unsetTree);
+  assert.deepEqual(readFileSync(join(unsetTree, ".cursor/skills/impeccable/scripts/impeccable.cmd")), lfCmd);
 });
 
 test("dirty preparation requires an explicit working-tree baseline and retains release checks", async (t) => {
