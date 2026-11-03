@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.21.0 - 2026-11-03
+
 - Update bundled Impeccable to 4.8.0 and native engine 0.1.18. `detect --github` annotates the line that caused a finding, and `--list-rules` can be narrowed with `--scope` or `--no-advisory`. A crisp shadow pushed 4px or more is an advisory. Live-mode values survive closing the panel and reloading the page, Content-Security-Policy meta patches no longer corrupt the file, and phones do not raise the keyboard when live mode loads. Straggler, radius, contrast, gradient text, and side-stripe checks are more accurate. `harden` covers Arabic-script joining, digits, and calendars. Audit contrast and touch targets match WCAG AA. A direction hand stays the size the weighing earned. Design keeps its Cursor pre-write denial hook; the bundled skill does not follow upstream's post-edit Cursor hook or download an engine.
 
 ## 0.20.0 - 2026-11-02
