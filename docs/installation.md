@@ -90,7 +90,7 @@ Release assets use these names:
 Run the following from the download directory. On macOS or Linux, replace the example version and editor in the archive name as needed:
 
 ```sh
-archive="geldmacher-design-cursor-v0.21.0.zip",
+archive="geldmacher-design-cursor-v0.21.1.zip",
 
 verify_release_file() {
   file="$1"
@@ -112,7 +112,7 @@ verify_release_file "provenance.json"
 On Windows PowerShell:
 
 ```powershell
-$archive = "geldmacher-design-cursor-v0.21.0.zip",
+$archive = "geldmacher-design-cursor-v0.21.1.zip",
 $files = @($archive, "provenance.json")
 $checksumLines = Get-Content -LiteralPath .\SHA256SUMS
 
@@ -189,13 +189,13 @@ Place the complete extracted directory at:
 
 OpenCode discovers the skills when that package's `skills/` directory is listed in the global `skills` array. It loads an explicit skill with `@design`, `@impeccable`, or `@motion`. The matching files in `~/.config/opencode/commands/` provide `/design`, `/impeccable`, and `/motion`. Design is autodiscovered. Impeccable and Motion stay explicit, matching Cursor and Codex.
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.
+OpenCode configuration and commands are shared. Merge only this plugin's entries and preserve all unrelated settings, skill paths, and commands. Keep originals in memory and create no backups. Roll back by installing an older GitHub release.
 
-Add only the Design skills path to an existing `skills` array. Keep every other key and every other plugin path, including Workflow and Efficiency. Do not write a second copy of those entries and do not remove them. Leave `opencode.jsonc` comments untouched. If `design.md`, `impeccable.md`, or `motion.md` already exists and is not a Design command, stop.
+Add only the Design skills path to an existing `skills` array. Preserve every other key and skill path. Add the Design path only if it is absent. Leave `opencode.jsonc` comments untouched. If `design.md`, `impeccable.md`, or `motion.md` already exists and is not a Design command, stop.
 
 Deploy keeps the original shared text in memory. If a write of `opencode.json` or one of Design's command files fails in the same run, deploy rewrites that original text from memory. It does not copy those files, the command directory, or the previous plugin directory to disk. A second deploy that changes nothing does not write. The OpenCode package is replaced only after the new directory is staged and validated. A failure before that replacement leaves the previous package in place. A failure after it stops and reports. Recover by installing an older GitHub release.
 
-`npm run deploy:local -- --opencode-only` performs that merge and command copy. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package. Start a new OpenCode session after installation. This package does not install a hook adapter.
+`npm run deploy:local -- --opencode-only` performs that merge and command copy. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package. If a Design registration is in `opencode.jsonc`, uninstall removes only that registration and preserves the comments and unrelated settings. Start a new OpenCode session after installation. This package does not install a hook adapter.
 
 The ZIP checksum proves the downloaded bytes only. It does not prove Marketplace acceptance, cache currentness, Cursor reload, Hook Trust, OpenCode skill registration, or fresh-task activation.
 

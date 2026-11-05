@@ -24,7 +24,7 @@ import { applyEdits, createScanner, findNodeAtLocation, parse as parseJsonc, par
 
 export const RECEIPT_NAME = ".local-deploy.json";
 export const HOSTS = ["cursor", "codex", "opencode"];
-export const OPENCODE_SHARED_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.";
+export const OPENCODE_SHARED_CONFIG_RULE = "OpenCode configuration and commands are shared. Change or remove only this plugin's entries. Preserve unrelated settings, skill paths, and commands.";
 const DEVELOPMENT_ROOTS = new Set([".agents", ".build", ".cursor", ".git", "node_modules", "test", "tests"]);
 const scriptPath = fileURLToPath(import.meta.url);
 const repositoryRoot = dirname(dirname(scriptPath));

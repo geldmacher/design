@@ -80,7 +80,7 @@ Choose one host or deploy all of them:
 | OpenCode only | `npm run deploy:local -- --dry-run --opencode-only` | `npm run deploy:local -- --opencode-only` |
 | Cursor, Codex, and OpenCode | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Efficiency: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release. If a write of `opencode.json` or one of Design's command files fails in the same run, deploy rewrites the original text from memory and does not copy it to disk. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package.
+OpenCode configuration and commands are shared. Merge only this plugin's entries and preserve all unrelated settings, skill paths, and commands. If a write of `opencode.json` or one of Design's command files fails in the same run, deploy rewrites the original text from memory and does not copy it to disk. `npm run deploy:uninstall` removes only Design's skills entries, its own command files, and its OpenCode package.
 
 `deploy:build` materializes the packages. The normal deploy uses `deploy:prepare` for its targeted checks; append `--full` to select the shared build followed by one complete `release-check`, without repeating the targeted suites. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
 

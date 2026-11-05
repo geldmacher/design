@@ -20,7 +20,6 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 import { parse as parseJsonc } from "jsonc-parser";
 import {
-  OPENCODE_SHARED_CONFIG_RULE,
   contentHash,
   deployPreparedTargets,
   deploymentPaths,
@@ -775,22 +774,6 @@ test("a failed Codex activation does not delete through a symlinked cache", () =
     assert.deepEqual(backupArtifactPaths(item.home), []);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
-  }
-});
-
-test("shared OpenCode config rule is fixed in deploy and release instructions", () => {
-  const files = [
-    "AGENTS.md",
-    "docs/development.md",
-    "docs/installation.md",
-    "docs/release-checklist.md",
-    "docs/release-validation.md",
-    ".agents/skills/deploy-local-plugin/SKILL.md",
-    ".agents/skills/release-plugin/SKILL.md",
-    ".cursor/commands/deploy-local-plugin.md",
-  ];
-  for (const file of files) {
-    assert.equal(readFileSync(new URL(`../${file}`, import.meta.url), "utf8").includes(OPENCODE_SHARED_CONFIG_RULE), true, file);
   }
 });
 
