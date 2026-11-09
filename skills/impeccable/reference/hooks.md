@@ -20,13 +20,19 @@ Geldmacher Design provides Cursor pre-write and Codex post-write/Stop adapters r
 
 On **Cursor**, `preToolUse` checks proposed Write/Edit/Shell write content and denies only when the real detector finds an issue. The denial message is visible to the agent as the tool error, so the agent can reconsider before the bad write lands.
 
+Design does not consult CLAUDE_CONFIG_DIR and does not write a user-scope Claude Code settings file. Hook activation changes canonical `.impeccable/` configuration for the registered Cursor and Codex adapters.
+
+Status reports the plugin adapter's canonical configuration and any project-install conflicts. It does not read harness manifests, Claude account settings, or another agent's plugin directory, and it does not repair them.
+
+Design does not record standalone hook consent. `impeccable context` does not write or repair host manifests, even when a previous install left `hook.consent` set to `accepted`. A missing Design adapter still produces `MANUAL_DETECTOR_REQUIRED`. Explicitly disabled hooks stay disabled.
+
 ## Routing
 
 The first argument is the action. Defaults to `status`.
 
 | Action | What it does |
 |---|---|
-| `status` | Print current state, shared/local config paths, ignored rules / files / values, env override. |
+| `status` | Print plugin hook configuration and project-install conflicts. It does not report harness manifest wiring. |
 | `on` | Enable the already registered plugin adapter in canonical configuration; leave host manifests unchanged. |
 | `off` | Set `enabled: false` in `.impeccable/config.json`. |
 | `ignore-rule <id>` | Append `<id>` to `detector.ignoreRules`; for `overused-font`, requires `--all-values`. Suppresses the rule across the whole project. |
@@ -46,7 +52,7 @@ The first argument is the action. Defaults to `status`.
    ```
 
 3. If `<action>` is `off`, follow up with a one-line note: "Done. New edits will not trigger the design hook in this project until you run `/impeccable hooks on`."
-4. If `<action>` is `on`, follow up with: "Done. The design hook will fire after the next Edit/Write on a UI file."
+4. If `<action>` is `on`, report that only `.impeccable/` changed and the registered Cursor or Codex adapter is enabled. Do not claim a host manifest was installed, and do not send the user to a standalone installer or another agent host.
 5. If `<action>` is `ignore-value`, `ignore-file`, or `ignore-rule`, just print the script output. The default scope is shared `.impeccable/config.json`; add `--local` only when the user explicitly asks for a private exception.
 6. If `<action>` is `status`, just print the script output. Do not add commentary unless the user asked a follow-up question.
 
@@ -56,7 +62,7 @@ The hook itself never writes ignore config; every exception goes through `impecc
 
 - **Real design problem**: fix it. Never add an ignore to skip a fix or to push a blocked write through.
 - **Confident false positive or sanctioned exception**: persist the narrowest ignore yourself and disclose it in your reply. The bar is evidence you can name: an intentional demo or fixture, documentation of bad design, literal or domain-appropriate motion (a ball that bounces), or a choice the user already confirmed. Put that evidence in `--reason` as `"<who decided: evidence>"`; write "user confirmed" only when the user actually did.
-- **Unsure**: leave the finding standing and ask the user in one line. Ask once; a one-line question costs less than the hook re-firing on every later edit.
+- **Unsure**: leave the finding standing and give the reason in one line. Ask the user only when you genuinely cannot decide.
 
 Self-serve stops at `ignore-value`. `ignore-file` and `ignore-rule` silence too much to add on your own judgment; ask the user first.
 

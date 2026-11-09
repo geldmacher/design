@@ -212,8 +212,24 @@ export function transformSkillFile(relativePath, original, version) {
     "This command toggles plugin hooks per project through `.impeccable/config.json`. `.impeccable/config.local.json` overrides shared values. Hook administration never writes host manifests or records standalone installation consent. `hook.enabled` must be explicitly true; malformed configuration produces a visible diagnostic and skips enforcement."
   ],
   [
-    "Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `~/.claude/settings.json` for a user-scope install; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
+    "Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `$CLAUDE_CONFIG_DIR/settings.json` for a user-scope install, defaulting to `~/.claude/settings.json`; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read), and Hermes Agent (the `impeccable-design-hook` plugin in `~/.hermes/plugins/`; the user enables it once with `hermes plugins enable impeccable-design-hook`; a project install's launcher runs only in a project Hermes trusts, via `hermes skills trust`). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
     "Geldmacher Design provides Cursor pre-write and Codex post-write/Stop adapters registered by the plugin. Project-local Impeccable installations and hook manifests are conflicts to diagnose. Agent Plugins v1 has no native hook integration."
+  ],
+  [
+    "When there is no project Claude skill, `hooks on` looks for `skills/impeccable/scripts/impeccable` inside `CLAUDE_CONFIG_DIR` (default `~/.claude`) and writes the hook into that account's `settings.json`, using the installed launcher's absolute path. Relative account directories resolve against the caller's working directory. An explicit account directory is exclusive: another account's default skill and settings are never substituted. Status and context read the same account settings. If no design harness can be wired, `hooks on` says so, reports skipped invalid settings or the missing skill lookup paths, and gives the next step.",
+    "Design does not consult CLAUDE_CONFIG_DIR and does not write a user-scope Claude Code settings file. Hook activation changes canonical `.impeccable/` configuration for the registered Cursor and Codex adapters."
+  ],
+  [
+    "Status checks the current event entries and matchers in each manifest, including the Stop pass where supported. Claude Code counts as wired when either project settings file (or its user settings file) contains the current entries. A legacy command, partial manifest, or missing file is reported as not wired. If enabled in config but no design harness is wired, status says so and gives `impeccable hooks on` as the repair command. An installed and enabled Hermes design-hook plugin also counts as wired; `on` acknowledges it without changing the plugin configuration. Wiring confirms the manifest entries; harness trust requirements and session reloads still apply.",
+    "Status reports the plugin adapter's canonical configuration and any project-install conflicts. It does not read harness manifests, Claude account settings, or another agent's plugin directory, and it does not repair them."
+  ],
+  [
+    "When `hook.consent` is `\"accepted\"` in the project's `config.local.json` and the hook is enabled, `impeccable context` restores missing or stale entries for installed harness skills and reports repairs in one line. Shared config consent does not authorize this write. Automatic repair preserves unrelated settings and hooks and leaves malformed manifests alone. Without local consent, context writes no manifests and keeps `MANUAL_DETECTOR_REQUIRED`, naming the missing or stale harness wiring. Explicitly disabled hooks stay disabled.",
+    "Design does not record standalone hook consent. `impeccable context` does not write or repair host manifests, even when a previous install left `hook.consent` set to `accepted`. A missing Design adapter still produces `MANUAL_DETECTOR_REQUIRED`. Explicitly disabled hooks stay disabled."
+  ],
+  [
+    "| `status` | Print current state, shared/local config paths, ignored rules / files / values, env override, and actual manifest wiring for each harness. |",
+    "| `status` | Print plugin hook configuration and project-install conflicts. It does not report harness manifest wiring. |"
   ],
   [
     "| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed. |",
@@ -323,7 +339,7 @@ export function transformSkillFile(relativePath, original, version) {
       );
       text = mustReplace(
         text,
-        "- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses `~/.claude/settings.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.\n",
+        "- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses the active account's `$CLAUDE_CONFIG_DIR/settings.json` (default `~/.claude/settings.json`). On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.\n",
         "- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.\n",
         "standalone hook install paths",
       );
@@ -362,6 +378,24 @@ export function transformSkillFile(relativePath, original, version) {
         "- The hook never blocks an edit; it emits a post-edit reminder. (A Cursor project still on the old `preToolUse` gate can block a write until its manifest is migrated.) Disabling stops the reminders.",
         "- Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.",
         "cursor write denial",
+      );
+      text = mustReplace(
+        text,
+        " Do not expect a Grok per-edit reminder: Grok discards that stdout. On Hermes Agent the per-edit findings arrive inside the `write_file` or `patch` tool result itself, as its `impeccable` field.",
+        " Do not expect a Grok per-edit reminder: Grok discards that stdout.",
+        "hermes per-edit hook",
+      );
+      text = mustReplace(
+        text,
+        ", and for Hermes Agent, whose plugin sends it from `pre_verify`",
+        "",
+        "hermes stop hook",
+      );
+      text = mustReplace(
+        text,
+        "4. If `<action>` is `on`, report what the command installed or repaired. If no installed skill folders were found or settings were skipped, surface that result and do not claim the hook will run. Otherwise note that the harness must load the updated settings (and satisfy any trust requirements) before it runs. On Hermes Agent, `on` cannot install or enable the plugin: if `impeccable context` reported `MANUAL_DETECTOR_REQUIRED`, tell the user to run `npx impeccable install` and then `hermes plugins enable impeccable-design-hook` instead.",
+        "4. If `<action>` is `on`, report that only `.impeccable/` changed and the registered Cursor or Codex adapter is enabled. Do not claim a host manifest was installed, and do not send the user to a standalone installer or another agent host.",
+        "hooks on follow-up",
       );
       operations.push("replace-project-hook-installation-with-plugin-hook");
     }

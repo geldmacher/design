@@ -4,7 +4,7 @@
 
 - Project: Impeccable
 - Source: https://github.com/pbakaus/impeccable
-- Pinned release: `skill-v4.8.0`
+- Pinned release: `skill-v4.8.1`
 - License: Apache License 2.0
 - Vendored scope: official Cursor skill and its four Cursor agents
 
