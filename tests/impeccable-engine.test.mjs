@@ -226,6 +226,25 @@ test('monorepo selection survives and target diagnostics use the selected projec
   assert.deepEqual(inventory(cwd), before);
 });
 
+test('context leaves host manifests untouched when standalone hook consent is accepted', (t) => {
+  const cwd = scratch(t);
+  fs.mkdirSync(path.join(cwd, '.git'));
+  write(cwd, 'PRODUCT.md', '# Product\nExample.\n');
+  write(cwd, '.impeccable/config.json', '{"hook":{"enabled":true}}\n');
+  const local = '{"hook":{"consent":"accepted","enabled":true},"detector":{"ignoreFiles":["keep"]}}\n';
+  write(cwd, '.impeccable/config.local.json', local);
+  write(cwd, '.cursor/skills/impeccable/scripts/impeccable', '#!/bin/sh\nexit 0\n');
+  const manifest = '{"hooks":{"preToolUse":[{"command":"keep"}]}}\n';
+  write(cwd, '.cursor/hooks.json', manifest);
+  const result = invoke(cwd, 'context');
+  assert.equal(result.status, 0, result.error || result.stderr);
+  assert.equal(fs.readFileSync(path.join(cwd, '.cursor/hooks.json'), 'utf8'), manifest);
+  assert.equal(fs.readFileSync(path.join(cwd, '.impeccable/config.local.json'), 'utf8'), local);
+  assert.equal(fs.existsSync(path.join(cwd, '.claude/settings.json')), false);
+  assert.equal(fs.existsSync(path.join(cwd, '.claude/settings.local.json')), false);
+  assert.doesNotMatch(result.stdout, /Repaired Impeccable hook wiring/);
+});
+
 test('direct ignore aliases through the launcher preserve files outside canonical configuration', (t) => {
   const cwd = scratch(t);
   const home = path.join(cwd, 'home'); fs.mkdirSync(home);

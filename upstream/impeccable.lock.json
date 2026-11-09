@@ -3,12 +3,12 @@
   "upstream": {
     "name": "Impeccable",
     "repository": "https://github.com/pbakaus/impeccable",
-    "tag": "skill-v4.8.0",
-    "tagObject": "09aef2fd2e3a2c7138f3e1a6cbbbdcb3f4087c2d",
-    "commit": "414603bf14c7a344edb466bb1f85690c77ce8b7d",
+    "tag": "skill-v4.8.1",
+    "tagObject": "3a3dc83ba7607880ac1607c5906045295f3b6bc7",
+    "commit": "924bbd194d02e5e15a227e75b5901fb0d7a4ecad",
     "archive": {
-      "url": "https://github.com/pbakaus/impeccable/releases/download/skill-v4.8.0/universal.zip",
-      "sha256": "82e6f6ff3a2b18f46f0f2fc388c1ab7abf3ccc52bbfc522456396d13011d6706"
+      "url": "https://github.com/pbakaus/impeccable/releases/download/skill-v4.8.1/universal.zip",
+      "sha256": "960ee8999b06de7d724534edd38d2ef5720909d7aa57dd26a2e8030460d70e2a"
     },
     "license": {
       "source": "LICENSE",
@@ -36,7 +36,7 @@
       "evidence-based-usability-guidance"
     ],
     "patch": "upstream/patches/impeccable-plugin.patch",
-    "patchSha256": "947172e694789a0f60df466b8f6aafec307ea0bc086df4cc0b6cb8d9f21cd259",
+    "patchSha256": "e333c8ac387c2a78c33df850ec21d3e1c2007c5a0b9c021f533679df4a62d76f",
     "files": [
       {
         "source": ".cursor/agents/impeccable-asset-producer.md",
@@ -50,22 +50,22 @@
       {
         "source": ".cursor/agents/impeccable-documenter.md",
         "destination": "agents/impeccable-documenter.md",
-        "sourceSha256": "37aeddc0f2031fa89d72519ae2e7542c267872f81786fb8288fca0a49118be11",
-        "vendoredSha256": "37aeddc0f2031fa89d72519ae2e7542c267872f81786fb8288fca0a49118be11",
+        "sourceSha256": "c89cf059257e2e85aac21e7b924c8fa203f422771ebe023f12b94b1979a7fe82",
+        "vendoredSha256": "c89cf059257e2e85aac21e7b924c8fa203f422771ebe023f12b94b1979a7fe82",
         "transformations": []
       },
       {
         "source": ".cursor/agents/impeccable-finish-reviewer.md",
         "destination": "agents/impeccable-finish-reviewer.md",
-        "sourceSha256": "e763252c557bb4bd10eb5805a3204a8bd8e7a3696afafa6440865cc7aa9ce7c1",
-        "vendoredSha256": "e763252c557bb4bd10eb5805a3204a8bd8e7a3696afafa6440865cc7aa9ce7c1",
+        "sourceSha256": "6d764841d6bc6febf676abd80396274a2e4c91be1a7f5eb4db553044f927df00",
+        "vendoredSha256": "6d764841d6bc6febf676abd80396274a2e4c91be1a7f5eb4db553044f927df00",
         "transformations": []
       },
       {
         "source": ".cursor/agents/impeccable-manual-edit-applier.md",
         "destination": "agents/impeccable-manual-edit-applier.md",
-        "sourceSha256": "3af7c46309f748ff3845f16455a431ec0e9e807e5e3a965e96e9ee75a1198eb8",
-        "vendoredSha256": "3af7c46309f748ff3845f16455a431ec0e9e807e5e3a965e96e9ee75a1198eb8",
+        "sourceSha256": "d091ca69dbfaf58f92335af44c3cd9901c65bc267f6652f337b51da5d3a22421",
+        "vendoredSha256": "d091ca69dbfaf58f92335af44c3cd9901c65bc267f6652f337b51da5d3a22421",
         "transformations": []
       },
       {
@@ -169,8 +169,8 @@
       {
         "source": ".cursor/skills/impeccable/reference/degraded/asset-producer.md",
         "destination": "skills/impeccable/reference/degraded/asset-producer.md",
-        "sourceSha256": "4d41df391570f711488e57b02ffadb1bfb940fc86300c536d40b1b379ea12b20",
-        "vendoredSha256": "adeed9bcc2f8c1f5598d0608737954e8d4dce6ecc9f7559d8dee14244ed8b2ee",
+        "sourceSha256": "1c81afe155924d639d8d900f4a4bde595d1f9898b00f1ea07fbc518ae51ec1cc",
+        "vendoredSha256": "2c1ec10125320205311ea6fc71e8cebdc0adaff23af5064f1f966ec62bc94b7e",
         "transformations": [
           "portable-dual-host-script-paths"
         ]
@@ -178,22 +178,22 @@
       {
         "source": ".cursor/skills/impeccable/reference/degraded/documenter.md",
         "destination": "skills/impeccable/reference/degraded/documenter.md",
-        "sourceSha256": "bcc05ea92faebb5c74037a9d4263a5ce9a56f5ab07c8ab3c59ee704d8cade745",
-        "vendoredSha256": "bcc05ea92faebb5c74037a9d4263a5ce9a56f5ab07c8ab3c59ee704d8cade745",
+        "sourceSha256": "17b6328d809c86622789dcbe1bb1b12ec8937118ef6aa4b37bfd9130d79a205c",
+        "vendoredSha256": "17b6328d809c86622789dcbe1bb1b12ec8937118ef6aa4b37bfd9130d79a205c",
         "transformations": []
       },
       {
         "source": ".cursor/skills/impeccable/reference/degraded/finish-reviewer.md",
         "destination": "skills/impeccable/reference/degraded/finish-reviewer.md",
-        "sourceSha256": "c33c4cfa7f0ce0bedde80d4fc3b595e747d0e9b43a77f06cacb8e899802f709d",
-        "vendoredSha256": "c33c4cfa7f0ce0bedde80d4fc3b595e747d0e9b43a77f06cacb8e899802f709d",
+        "sourceSha256": "04ba3571cd0f405dffb6b51d892add0e4f19fd7e2bc4815320f2bd2ab5bd2a8a",
+        "vendoredSha256": "04ba3571cd0f405dffb6b51d892add0e4f19fd7e2bc4815320f2bd2ab5bd2a8a",
         "transformations": []
       },
       {
         "source": ".cursor/skills/impeccable/reference/degraded/manual-edit-applier.md",
         "destination": "skills/impeccable/reference/degraded/manual-edit-applier.md",
-        "sourceSha256": "5fae7f8a2fc3ddd49ad0a413446dc44daedef5b6b7de5eb935bd2fbfad646d58",
-        "vendoredSha256": "5fae7f8a2fc3ddd49ad0a413446dc44daedef5b6b7de5eb935bd2fbfad646d58",
+        "sourceSha256": "357b19acc7ef688c337a4f020633a49db23c84620b13636f9ff20d3ab934df1a",
+        "vendoredSha256": "357b19acc7ef688c337a4f020633a49db23c84620b13636f9ff20d3ab934df1a",
         "transformations": []
       },
       {
@@ -256,8 +256,8 @@
       {
         "source": ".cursor/skills/impeccable/reference/hooks.md",
         "destination": "skills/impeccable/reference/hooks.md",
-        "sourceSha256": "b4b4040644bf94912e32c260f3e6905bf84b4a8ef1c6ff5862ae515f05e18dbf",
-        "vendoredSha256": "e054da8c648a06d84c694b2b696846454b9d609f004acc1d9617140caf5fce0c",
+        "sourceSha256": "66d9f21a131c372704955fd4b288962b4d91cf6aa0ddce624a5ffefb504e2b40",
+        "vendoredSha256": "68bb92b8ff3cb903391e21e6d6be33c668106d0e25e9f82898c993749ce46a39",
         "transformations": [
           "plugin-project-maintenance",
           "replace-project-hook-installation-with-plugin-hook",
@@ -267,8 +267,8 @@
       {
         "source": ".cursor/skills/impeccable/reference/init.md",
         "destination": "skills/impeccable/reference/init.md",
-        "sourceSha256": "69bc0879c301d86b04f2571919c472b0db81851afd2b7a2b7a6f7dcfc79c98cf",
-        "vendoredSha256": "69bc0879c301d86b04f2571919c472b0db81851afd2b7a2b7a6f7dcfc79c98cf",
+        "sourceSha256": "68cc1a8e5c94b401084bc0e110309003b82d7d1ab4e71f1ce6153d7d1361945e",
+        "vendoredSha256": "68cc1a8e5c94b401084bc0e110309003b82d7d1ab4e71f1ce6153d7d1361945e",
         "transformations": []
       },
       {
@@ -299,8 +299,8 @@
       {
         "source": ".cursor/skills/impeccable/reference/live.md",
         "destination": "skills/impeccable/reference/live.md",
-        "sourceSha256": "d600c91d1193dc4a0999378500e94a235f6fb4b13cff898a7f559ca0153d3cf6",
-        "vendoredSha256": "972c33014b13fbe1407ff5dcf8d1749281bb8dc443d2aeafecf59132aba38153",
+        "sourceSha256": "69cc13b5531675476bc13aac62fdd144b222adb418c310dec99c4729c5ebad46",
+        "vendoredSha256": "ed36d54b80df533a0f37fe0ac9e5d49aacda25ddb033f6bd7e39e1c38afde6b5",
         "transformations": [
           "portable-dual-host-script-paths"
         ]
@@ -329,8 +329,8 @@
       {
         "source": ".cursor/skills/impeccable/reference/new-work.md",
         "destination": "skills/impeccable/reference/new-work.md",
-        "sourceSha256": "e4dc11abc7c809a8678915f05f99befd7fa405d6e0250f8def3025d8c5019a79",
-        "vendoredSha256": "f87f47626fb66c21df430cace1ef030678d6b5877370042525edb52dc9bc307e",
+        "sourceSha256": "102f09ea80f467749075819f49052998df1969d04070d1b73960c7def9861c4c",
+        "vendoredSha256": "244b7a3e9364e039efe7b8ce08eaa34fbbd01c79eba6700fa2f0443b3693ef2a",
         "transformations": [
           "portable-dual-host-script-paths"
         ]
@@ -423,38 +423,38 @@
         ]
       },
       {
-        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.18/impeccable-darwin-arm64",
+        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.19/impeccable-darwin-arm64",
         "destination": "skills/impeccable/scripts/bin/darwin-arm64/impeccable",
-        "sourceSha256": "543ee2f72036ad185dc9991ac3ba86b74d91f988f3d497776a088b8b65c8a9e1",
-        "vendoredSha256": "543ee2f72036ad185dc9991ac3ba86b74d91f988f3d497776a088b8b65c8a9e1",
+        "sourceSha256": "c35d0b0b250afceb5ab6ee7edfe190a04d76d25c56bac01935a7a1b06d0df818",
+        "vendoredSha256": "c35d0b0b250afceb5ab6ee7edfe190a04d76d25c56bac01935a7a1b06d0df818",
         "transformations": []
       },
       {
-        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.18/impeccable-darwin-x64",
+        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.19/impeccable-darwin-x64",
         "destination": "skills/impeccable/scripts/bin/darwin-x64/impeccable",
-        "sourceSha256": "1f1eee78c142f7e40e16f481aeeeb1fad1d8515d8a1ef033d7c6d133e52232b3",
-        "vendoredSha256": "1f1eee78c142f7e40e16f481aeeeb1fad1d8515d8a1ef033d7c6d133e52232b3",
+        "sourceSha256": "df7c2b9cec89df54d1d9722a35aecc48b965dfad190c4ec2e766ce3f7743a544",
+        "vendoredSha256": "df7c2b9cec89df54d1d9722a35aecc48b965dfad190c4ec2e766ce3f7743a544",
         "transformations": []
       },
       {
-        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.18/impeccable-linux-arm64",
+        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.19/impeccable-linux-arm64",
         "destination": "skills/impeccable/scripts/bin/linux-arm64/impeccable",
-        "sourceSha256": "317cb18d64b0f7715681dd6e574ad64b2adb5a6caf8e7a1b3b57965f805404be",
-        "vendoredSha256": "317cb18d64b0f7715681dd6e574ad64b2adb5a6caf8e7a1b3b57965f805404be",
+        "sourceSha256": "73b5662e42f060aba716016c34a7274cc49a998cd0d5da8b84a95d9e4edea729",
+        "vendoredSha256": "73b5662e42f060aba716016c34a7274cc49a998cd0d5da8b84a95d9e4edea729",
         "transformations": []
       },
       {
-        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.18/impeccable-linux-x64",
+        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.19/impeccable-linux-x64",
         "destination": "skills/impeccable/scripts/bin/linux-x64/impeccable",
-        "sourceSha256": "736ed785e74ae2344d3036127f614ddde5ab520a527d8bc82a891612ef71f648",
-        "vendoredSha256": "736ed785e74ae2344d3036127f614ddde5ab520a527d8bc82a891612ef71f648",
+        "sourceSha256": "07b763dc00012e9acf219fe2d2e8980f0810fb8af2e4a41c090107a8351d412f",
+        "vendoredSha256": "07b763dc00012e9acf219fe2d2e8980f0810fb8af2e4a41c090107a8351d412f",
         "transformations": []
       },
       {
-        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.18/impeccable-windows-x64.exe",
+        "source": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.19/impeccable-windows-x64.exe",
         "destination": "skills/impeccable/scripts/bin/windows-x64/impeccable.exe",
-        "sourceSha256": "8f61e96b0c97001546a824d79b44f46b423b560f3eb1a0cc44a8695a1b395d9f",
-        "vendoredSha256": "8f61e96b0c97001546a824d79b44f46b423b560f3eb1a0cc44a8695a1b395d9f",
+        "sourceSha256": "30427e0cfea383a0adbc5cc554481c3f18337eeabcc4eaf7d9bb48ad2e8b5676",
+        "vendoredSha256": "30427e0cfea383a0adbc5cc554481c3f18337eeabcc4eaf7d9bb48ad2e8b5676",
         "transformations": []
       },
       {
@@ -481,14 +481,14 @@
       {
         "source": ".cursor/skills/impeccable/scripts/engine-checksums.txt",
         "destination": "skills/impeccable/scripts/engine-checksums.txt",
-        "sourceSha256": "2f0235179cbc515d7c7ec71a9a08283d0cb88a5238d35ffa5a5f42122e78fe35",
-        "vendoredSha256": "2f0235179cbc515d7c7ec71a9a08283d0cb88a5238d35ffa5a5f42122e78fe35",
+        "sourceSha256": "d1acb01e7e1ab1e5a1f691af710146de82c1915a3e360ae94e9d8eaa6fc3c875",
+        "vendoredSha256": "d1acb01e7e1ab1e5a1f691af710146de82c1915a3e360ae94e9d8eaa6fc3c875",
         "transformations": []
       },
       {
         "source": ".cursor/skills/impeccable/scripts/impeccable",
         "destination": "skills/impeccable/scripts/impeccable",
-        "sourceSha256": "d9709ee88e790bda2d98f55c4d1abe42e28b91db849882a2998bac79b1e074cb",
+        "sourceSha256": "137173707b882616104b9d621b53bea37f135de09461add3301b9fcb3d7de461",
         "vendoredSha256": "e48c389b47e2a7956dcc20be02dac78c6bc052458e7eb329db9482be096fbe84",
         "transformations": [
           "native-engine-launcher"
@@ -497,7 +497,7 @@
       {
         "source": ".cursor/skills/impeccable/scripts/impeccable.cmd",
         "destination": "skills/impeccable/scripts/impeccable.cmd",
-        "sourceSha256": "74154d320dda16e7cb184406a9deecc8c6a5953ab675af99cea207471d63b4b4",
+        "sourceSha256": "73c2e4d7613c38e35654df0444d559c97f1d09a9d373f4e72b3d7b21b6e1060c",
         "vendoredSha256": "073975e9a2bd302bad9a06310c3a71c8353ac128a8dc11969c0a289ae5ccd2c8",
         "transformations": [
           "native-engine-launcher"
@@ -527,8 +527,8 @@
       {
         "source": ".cursor/skills/impeccable/scripts/live-browser.js",
         "destination": "skills/impeccable/scripts/live-browser.js",
-        "sourceSha256": "718b7e3c5c9cc3cc8fb75ed99b32a7ebce627e3b6a108e21656fa0fd298e34f0",
-        "vendoredSha256": "718b7e3c5c9cc3cc8fb75ed99b32a7ebce627e3b6a108e21656fa0fd298e34f0",
+        "sourceSha256": "e8e6a4c013254e241a5a33977424581215c987a533968eadda759e2488ae09e5",
+        "vendoredSha256": "e8e6a4c013254e241a5a33977424581215c987a533968eadda759e2488ae09e5",
         "transformations": []
       },
       {
@@ -541,15 +541,15 @@
       {
         "source": ".cursor/skills/impeccable/scripts/VERSION",
         "destination": "skills/impeccable/scripts/VERSION",
-        "sourceSha256": "447836d46f39c5900faf74ad6a6554b8e1fafeca1f78de0416d5f05c6e09a080",
-        "vendoredSha256": "447836d46f39c5900faf74ad6a6554b8e1fafeca1f78de0416d5f05c6e09a080",
+        "sourceSha256": "b6961620d618f9cb3418be09f15e730af410a3e0a3e1d3a649c8892bfa7317d4",
+        "vendoredSha256": "b6961620d618f9cb3418be09f15e730af410a3e0a3e1d3a649c8892bfa7317d4",
         "transformations": []
       },
       {
         "source": ".cursor/skills/impeccable/SKILL.md",
         "destination": "skills/impeccable/SKILL.md",
-        "sourceSha256": "75240db9704747abe4fc6ef788fb37b20e2b2aee03a3fe1c221ff9b274a07f4b",
-        "vendoredSha256": "a6af446f60cdcb6c7a67cc5e82bd5d08508340b5ff2cf77ee4ba743c2f42490a",
+        "sourceSha256": "cc2c03dd33024abfd47f9dedcc7862ffda75b657bf3e242a91d9d854b8301cd8",
+        "vendoredSha256": "923aa674402428c73ac65cb1ab37c76e36bc0af786f59cad09609c2c74710ebc",
         "transformations": [
           "agent-skills-frontmatter",
           "scoped-skill-discovery",

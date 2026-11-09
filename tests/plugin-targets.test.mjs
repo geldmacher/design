@@ -143,7 +143,8 @@ test("deterministic target allowlists isolate the portable package and native ad
     const sourceImpeccableRoot = join(repositoryRoot, "skills", "impeccable");
     const portableImpeccableRoot = join(first["agent-plugin"].path, "skills", "impeccable");
     const documentationFinish = readFileSync(join(portableImpeccableRoot, 'reference/new-work.md'), 'utf8');
-    assert.match(documentationFinish, /After the last correction, load \[degraded\/documenter\.md\]/);
+    assert.match(documentationFinish, /After the last correction, on a new or replacement world or an approved system change where a DESIGN\.md already exists at the write boundary, collect the choice \[document\.md\]\(document\.md\) requires: show the user the existing file\. Ask the user directly to clarify what you cannot infer\. Offer refresh, overwrite, or merge\. Then load \[degraded\/documenter\.md\]/);
+    assert.match(documentationFinish, /The inline role cannot ask and writes nothing over an existing DESIGN\.md without that choice/);
     assert.match(documentationFinish, /token-bearing DESIGN\.md \*\*and\*\* `\.impeccable\/design\.json`/);
     assert.match(documentationFinish, /Ordinary extensions compare the finished build against the incumbent system, preserve its files/);
     assert.match(documentationFinish, /report pre-existing drift without repairing it unasked/);

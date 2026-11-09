@@ -1,18 +1,18 @@
 diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
-index 96aa029..0141949 100644
+index 8c5e0dc..27a9303 100644
 --- a/skills/impeccable/SKILL.md
 +++ b/skills/impeccable/SKILL.md
 @@ -1,10 +1,18 @@
  ---
  name: impeccable
 -description: "Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, settings, onboarding, empty states, and native iOS or Android screens. Handles UX review, hierarchy, layout, typography, color, motion, UX copy, accessibility, responsive behavior, edge cases, and capturing or documenting design systems (DESIGN.md, tokens). Also for making bland UI bolder, loud UI quieter, or ambitious visual effects. Not for backend-only or non-UI tasks."
--version: 4.8.0
+-version: 4.8.1
 -license: Apache 2.0
 +description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.
 +license: Apache-2.0
 +compatibility: Requires Node.js 22 or newer.
 +metadata:
-+  version: "4.8.0"
++  version: "4.8.1"
  ---
  
 +## Geldmacher Design host contract
@@ -241,7 +241,7 @@ index 61c8f6a..81a4ec7 100644
  ##### 1. Visibility of System Status
  
 diff --git a/skills/impeccable/reference/degraded/asset-producer.md b/skills/impeccable/reference/degraded/asset-producer.md
-index ca75f0d..439f48e 100644
+index c19f34f..4dc8b5d 100644
 --- a/skills/impeccable/reference/degraded/asset-producer.md
 +++ b/skills/impeccable/reference/degraded/asset-producer.md
 @@ -29,9 +29,9 @@ Every region with `medium: raster` in the spec ships as a plate at its `plate` p
@@ -516,20 +516,20 @@ index bedfa84..30847f6 100644
  
  Done when the helper is stopped and the dev site still answers with the accepted design.
 diff --git a/skills/impeccable/reference/hooks.md b/skills/impeccable/reference/hooks.md
-index 6544c7f..a91e1f0 100644
+index d6f22a5..1e9694a 100644
 --- a/skills/impeccable/reference/hooks.md
 +++ b/skills/impeccable/reference/hooks.md
-@@ -1,24 +1,24 @@
+@@ -1,30 +1,30 @@
  # /impeccable hooks
  
 +> Geldmacher Design integration: Cursor and Codex use plugin-registered host adapters. This command changes only `.impeccable/` config and never installs or edits a project-local hook manifest.
 +
  Manage the **design detector hook** for the current project.
  
--The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, Cursor, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Grok Build fires the same PostToolUse scan to mark touched files, then surfaces findings on Stop `additionalContext`. Do not expect a Grok per-edit reminder: Grok discards that stdout.
+-The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, Cursor, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Grok Build fires the same PostToolUse scan to mark touched files, then surfaces findings on Stop `additionalContext`. Do not expect a Grok per-edit reminder: Grok discards that stdout. On Hermes Agent the per-edit findings arrive inside the `write_file` or `patch` tool result itself, as its `impeccable` field.
 +The hook runs the impeccable design detector on direct file edits to design-relevant files (`.tsx`, `.jsx`, `.html`, `.vue`, `.svelte`, `.astro`, `.css`, `.scss`, `.sass`, `.less`, `.ts`, `.js`). Claude Code, Codex, and GitHub Copilot use a post-tool-use hook and push a short system reminder into the agent's context after the edit; findings get a correction prompt, pending issues get a re-nudge, and clean UI-ish files get a short ack unless quiet mode is on (`hook.quiet` in config). Plain `.ts` and `.js` files are still scanned, but stay quiet unless the detector finds something. Cursor uses `preToolUse` to block bad proposed writes before they land and stays silent when it allows a clean write. Grok Build fires the same PostToolUse scan to mark touched files, then surfaces findings on Stop `additionalContext`. Do not expect a Grok per-edit reminder: Grok discards that stdout.
  
--The detector rules run in two tiers. The per-edit hook surfaces only the immediate tier: mechanical, unambiguous problems worth interrupting an edit for, such as broken images, overflowing content, contrast and legibility failures, gradient text, glow shadows, and design-system drift. Everything else (copy cadence, palette and typography taste, layout rhythm) is deferred to a deep pass on the `Stop` hook event, which runs the full rule set over every UI file touched in the session and surfaces the remaining findings once, deduplicated against what the per-edit pass already reported. A session with nothing left to report stops silently. Set `hook.perEditRules` to `"all"` in `.impeccable/config.json` to restore the full rule set on every edit. The Stop deep pass is wired for Claude Code, Codex, and Grok Build, which dispatch a native `Stop` hook event. Cursor does not get one (its `stop` hook can only answer with a follow-up user message), and GitHub Copilot's stop-style events do not feed context back to the model, so they keep the full detector per edit. Grok also fires an observe-only Stop with `reason: "shutdown"` after `end_turn`; skip that one, scan only `end_turn`.
+-The detector rules run in two tiers. The per-edit hook surfaces only the immediate tier: mechanical, unambiguous problems worth interrupting an edit for, such as broken images, overflowing content, contrast and legibility failures, gradient text, glow shadows, and design-system drift. Everything else (copy cadence, palette and typography taste, layout rhythm) is deferred to a deep pass on the `Stop` hook event, which runs the full rule set over every UI file touched in the session and surfaces the remaining findings once, deduplicated against what the per-edit pass already reported. A session with nothing left to report stops silently. Set `hook.perEditRules` to `"all"` in `.impeccable/config.json` to restore the full rule set on every edit. The Stop deep pass is wired for Claude Code, Codex, and Grok Build, which dispatch a native `Stop` hook event, and for Hermes Agent, whose plugin sends it from `pre_verify`. Cursor does not get one (its `stop` hook can only answer with a follow-up user message), and GitHub Copilot's stop-style events do not feed context back to the model, so they keep the full detector per edit. Grok also fires an observe-only Stop with `reason: "shutdown"` after `end_turn`; skip that one, scan only `end_turn`.
 +The detector rules run in two tiers. The per-edit hook surfaces only the immediate tier: mechanical, unambiguous problems worth interrupting an edit for, such as broken images, overflowing content, contrast and legibility failures, gradient text, glow shadows, and design-system drift. Everything else (copy cadence, palette and typography taste, layout rhythm) is deferred to a deep pass on the `Stop` hook event, which runs the full rule set over every UI file touched in the session and surfaces the remaining findings once, deduplicated against what the per-edit pass already reported. A session with nothing left to report stops silently. Set `hook.perEditRules` to `"all"` in `.impeccable/config.json` to restore the full rule set on every edit. The Stop deep pass is wired for Claude Code, Codex, and Grok Build, which dispatch a native `Stop` hook event. Cursor does not get one (its stop hook is not consistently dispatched; the pre-write gate covers it), and GitHub Copilot's stop-style events do not feed context back to the model, so they keep the full detector per edit. Grok also fires an observe-only Stop with `reason: "shutdown"` after `end_turn`; skip that one, scan only `end_turn`.
  
  Every hook is a mechanical pass. The reflexes no scanner catches live in [craft-floor.md](craft-floor.md), which the skill loads before it edits UI, so they apply whether or not a hook is wired. A session with no automatic hook gets one `MANUAL_DETECTOR_REQUIRED` directive from `impeccable context` asking for a single detector run at the end.
@@ -541,7 +541,7 @@ index 6544c7f..a91e1f0 100644
  
 -Manual `.cursor/skills/impeccable/scripts/impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `.cursor/skills/impeccable/scripts/impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `.cursor/skills/impeccable/scripts/impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
 -
--Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `~/.claude/settings.json` for a user-scope install; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), and GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.
+-Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `$CLAUDE_CONFIG_DIR/settings.json` for a user-scope install, defaulting to `~/.claude/settings.json`; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read), and Hermes Agent (the `impeccable-design-hook` plugin in `~/.hermes/plugins/`; the user enables it once with `hermes plugins enable impeccable-design-hook`; a project install's launcher runs only in a project Hermes trusts, via `hermes skills trust`). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.
 +Manual `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect` scans use the same project filter config by default: `detector.ignoreRules`, `detector.ignoreFiles`, `detector.ignoreValues`, and `detector.designSystem.enabled`. `hook.enabled` only controls automatic hook execution, not manual CLI scans. Use `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable detect --no-config ...` for a raw detector run that ignores project config/context. Use `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable ignores ...` for direct CLI CRUD on the same detector ignores.
  
 -On **Cursor**, the hook runs on `postToolUse` for the `Write` tool (every agent file edit) and returns its reminder as `additional_context`, which Cursor adds after the tool result. Projects set up before this ran a `preToolUse` gate (`hook-before-edit`) that blocked bad writes before they landed; that gate still works until `hooks on`, `impeccable update`, or `impeccable doctor --fix` moves the entry to `postToolUse`.
@@ -550,13 +550,24 @@ index 6544c7f..a91e1f0 100644
 -Gemini installs session and completion hooks in `.gemini/settings.json`, merged into the settings already there (comments are tolerated; a commented file is backed up to `settings.json.bak` before the rewrite, and a file that is not valid JSON is left alone). It does not install a per-edit detector hook. The `BeforeTool` hook only rewrites shell commands that run `build-phase`, and only on macOS and Linux; on Windows (where Gemini runs hooks through PowerShell) no session id reaches the shell, so a comp build is not tied to the session and the completion reminder stays silent.
 +On **Cursor**, `preToolUse` checks proposed Write/Edit/Shell write content and denies only when the real detector finds an issue. The denial message is visible to the agent as the tool error, so the agent can reconsider before the bad write lands.
  
+-When there is no project Claude skill, `hooks on` looks for `skills/impeccable/scripts/impeccable` inside `CLAUDE_CONFIG_DIR` (default `~/.claude`) and writes the hook into that account's `settings.json`, using the installed launcher's absolute path. Relative account directories resolve against the caller's working directory. An explicit account directory is exclusive: another account's default skill and settings are never substituted. Status and context read the same account settings. If no design harness can be wired, `hooks on` says so, reports skipped invalid settings or the missing skill lookup paths, and gives the next step.
++Design does not consult CLAUDE_CONFIG_DIR and does not write a user-scope Claude Code settings file. Hook activation changes canonical `.impeccable/` configuration for the registered Cursor and Codex adapters.
+ 
+-Status checks the current event entries and matchers in each manifest, including the Stop pass where supported. Claude Code counts as wired when either project settings file (or its user settings file) contains the current entries. A legacy command, partial manifest, or missing file is reported as not wired. If enabled in config but no design harness is wired, status says so and gives `impeccable hooks on` as the repair command. An installed and enabled Hermes design-hook plugin also counts as wired; `on` acknowledges it without changing the plugin configuration. Wiring confirms the manifest entries; harness trust requirements and session reloads still apply.
++Status reports the plugin adapter's canonical configuration and any project-install conflicts. It does not read harness manifests, Claude account settings, or another agent's plugin directory, and it does not repair them.
+ 
+-When `hook.consent` is `"accepted"` in the project's `config.local.json` and the hook is enabled, `impeccable context` restores missing or stale entries for installed harness skills and reports repairs in one line. Shared config consent does not authorize this write. Automatic repair preserves unrelated settings and hooks and leaves malformed manifests alone. Without local consent, context writes no manifests and keeps `MANUAL_DETECTOR_REQUIRED`, naming the missing or stale harness wiring. Explicitly disabled hooks stay disabled.
++Design does not record standalone hook consent. `impeccable context` does not write or repair host manifests, even when a previous install left `hook.consent` set to `accepted`. A missing Design adapter still produces `MANUAL_DETECTOR_REQUIRED`. Explicitly disabled hooks stay disabled.
+ 
  ## Routing
  
-@@ -27,14 +27,14 @@ The first argument is the action. Defaults to `status`.
+@@ -32,15 +32,15 @@ The first argument is the action. Defaults to `status`.
+ 
  | Action | What it does |
  |---|---|
- | `status` | Print current state, shared/local config paths, ignored rules / files / values, env override. |
+-| `status` | Print current state, shared/local config paths, ignored rules / files / values, env override, and actual manifest wiring for each harness. |
 -| `on` | Set `enabled: true` in `.impeccable/config.json`, record local hook consent as accepted, and install/repair provider hook manifests when the skill is installed. |
++| `status` | Print plugin hook configuration and project-install conflicts. It does not report harness manifest wiring. |
 +| `on` | Enable the already registered plugin adapter in canonical configuration; leave host manifests unchanged. |
  | `off` | Set `enabled: false` in `.impeccable/config.json`. |
  | `ignore-rule <id>` | Append `<id>` to `detector.ignoreRules`; for `overused-font`, requires `--all-values`. Suppresses the rule across the whole project. |
@@ -569,7 +580,7 @@ index 6544c7f..a91e1f0 100644
  
  ## Flow
  
-@@ -42,7 +42,7 @@ The first argument is the action. Defaults to `status`.
+@@ -48,11 +48,11 @@ The first argument is the action. Defaults to `status`.
  2. Invoke the admin script and pass the user's output through verbatim:
  
     ```bash
@@ -578,7 +589,12 @@ index 6544c7f..a91e1f0 100644
     ```
  
  3. If `<action>` is `off`, follow up with a one-line note: "Done. New edits will not trigger the design hook in this project until you run `/impeccable hooks on`."
-@@ -64,7 +64,7 @@ Prefer the narrowest exception:
+-4. If `<action>` is `on`, report what the command installed or repaired. If no installed skill folders were found or settings were skipped, surface that result and do not claim the hook will run. Otherwise note that the harness must load the updated settings (and satisfy any trust requirements) before it runs. On Hermes Agent, `on` cannot install or enable the plugin: if `impeccable context` reported `MANUAL_DETECTOR_REQUIRED`, tell the user to run `npx impeccable install` and then `hermes plugins enable impeccable-design-hook` instead.
++4. If `<action>` is `on`, report that only `.impeccable/` changed and the registered Cursor or Codex adapter is enabled. Do not claim a host manifest was installed, and do not send the user to a standalone installer or another agent host.
+ 5. If `<action>` is `ignore-value`, `ignore-file`, or `ignore-rule`, just print the script output. The default scope is shared `.impeccable/config.json`; add `--local` only when the user explicitly asks for a private exception.
+ 6. If `<action>` is `status`, just print the script output. Do not add commentary unless the user asked a follow-up question.
+ 
+@@ -70,7 +70,7 @@ Prefer the narrowest exception:
  
  - If the finding line shows an `ignore-value <rule> <value>` pair, pass it to `impeccable hooks ignore-value` with your `--reason`. This writes shared `.impeccable/config.json` by default.
  - For value-specific findings such as `overused-font` and `bounce-easing`, use `ignore-value` for the specific value. Do not use `ignore-rule overused-font` for a specific font.
@@ -587,7 +603,7 @@ index 6544c7f..a91e1f0 100644
  - Reach for `ignore-file <path>` only when the whole file is out of scope for design review: a fixture, a generated artifact, a deliberate slop demo. It silences every rule for that file permanently, including rules that have not been written yet. A real UI surface with one noisy rule wants the file-scoped value ignore above.
  - Use `ignore-rule <id>` only when the user asks to suppress that whole rule across the project. For broad overused-font suppression, use `ignore-rule overused-font --all-values` only when the user asks to ignore overused fonts generally.
  - Prefer config ignores (the commands above) by default; they keep suppressions in one reviewable place. Reach for an inline comment only when the waiver must travel with a single file that leaves the repo (a generated/exported standalone document, an emailed HTML file). The supported marker is `impeccable-disable <rule>` (whole file) or `impeccable-disable-line` / `impeccable-disable-next-line` (one line), in any comment syntax, with an optional reason after `:` or `--`. The detector honors it by default; `--no-inline-ignores` or `--no-config` bypasses it.
-@@ -72,43 +72,43 @@ Prefer the narrowest exception:
+@@ -78,43 +78,43 @@ Prefer the narrowest exception:
  Example value-specific exception:
  
  ```bash
@@ -630,7 +646,7 @@ index 6544c7f..a91e1f0 100644
  - Do not edit the launcher or the binary behind `impeccable hook` and `impeccable hook-before-edit` from this flow. Those are skill plumbing.
 -- When a user asks how far to trust the hook, say it runs the engine unsandboxed with the agent's environment and network access (in the Copilot cloud agent too, once `.github/hooks/impeccable.json` is committed), and that the launcher checks a downloaded engine against `.cursor/skills/impeccable/scripts/engine-checksums.txt` before its first run; **never** call it sandboxed.
 -- The hook never blocks an edit; it emits a post-edit reminder. (A Cursor project still on the old `preToolUse` gate can block a write until its manifest is migrated.) Disabling stops the reminders.
--- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses `~/.claude/settings.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.
+-- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses the active account's `$CLAUDE_CONFIG_DIR/settings.json` (default `~/.claude/settings.json`). On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.
 +- When a user asks how far to trust the hook, say it runs the verified in-package engine with the agent's environment. It does not download a binary. Do not call it sandboxed.
 +- Cursor can block a proposed write when the detector finds a real issue. Claude Code, Codex, and GitHub Copilot do not block the edit; they emit a post-edit reminder instead. Disabling stops both blocking and reminders.
 +- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.
@@ -668,7 +684,7 @@ index 1f3b581..7a3095e 100644
  
  Output `{ shape, signals }`; the shape names the *patch mechanism*, so one template covers many frameworks:
 diff --git a/skills/impeccable/reference/live.md b/skills/impeccable/reference/live.md
-index 0e4b975..7b8e164 100644
+index fff2ca4..b79d828 100644
 --- a/skills/impeccable/reference/live.md
 +++ b/skills/impeccable/reference/live.md
 @@ -4,13 +4,13 @@ Interactive live variant mode: select elements in the browser, pick a design act
@@ -762,7 +778,7 @@ index 0e4b975..7b8e164 100644
  
  ## Handle `prefetch`
  
-@@ -306,7 +306,7 @@ When native subagents are available, delegate source edits to `impeccable_manual
+@@ -308,7 +308,7 @@ An op with `deleted: true` and `removeElement: true` is the browser's Remove bad
  
  If `repair` is present, the previous Apply changed source but final validation failed. Fix the current source and return the same canonical JSON result; do not roll files back yourself. The browser will ask the user before any rollback.
  
@@ -771,7 +787,7 @@ index 0e4b975..7b8e164 100644
  
  ## Exit
  
-@@ -315,7 +315,7 @@ The user stops live mode by saying so in chat, closing the tab (SSE drops; poll
+@@ -317,7 +317,7 @@ The user stops live mode by saying so in chat, closing the tab (SSE drops; poll
  ## Cleanup
  
  ```bash
@@ -781,7 +797,7 @@ index 0e4b975..7b8e164 100644
  
  Stops the helper and runs `impeccable live-inject --remove` to strip the injected script (use `stop --keep-inject` to keep it for a quick restart; `.impeccable/live/config.json` persists as project config). Then search for and remove any leftover `impeccable-variants-start` wrappers and `impeccable-carbonize-start` blocks.
 diff --git a/skills/impeccable/reference/new-work.md b/skills/impeccable/reference/new-work.md
-index 46910b3..ea1a12e 100644
+index 30eec17..645f6cd 100644
 --- a/skills/impeccable/reference/new-work.md
 +++ b/skills/impeccable/reference/new-work.md
 @@ -36,7 +36,7 @@ Inherit its world and composition. Resolve only the new purpose, content, hierar
@@ -801,8 +817,8 @@ index 46910b3..ea1a12e 100644
 +4. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable concept-seed --scope direction --mode <mode>` and follow what it prints. No substitute, no skip: on a new or replacement world, writing artifact code before this script has run and its assignment is acknowledged is a contract violation, whatever the harness, the model, or the time pressure; the roll is what keeps every run from converging on the category default. The script assigns the direction to build and deals catalog challengers. Fuse each challenger before judging it: the challenger supplies the form and its system grammar, the product supplies every fact, clarity wins conflicts. Weigh fused challengers against the assigned direction on exactly two axes, audience identification and product clarity. Losing to strong grounded material is a valid outcome; beating a thin or tool-monoculture list is the point. Close with a verdict per challenger, decided before any borrowing: wins (beats the assigned direction on both axes; becomes the build candidate), competitive (holds one axis; stays a full alternate), or declined (loses both). A declined challenger is not spent: name the one discipline of its system the assigned direction lacks, and raise the assigned direction to match before presenting it. A donation transfers ambition and system discipline (a palette's total commitment, a grid's density courage, a form's structural honesty), never the challenger's clothes. A component treatment, such as a button's shadow or a display face, is clothes, not discipline; a lifted motif is a costume note, not a raise, and one world owns the page. Write each raise into the presented direction as its own line, named for its donor; a raise nobody can read did not happen.
  5. Present one direction, fully committed and already raised by the hand it beat, raises visible as named lines: world, first viewport, visitor path, signature interaction, cross-surface reach, honest risk. Route each challenger by verdict: winning and competitive challengers are full alternates with their QUALITY BAR cards and one-line case; declined challengers render demoted, compact and quiet, each carrying its verdict and what the direction kept from it, never full-size, never silently dropped, still adoptable on request. The verdict informs the user's choice, never pre-empts it; the demoted row is the hand's proof of judgment. A hand holds at most three full-card challengers: when the roll deals more, the three strongest join and the rest wait in the re-roll pool, noted in one line; dropping a challenger from the hand itself takes a named product-truth failure, disclosed. The hand's size follows the verdicts, never a number the user named: when the weighing yields fewer full cards than asked, deliver the honest hand, say in one line why it is smaller, and offer a re-roll to deal candidates that could earn full cards. A declined challenger is never promoted to fill a slot; a promoted card looks exactly like a competitive one, so the promotion leaves no trace. The standing exit does not count toward a requested number once the user has seen and rejected it; it stays present as the quiet door. Add one card for your own top-ranked grounded candidate when it is not the assigned direction, kicker IMPECCABLE’S PICK, same anatomy as every card, with an honest risk line naming its familiarity when true: the strongest grounded direction is often where most runs in this category land, and the user deciding that trade is the point of showing it. Familiar and effective is a legitimate destination, not a failure of nerve; the pick card and the standing exit serve it at two depths. One pick card, never two, never a ranked list: a lineup of your candidates hands selection back to a taste function and invites the safest card. The pick never takes the lead position; when the dice assign your top candidate there is no pick card, and the assigned card notes it topped your list. Add re-roll with an optional one-line steer, in three registers: plain (a fresh hand, same spread), safer (your remaining conventional grounded candidates plus the canon against named competitors), bolder (foreign forms only, at full commitment). The register is the user's steering on the familiar-to-bold axis, never yours to pre-select; when the answer carries one, re-run the seed with `--register <value>` and the next `--reroll` round, and follow what it prints. A user saying "bolder" or "safer" while a direction round is open means these registers, never the bolder or harden commands. The two channels share this structure and differ only in richness: cards and boards on the decision page, names and one-liners through the structured tool, whose option list carries the assigned direction, the pick, the winning and competitive challengers, and the standing exit last; declined challengers fold into the assigned option's description as their kept lines, so the raise survives the text channel.
  
--The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in the build-path paragraph below). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, or `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `.cursor/skills/impeccable/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
-+The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in the build-path paragraph below). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, or `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
+-The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in the build-path paragraph below). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), or `dealt` (a surface round's dealt structures other than the lead), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `.cursor/skills/impeccable/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
++The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in the build-path paragraph below). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), or `dealt` (a surface round's dealt structures other than the lead), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
  
  When image generation exists, every card also declares a `comp` path under `.impeccable/mocks/decision/`, the canon card included. Where the harness sandboxes its shell, start the page through the least-sandboxed command path it offers: a sandboxed shell cannot bind the board's port, and the first-attempt failure costs a retry every session. Serve the page first, then produce the comps; the page shimmer-waits per slot and the user may answer before they land. Load [visualize.md](visualize.md) before writing the first decision comp prompt, not at the comp round: each card's image is that direction's north-star comp at full fidelity under its comp discipline and the MODE RULES block concept-seed printed, and a prompt written before reading them misses every rule there: the requested surface as the real page, its first viewport and the start of the section below it, held like every comp to visualize.md's rule that a template skeleton stays the template whatever world paints it (your own pick included: a safe layout under a world skin is the template), a short prompt in visualize.md's shape, real product name and real content, no invented commercial claims, in that card's own palette, type character, and material world, committed all the way. Once a round declares comps it has not generated yet, `impeccable serve-question --start` (and `--update`, and a flip to comp) prints a `NEXT read <path>/visualize.md` line; read that file then, before the first prompt. `--wait` prints `COMP SIDECAR MISSING` for any landed decision comp with no prompt sidecar (the image's full file name plus `.json`: `a.png` gets `a.png.json`); write the missing sidecar before you continue. `COMP STALE` names a file an earlier round left at one of this hand's slots; regenerate it there. Generation takes the same time at any fidelity, so an unfinished draft pays comp cost for draft quality; fairness between cards is equal fidelity in each card's own grammar, one surface, one aspect, never shared unfinishedness. The frame's aspect is the surface's own: portrait at device viewport for a native app or mobile-first surface, landscape for desktop web; the decision page adapts to either, and a phone screen comped landscape is a broken frame, not a neutral default. Produce in reading order, the assigned card, then the pick, then the full-card hand, then canon, each file written with its prompt sidecar the moment it is done, so a re-roll's spend front-loads onto the cards read first; declined challengers get no comp, their catalog thumb is their face. With parallel subagents, fan out one agent per card: each spawn is the shipped asset producer with a single-comp packet, that card's fields, its world's card images when the NEXT line names them, PRODUCT.md, the shared frame, the path to visualize.md for its comp discipline, the COMPS section of the MODE RULES block copied verbatim (the subagent never sees the roll's output), and the card's declared path, up to four in flight. Regenerate inline any slot still empty when its agent returns; drop without ceremony any slot still empty when the user answers. No other supervision is owed. Without parallel subagents, generate in the main thread after serving, same order, and let the harness's own generation display carry the progress; the wait for the answer follows the last file. The chosen card's comp is not spent by the choice: comp-led, it enters the comp round as compositional option one; code-led, it returns at the finish review as the critique reference, what the image dared that the build did not. Unchosen comps stay in `.impeccable/mocks/decision/` as the round's spent hand; they carry no approval and imply none. With no image generation, cards carry their identity in palette chips and facts, and that page is complete, not a lesser version; the page then also demotes every challenger's catalog art to a labeled thumbnail on its own, because salience must encode the verdict, never the accident of which cards have images.
  
@@ -852,7 +868,7 @@ index 46910b3..ea1a12e 100644
  
  Report the final verdict under the reviewer's own disposition word and at its actual scope. A verdict pass scores the listed fixes and nothing else: "the reviewer scored all three fixes resolved" is a claim it supports, "no material issues remain" is not. A table with open material findings is never announced as a pass, never softened, and never dressed as whole-surface approval when only a fix list was scored. When the user answers a ship with evidence against it, their own screenshot, a named mismatch with the comp, that evidence outranks every capture you made: put their material in the packet and spawn a fresh reviewer for a new full review. Patching inline and self-certifying is how a rejected page ships twice.
  
- After the last correction, spawn the shipped documenter, `impeccable-documenter` (`impeccable_documenter` in codex), with the project root, artifact path, direction contract, PRODUCT.md, [document.md](document.md), and write boundary. Without subagents, load [degraded/documenter.md](degraded/documenter.md) and [document.md](document.md) before writing. Verify the outcome: new worlds and approved system changes require token-bearing DESIGN.md **and** `.impeccable/design.json`, not prose alone. Ordinary extensions compare the finished build against the incumbent system, preserve its files, and report the evidence checked; report pre-existing drift without repairing it unasked. Recheck after later edits. Finish only when review and documentation are complete.
+ After the last correction, on a new or replacement world or an approved system change where a DESIGN.md already exists at the write boundary, collect the choice [document.md](document.md) requires: show the user the existing file. Ask the user directly to clarify what you cannot infer. Offer refresh, overwrite, or merge. Then spawn the shipped documenter, `impeccable-documenter` (`impeccable_documenter` in codex), with the project root, artifact path, direction contract, PRODUCT.md, [document.md](document.md), write boundary, and that choice; the documenter cannot ask and writes nothing over an existing DESIGN.md without it. Without subagents, load [degraded/documenter.md](degraded/documenter.md) and [document.md](document.md) before writing. Verify the outcome: new worlds and approved system changes require token-bearing DESIGN.md **and** `.impeccable/design.json`, not prose alone. Ordinary extensions compare the finished build against the incumbent system, preserve its files, and report the evidence checked; report pre-existing drift without repairing it unasked. Recheck after later edits. Finish only when review and documentation are complete.
  
 -On a comp-led build, record the final review disposition with `.cursor/skills/impeccable/scripts/impeccable build-phase finish --disposition <ship|fix|rebuild|recapture>` before the final response. A refused `ship` is an unfinished build; report the outstanding phase with the verdict. Any edit after the last captured gate, a fix for a hook finding after `ship` included, voids that capture: run `finish --disposition ship` again before you stop, which rechecks the current files against the gate and names any recapture it needs. Never record `fix` to end a run over an open gate: take the route the gate names, and when the user leaves it open, report that phase as open.
 +On a comp-led build, record the final review disposition with `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable build-phase finish --disposition <ship|fix|rebuild|recapture>` before the final response. A refused `ship` is an unfinished build; report the outstanding phase with the verdict. Any edit after the last captured gate, a fix for a hook finding after `ship` included, voids that capture: run `finish --disposition ship` again before you stop, which rechecks the current files against the gate and names any recapture it needs. Never record `fix` to end a run over an open gate: take the route the gate names, and when the user leaves it open, report that phase as open.
@@ -943,10 +959,10 @@ index f628950..67c35b1 100644
  Convert images with a converter `impeccable context` reported at boot (the IMAGE_TOOLS line); probe only when it reported none, at most once per session, never per image.
  
 diff --git a/skills/impeccable/scripts/impeccable b/skills/impeccable/scripts/impeccable
-index 92d8cca..26b0f9c 100755
+index 0b31c9e..26b0f9c 100755
 --- a/skills/impeccable/scripts/impeccable
 +++ b/skills/impeccable/scripts/impeccable
-@@ -1,249 +1,4 @@
+@@ -1,266 +1,4 @@
  #!/bin/sh
 -# Impeccable launcher. Runs the platform binary shipped next to this script:
 -#   <this dir>/bin/<os>-<arch>/impeccable
@@ -955,12 +971,16 @@ index 92d8cca..26b0f9c 100755
 -# The unversioned home binary and the PATH candidate are validated with the
 -# engine-probe handshake first: the retired 3.x npm CLI also installed a bin
 -# named `impeccable`, and exec'ing it would fail every verb with
--# "Unknown command". Trusted candidates (IMPECCABLE_BIN, the sibling binary,
--# the version-pinned cache) are exec'd without a probe: hooks run them on
--# every edit and must stay fast. The version-pinned cache and the download are
--# verified against engine-checksums.txt (next to this script), never against
--# anything published beside the binary; a <binary>.verified stamp records that
--# a cached binary passed, so only the first run hashes it.
+-# "Unknown command". The sibling binary must also report the version in
+-# VERSION: it is gitignored, so a skill upgrade that copies files over this
+-# directory leaves the old engine in place. A local build of the same version
+-# passes, which is why it is not hashed. IMPECCABLE_BIN is the operator's
+-# explicit choice and is exec'd without a probe. The version-pinned cache and
+-# the download are verified against engine-checksums.txt (next to this
+-# script), never against anything published beside the binary; a
+-# <binary>.verified stamp holding the manifest digest and the binary's size
+-# skips rehashing until either changes or the binary is newer than the stamp.
+-# No path hashes on every run: hooks run this launcher on every edit.
  set -eu
 -
 -# True when the candidate answers the engine handshake (prints
@@ -972,7 +992,7 @@ index 92d8cca..26b0f9c 100755
 -probe_ok() {
 -  probe_out=$(IMPECCABLE_LAUNCHER_PROBE=1 "$1" engine-probe 2>/dev/null) || return 1
 -  case "$probe_out" in
--    impeccable-engine*) return 0 ;;
+-    impeccable-engine*) probe_version=${probe_out#impeccable-engine }; return 0 ;;
 -  esac
 -  return 1
 -}
@@ -984,7 +1004,8 @@ index 92d8cca..26b0f9c 100755
 -# still counts.
 -manifest_digest() {
 -  [ -f "$manifest" ] || return 0
--  while IFS="$(printf ' \t\r')" read -r m_version m_asset m_sum _ || [ -n "$m_version" ]; do
+-  sep=$(printf ' \t\r')
+-  while IFS="$sep" read -r m_version m_asset m_sum _ || [ -n "$m_version" ]; do
 -    case "$m_version" in ''|'#'*) continue ;; esac
 -    if [ "$m_version" = "$1" ] && [ "$m_asset" = "$2" ]; then
 -      printf '%s' "$m_sum"
@@ -994,14 +1015,18 @@ index 92d8cca..26b0f9c 100755
 -  return 0
 -}
 -# Sets $expected (and, on Windows on ARM, which runs x64 binaries,
--# $expected_x64) from engine-checksums.txt. Only called off the stamped fast
--# path: hooks run this launcher on every edit.
+-# $expected_x64) from engine-checksums.txt.
 -read_expected() {
 -  expected=$(manifest_digest "$version" "$asset")
 -  expected_x64=""
 -  if [ "$os" = windows ] && [ "$arch" = arm64 ]; then
 -    expected_x64=$(manifest_digest "$version" impeccable-windows-x64.exe)
 -  fi
+-}
+-# Sets $size to the byte count of the cached binary (BSD wc pads it).
+-cached_size() {
+-  size=$(wc -c < "$cached") || size=""
+-  size=${size##* }
 -}
 -# Sets $actual to the sha256 of $1, empty when no hash tool works.
 -hash_file() {
@@ -1014,6 +1039,9 @@ index 92d8cca..26b0f9c 100755
 -}
 -
  dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+-# VS Code syncs a plugin without the executable bit. Its hooks run this through
+-# sh, so restore the bit for the commands the skill runs directly (#1249).
+-[ -x "$0" ] || chmod +x "$0" 2>/dev/null || :
 -manifest="$dir/engine-checksums.txt"
 -
 -# What the binary needs to know about its home: the skill directory (for
@@ -1043,15 +1071,17 @@ index 92d8cca..26b0f9c 100755
 -  *) arch=unknown ;;
 -esac
 -
+-version=""
+-[ -f "$dir/VERSION" ] && version=$(tr -d '[:space:]' < "$dir/VERSION")
 -bin="$dir/bin/$os-$arch/impeccable"
 -[ "$os" = windows ] && bin="$bin.exe"
 -
--if [ -x "$bin" ]; then
--  exec "$bin" "$@"
--fi
--if [ -f "$bin" ]; then
--  # Lost the executable bit in transit (zip extraction, some copiers).
--  chmod +x "$bin" 2>/dev/null && exec "$bin" "$@"
+-# Lost the executable bit in transit (zip extraction, some copiers).
+-if [ -f "$bin" ] && { [ -x "$bin" ] || chmod +x "$bin" 2>/dev/null; }; then
+-  if [ -n "$probing" ] || [ -z "$version" ] || { probe_ok "$bin" && [ "$probe_version" = "$version" ]; }; then
+-    exec "$bin" "$@"
+-  fi
+-  echo "impeccable: skipping $bin: it reports engine ${probe_version:-unknown} but this skill pins $version; delete it to stop this warning" >&2
 -fi
 -# On Windows (an MSYS/Git Bash shell) the cached names carry .exe so this
 -# launcher and impeccable.cmd share one cache.
@@ -1062,20 +1092,22 @@ index 92d8cca..26b0f9c 100755
 -  exec "$home_bin" "$@"
 -fi
 -# Version-pinned user cache, filled by the download below or by `impeccable update`.
--version=""
--[ -f "$dir/VERSION" ] && version=$(tr -d '[:space:]' < "$dir/VERSION")
 -cache_root="${IMPECCABLE_HOME:-${HOME:-/nonexistent}/.impeccable}"
 -cached="$cache_root/bin/$version/impeccable$exe"
 -asset="impeccable-$os-$arch"
 -[ "$os" = windows ] && asset="$asset.exe"
 -if [ -n "$version" ] && [ -x "$cached" ]; then
--  if [ -f "$cached.verified" ]; then
+-  read_expected
+-  cached_size
+-  stamp=""
+-  stamp_size=""
+-  { IFS="$(printf ' \t\r')" read -r stamp stamp_size _ < "$cached.verified"; } 2>/dev/null || :
+-  if [ -n "$stamp" ] && [ "$stamp_size" = "$size" ] && { [ "$stamp" = "$expected" ] || [ "$stamp" = "$expected_x64" ]; } && [ ! "$cached" -nt "$cached.verified" ]; then
 -    exec "$cached" "$@"
 -  fi
--  read_expected
 -  hash_file "$cached"
 -  if [ -n "$actual" ] && { [ "$actual" = "$expected" ] || [ "$actual" = "$expected_x64" ]; }; then
--    { echo "$actual" > "$cached.verified"; } 2>/dev/null || :
+-    { echo "$actual $size" > "$cached.verified"; } 2>/dev/null || :
 -    exec "$cached" "$@"
 -  fi
 -  echo "impeccable: cannot verify the cached engine $cached against $manifest; not using it" >&2
@@ -1184,7 +1216,8 @@ index 92d8cca..26b0f9c 100755
 -      exit 127
 -    fi
 -    check_download "$cached"
--    { echo "$actual" > "$cached.verified"; } 2>/dev/null || :
+-    cached_size
+-    { echo "$actual $size" > "$cached.verified"; } 2>/dev/null || :
 -    exec "$cached" "$@"
 -  fi
 -  rm -f "$tmp" 2>/dev/null
@@ -1198,10 +1231,10 @@ index 92d8cca..26b0f9c 100755
 -exit 127
 +exec node "$dir/../../../src/impeccable-launcher.mjs" "$@"
 diff --git a/skills/impeccable/scripts/impeccable.cmd b/skills/impeccable/scripts/impeccable.cmd
-index 09abf6b..ec5768f 100644
+index 357b054..ec5768f 100644
 --- a/skills/impeccable/scripts/impeccable.cmd
 +++ b/skills/impeccable/scripts/impeccable.cmd
-@@ -1,278 +1,6 @@
+@@ -1,306 +1,6 @@
 -@echo off
 -setlocal
 -rem Impeccable launcher (Windows). Runs bin\windows-<arch>\impeccable.exe next
@@ -1215,13 +1248,16 @@ index 09abf6b..ec5768f 100644
 -rem   delayed expansion eating ! characters in user arguments.
 -rem - The unversioned user binary and the PATH candidate are validated with
 -rem   the engine-probe handshake (see :probe) so the retired 3.x npm CLI,
--rem   whose bin is also named impeccable, is never exec'd. IMPECCABLE_BIN,
--rem   the sibling binary, and the version-pinned cache stay trusted.
+-rem   whose bin is also named impeccable, is never exec'd. The sibling binary
+-rem   must also report the version in VERSION: it is not tracked, so a skill
+-rem   upgrade can leave an old engine in place. IMPECCABLE_BIN stays trusted.
 -rem - Downloads and the version-pinned cache are verified via certutil
 -rem   against engine-checksums.txt next to this file, and fail closed; a
--rem   .verified stamp lets later runs skip hashing the cache. On ARM64 the
--rem   arm64 asset is tried first and the x64 asset is the fallback (Windows on
--rem   ARM runs x64 binaries), each only when the manifest has a line for it.
+-rem   .verified stamp lets later runs skip hashing the cache while it holds
+-rem   the manifest digest and the binary's size and is not older than the
+-rem   binary. On ARM64 the arm64 asset is tried first and the x64 asset is the
+-rem   fallback (Windows on ARM runs x64 binaries), each only when the manifest
+-rem   has a line for it.
 -if not defined IMPECCABLE_SKILL_DIR set "IMPECCABLE_SKILL_DIR=%~dp0.."
 -if not defined IMPECCABLE_SELF set "IMPECCABLE_SELF=%~f0"
 -set "arch=x64"
@@ -1233,8 +1269,18 @@ index 09abf6b..ec5768f 100644
 -goto run
 -:no_env_bin
 -
+-set "version="
+-if exist "%~dp0VERSION" set /p version=<"%~dp0VERSION"
 -set "bin=%~dp0bin\windows-%arch%\impeccable.exe"
 -if not exist "%bin%" goto no_sibling
+-if defined IMPECCABLE_LAUNCHER_PROBE goto sibling_ok
+-if not defined version goto sibling_ok
+-call :probe "%bin%"
+-if "%probe_version%"=="%version%" goto sibling_ok
+-if not defined probe_version set "probe_version=unknown"
+-echo impeccable: skipping "%bin%": it reports engine %probe_version% but this skill pins %version%; delete it to stop this warning 1>&2
+-goto no_sibling
+-:sibling_ok
 -set "run=%bin%"
 -goto run
 -:no_sibling
@@ -1248,16 +1294,27 @@ index 09abf6b..ec5768f 100644
 -goto run
 -:no_home_bin
 -
--set "version="
--if exist "%~dp0VERSION" set /p version=<"%~dp0VERSION"
 -if not defined IMPECCABLE_HOME set "IMPECCABLE_HOME=%USERPROFILE%\.impeccable"
 -set "cached=%IMPECCABLE_HOME%\bin\%version%\impeccable.exe"
 -set "asset=impeccable-windows-%arch%.exe"
 -set "manifest=%~dp0engine-checksums.txt"
 -if not defined version goto no_cache
 -if not exist "%cached%" goto no_cache
--if exist "%cached%.verified" goto cache_trusted
 -call :read_expected
+-for %%f in ("%cached%") do set "size=%%~zf"
+-set "stamp="
+-if exist "%cached%.verified" for /f "usebackq tokens=1,2" %%s in ("%cached%.verified") do set "stamp=%%s"& set "stamp_size=%%t"
+-if not defined stamp goto cache_hash
+-if not "%stamp_size%"=="%size%" goto cache_hash
+-if /I "%stamp%"=="%expected%" goto cache_stamp_matches
+-if /I "%stamp%"=="%expected_x64%" goto cache_stamp_matches
+-goto cache_hash
+-:cache_stamp_matches
+-rem Newest first: the stamp must be listed before the binary it vouches for.
+-set "newest="
+-for /f "delims=" %%f in ('dir /b /a:-d /o:-d "%cached%*" 2^>nul') do if not defined newest set "newest=%%f"
+-if /I "%newest%"=="impeccable.exe.verified" goto cache_trusted
+-:cache_hash
 -call :sha256 "%cached%" "%TEMP%\impeccable-hash-%RANDOM%%RANDOM%.txt"
 -if not defined actual goto cache_unverified
 -if /I "%actual%"=="%expected%" goto cache_verified
@@ -1266,7 +1323,7 @@ index 09abf6b..ec5768f 100644
 -echo impeccable: cannot verify the cached engine "%cached%" against "%manifest%"; not using it 1>&2
 -goto no_cache
 -:cache_verified
--(>"%cached%.verified" echo %actual%) 2>nul
+-(>"%cached%.verified" echo %actual% %size%) 2>nul
 -:cache_trusted
 -set "run=%cached%"
 -goto run
@@ -1354,8 +1411,7 @@ index 09abf6b..ec5768f 100644
 -
 -:read_expected
 -rem Sets expected (and, on ARM64, expected_x64: Windows on ARM runs x64
--rem binaries) from engine-checksums.txt. Only called off the stamped path:
--rem hooks run this launcher on every edit.
+-rem binaries) from engine-checksums.txt.
 -call :manifest_digest "%asset%" expected
 -set "expected_x64="
 -if "%arch%"=="arm64" call :manifest_digest impeccable-windows-x64.exe expected_x64
@@ -1415,7 +1471,8 @@ index 09abf6b..ec5768f 100644
 -call :discard_staging
 -call :check_download "%cached%"
 -if errorlevel 1 exit /b 127
--(>"%cached%.verified" echo %actual%) 2>nul
+-for %%f in ("%cached%") do set "size=%%~zf"
+-(>"%cached%.verified" echo %actual% %size%) 2>nul
 -set "run=%cached%"
 -goto run
 -
@@ -1432,9 +1489,11 @@ index 09abf6b..ec5768f 100644
 -
 -:probe
 -rem Sets probe_ok=1 when %1 answers the engine handshake: prints
--rem "impeccable-engine <version>" and exits 0. The 3.x npm CLI answers any
--rem unknown verb with "Unknown command", exit 1, so it never passes.
+-rem "impeccable-engine <version>" and exits 0, and probe_version to that
+-rem version. The 3.x npm CLI answers any unknown verb with "Unknown command",
+-rem exit 1, so it never passes.
 -set "probe_ok="
+-set "probe_version="
 -set "probe_tmp=%TEMP%\impeccable-probe-%RANDOM%%RANDOM%.txt"
 -set "IMPECCABLE_LAUNCHER_PROBE=1"
 -"%~1" engine-probe >"%probe_tmp%" 2>nul
@@ -1442,7 +1501,9 @@ index 09abf6b..ec5768f 100644
 -set "IMPECCABLE_LAUNCHER_PROBE="
 -if not "%probe_err%"=="0" goto probe_done
 -findstr /b /c:"impeccable-engine" "%probe_tmp%" >nul 2>nul
--if not errorlevel 1 set "probe_ok=1"
+-if errorlevel 1 goto probe_done
+-set "probe_ok=1"
+-for /f "usebackq tokens=2" %%v in ("%probe_tmp%") do if not defined probe_version set "probe_version=%%v"
 -:probe_done
 -del "%probe_tmp%" >nul 2>nul
 -exit /b 0

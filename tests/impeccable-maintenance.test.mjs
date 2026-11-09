@@ -81,9 +81,12 @@ test("guidance transformations reproduce locked files and reject upstream anchor
         assert.match(first.text, /Cursor pre-write/);
         assert.match(first.text, /`preToolUse` checks proposed Write\/Edit\/Shell write content and denies/);
         assert.match(first.text, /verified in-package engine/);
+        assert.match(first.text, /Ask the user only when you genuinely cannot decide/);
+        assert.match(first.text, /does not write or repair host manifests/);
         assert.doesNotMatch(first.text, /postToolUse/);
         assert.doesNotMatch(first.text, /engine-checksums\.txt/);
         assert.doesNotMatch(first.text, /The hook never blocks an edit/);
+        assert.doesNotMatch(first.text, /hermes plugins enable/);
       }
     }
   } finally {

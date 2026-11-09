@@ -59,6 +59,37 @@ export function planHookActivation(root, enabled) {
     .map(({ name, value }) => ({ name, value: { ...value, hook: { ...value?.hook, enabled } } }));
 }
 
+// Upstream context repairs host manifests when local hook.consent is "accepted".
+// Hide that consent for the call and restore the file bytes afterward.
+export function runWithoutStandaloneHookConsent(root, run) {
+  const file = path.join(root, '.impeccable', 'config.local.json');
+  let stat;
+  try { stat = fs.lstatSync(file); }
+  catch (error) {
+    if (error.code === 'ENOENT') return run();
+    throw error;
+  }
+  if (stat.isSymbolicLink() || !stat.isFile()) return run();
+  const original = fs.readFileSync(file);
+  let parsed;
+  try { parsed = JSON.parse(original.toString('utf8')); }
+  catch { return run(); }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !parsed.hook || typeof parsed.hook !== 'object' || Array.isArray(parsed.hook) || parsed.hook.consent !== 'accepted') return run();
+  const hook = { ...parsed.hook };
+  delete hook.consent;
+  const temporary = `${file}.${randomUUID()}.tmp`;
+  let swapped = false;
+  try {
+    fs.writeFileSync(temporary, `${JSON.stringify({ ...parsed, hook }, null, 2)}\n`, { flag: 'wx' });
+    fs.renameSync(temporary, file);
+    swapped = true;
+    return run();
+  } finally {
+    fs.rmSync(temporary, { force: true });
+    if (swapped) fs.writeFileSync(file, original);
+  }
+}
+
 export function applyHookActivation(root, enabled) {
   const changes = planHookActivation(root, enabled);
   const written = [];

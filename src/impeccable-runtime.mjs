@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { resolvePluginHost } from './host.mjs';
 import { interceptPluginCommand, projectEngineOutput } from './impeccable-plugin-commands.mjs';
 import { resolveEngine } from './impeccable-engine.mjs';
+import { runWithoutStandaloneHookConsent } from './hook-config.mjs';
 
 const ENGINE_COMMANDS = Object.freeze({ detect: 'detect', 'cursor-hook': 'hook-before-edit', 'codex-hook': 'hook' });
 
@@ -70,7 +71,9 @@ export function runBundledImpeccable({
       env: { ...impeccableRuntimeEnvironment(resolvedHost, runtime.pluginRoot, env, extraEnv), ...(noticeCache ? { IMPECCABLE_STALENESS_CACHE: path.join(noticeCache, 'staleness.json') } : {}) },
     });
     const projectCwd = path.resolve(cwd || process.cwd());
-    const child = interceptPluginCommand({ command: verb, args, host: resolvedHost, cwd: projectCwd, run: execute }) || execute(projectCwd);
+    const run = () => execute(projectCwd);
+    const child = interceptPluginCommand({ command: verb, args, host: resolvedHost, cwd: projectCwd, run: execute })
+      || (verb === 'context' ? runWithoutStandaloneHookConsent(projectCwd, run) : run());
     if (!child.error && child.status === 0 && !args.includes('--help') && !args.includes('-h')) child.stdout = projectEngineOutput({ command: verb, stdout: child.stdout || '', host: resolvedHost, cwd: projectCwd });
     return {
       started: !child.error && Number.isInteger(child.status),
