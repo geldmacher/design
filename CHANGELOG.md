@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update bundled Impeccable to 4.8.2 and native engine 0.1.21. Accepting a live variant on a page without hot reload keeps that variant styled, and live captures keep the page fonts. `generate-image` honors `OPENAI_BASE_URL`. Design keeps its Cursor pre-write denial hook.
+
 ## 0.22.0
 
 - Update bundled Impeccable to 4.8.1 and native engine 0.1.19. Stop findings stay listed for the agent to fix or skip, and the agent asks only when it cannot decide. Live mode can remove an element, and Vue and Svelte previews keep their compiled markup. Detector scans include `.mjs` and `.cjs`, read contrast from the visible ground, and take a `background` shorthand color from its final layer. Design keeps its Cursor pre-write denial hook. It does not install the Hermes Agent plugin, follow `CLAUDE_CONFIG_DIR`, or let `context` rewrite host manifests.

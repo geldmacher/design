@@ -4,7 +4,7 @@ description: Execute the bundled web-interface design workflow when Design route
 license: Apache-2.0
 compatibility: Requires Node.js 22 or newer.
 metadata:
-  version: "4.8.1"
+  version: "4.8.2"
 ---
 
 ## Geldmacher Design host contract
