@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.23.0
+
 - Update bundled Impeccable to 4.8.2 and native engine 0.1.21. Accepting a live variant on a page without hot reload keeps that variant styled, and live captures keep the page fonts. `generate-image` honors `OPENAI_BASE_URL`. Design keeps its Cursor pre-write denial hook.
 
 ## 0.22.0
