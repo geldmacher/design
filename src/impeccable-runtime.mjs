@@ -3,7 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { resolvePluginHost } from './host.mjs';
-import { interceptPluginCommand, projectEngineOutput } from './impeccable-plugin-commands.mjs';
+import { interceptPluginCommand, projectEngineOutput, rejectBundledAccountCommand } from './impeccable-plugin-commands.mjs';
 import { resolveEngine } from './impeccable-engine.mjs';
 import { runWithoutStandaloneHookConsent } from './hook-config.mjs';
 
@@ -19,6 +19,9 @@ export function impeccableRuntimeEnvironment(host, pluginRoot, env = process.env
     IMPECCABLE_HOST: resolvedHost,
     GELDMACHER_DESIGN_PLUGIN_ROOT: pluginRoot,
     IMPECCABLE_NO_UPDATE_CHECK: '1',
+    // Health counts, DESIGN.md, critique bodies, and setup status upload
+    // after sign-in unless this opt-out is set. Design keeps it set.
+    IMPECCABLE_NO_TELEMETRY: '1',
     IMPECCABLE_PROVIDER_ID: resolvedHost,
     IMPECCABLE_SKILL_DIR: path.join(pluginRoot, 'skills/impeccable'),
     IMPECCABLE_SELF: selfCommand,
@@ -53,10 +56,23 @@ export function runBundledImpeccable({
   extraEnv = {},
   spawn = spawnSync,
 } = {}) {
+  const verb = command || ENGINE_COMMANDS[scriptId];
+  const accountRefusal = rejectBundledAccountCommand(verb);
+  if (accountRefusal) {
+    return {
+      started: false,
+      status: 1,
+      signal: null,
+      stdout: '',
+      stderr: `${accountRefusal}\n`,
+      error: accountRefusal,
+      timedOut: false,
+      runtime: null,
+    };
+  }
   let noticeCache;
   try {
     const runtime = resolveEngine(pluginRoot);
-    const verb = command || ENGINE_COMMANDS[scriptId];
     if (!verb) throw new Error(`Unknown engine command: ${scriptId}`);
     const resolvedHost = resolvePluginHost(host, pluginRoot, env);
     if (verb === 'context') noticeCache = fs.mkdtempSync(path.join(os.tmpdir(), 'design-context-'));

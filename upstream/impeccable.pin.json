@@ -2,52 +2,52 @@
   "$schema": "./impeccable.pin.schema.json",
   "schemaVersion": 2,
   "name": "Impeccable",
-  "version": "4.8.2",
+  "version": "4.9.0",
   "repository": "https://github.com/pbakaus/impeccable",
-  "tag": "skill-v4.8.2",
-  "tagObject": "3a2a4a38d58d1aa7e76d00f66c4e83666ad78fe5",
-  "commit": "035c8f319edd019936525a062fe99e83ca8d12c6",
+  "tag": "skill-v4.9.0",
+  "tagObject": "0df4829c376a69b8ee3f386051b0538e39d85953",
+  "commit": "c4cd1924c389f68d37c687d9c2bbf13f12547c41",
   "archive": {
     "name": "universal.zip",
-    "url": "https://github.com/pbakaus/impeccable/releases/download/skill-v4.8.2/universal.zip",
-    "sha256": "2d91255946127a5862cea0811c269b0943984840de76b90d32e4c2c5293c103a"
+    "url": "https://github.com/pbakaus/impeccable/releases/download/skill-v4.9.0/universal.zip",
+    "sha256": "9019a8b68aa9f9eca1396d31c10f561c6fc02752f3753e0d4c88ed8b542e9080"
   },
   "engine": {
-    "version": "0.1.21",
-    "tag": "engine-v0.1.21",
-    "tagObject": "3eb3a4b33afd28bb1fb75d0b289a81cd64268976",
-    "commit": "fe45455d36ed14c85ece25c9b868344e55713352",
-    "releaseId": 438721118,
+    "version": "0.1.23",
+    "tag": "engine-v0.1.23",
+    "tagObject": "6b3cd5788894f98c8576fa44b578dfe600326df3",
+    "commit": "70472d29dd6a07e7b9325d609c69df77fd36c1e9",
+    "releaseId": 443452514,
     "assets": {
       "darwin-arm64": {
-        "id": 726118519,
-        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.21/impeccable-darwin-arm64",
-        "sha256": "086fd22e54c445a0e792f66d2f168e35ec93f7c59054e1fde539d0d95b01ce41",
-        "size": 18499072
+        "id": 740913303,
+        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.23/impeccable-darwin-arm64",
+        "sha256": "b10fccb5746fab4c6c5c0867a0ea51182ea0c8dbdfb292ac3d159adcbb2fa868",
+        "size": 19113200
       },
       "darwin-x64": {
-        "id": 726118529,
-        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.21/impeccable-darwin-x64",
-        "sha256": "bbcd4307b4dd7e0c8a3a264b880b5d73ae1971cc1d219677b6f7e044b9f05eb7",
-        "size": 20846528
+        "id": 740913305,
+        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.23/impeccable-darwin-x64",
+        "sha256": "9a025767a15e59312bcb5053c2b0533adbe3ff711c6c23ef0688d18924f98ec8",
+        "size": 21541992
       },
       "linux-arm64": {
-        "id": 726118522,
-        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.21/impeccable-linux-arm64",
-        "sha256": "e2cda6ac3eefb1cdd51d147f6e897a19c773fe7bbfbdbd1361eef744d4137080",
-        "size": 19149400
+        "id": 740913300,
+        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.23/impeccable-linux-arm64",
+        "sha256": "65f175146a808d5bc73363e7e129d13edc999d8f305440ea207bec921b26a391",
+        "size": 19718752
       },
       "linux-x64": {
-        "id": 726118546,
-        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.21/impeccable-linux-x64",
-        "sha256": "579a0b6ff639ed28812ae632c556b6524a5b7d13fff4227cd3095a65554415b6",
-        "size": 22955272
+        "id": 740913328,
+        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.23/impeccable-linux-x64",
+        "sha256": "58cac6504fe29707bbf401fddaf2551b0690d278e845db4b9aaab416556f6ad7",
+        "size": 23549200
       },
       "windows-x64": {
-        "id": 726118573,
-        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.21/impeccable-windows-x64.exe",
-        "sha256": "4cb1d921315e51ace39af5abbfd2e1be3c8624fcfc5074539f43ba894777fece",
-        "size": 21330320
+        "id": 740913354,
+        "url": "https://github.com/pbakaus/impeccable/releases/download/engine-v0.1.23/impeccable-windows-x64.exe",
+        "sha256": "e1364f415a838e080f394604f496bfa7dcc178c9bce62af673d54f2b5cbcd33c",
+        "size": 21967248
       }
     }
   }

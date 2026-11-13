@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update bundled Impeccable to 4.9.0 and native engine 0.1.23. Direction rounds ask about the product, and a named product sets the craft bar rather than the look. Audit checks rendered right-to-left layout and saves its report beside critique under one reports setting. The Codex Stop hook also scans UI files a shell wrote during the session. Design keeps its Cursor pre-write denial hook. Bundled engine runs opt out of account uploads, and sign-in commands are refused, so DESIGN.md, critique reports, health counts, and setup status are not sent.
+
 ## 0.23.0
 
 - Update bundled Impeccable to 4.8.2 and native engine 0.1.21. Accepting a live variant on a page without hot reload keeps that variant styled, and live captures keep the page fonts. `generate-image` honors `OPENAI_BASE_URL`. Design keeps its Cursor pre-write denial hook.

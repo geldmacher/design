@@ -55,6 +55,8 @@ test('runtime facade resolves only physical bundled scripts and sets one explici
   assert.equal(codexEnv.PLUGIN_ROOT, pluginRoot);
   assert.equal(codexEnv.CURSOR_PLUGIN_ROOT, undefined);
   assert.equal(codexEnv.IMPECCABLE_NO_UPDATE_CHECK, '1');
+  assert.equal(codexEnv.IMPECCABLE_NO_TELEMETRY, '1');
+  assert.equal(impeccableRuntimeEnvironment('codex', pluginRoot, { IMPECCABLE_NO_TELEMETRY: 'false' }).IMPECCABLE_NO_TELEMETRY, '1');
 
   let observed;
   const child = runBundledImpeccable({
