@@ -3,14 +3,18 @@ import { fileURLToPath } from 'node:url';
 import { runBundledImpeccable } from './impeccable-runtime.mjs';
 import { impeccableRuntimeEnvironment } from './impeccable-runtime.mjs';
 import { resolveEngine } from './impeccable-engine.mjs';
-import { createEngineOutputStream } from './impeccable-plugin-commands.mjs';
+import { createEngineOutputStream, rejectBundledAccountCommand } from './impeccable-plugin-commands.mjs';
 import { resolvePluginHost } from './host.mjs';
 import { spawn } from 'node:child_process';
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [command = '--help', ...args] = process.argv.slice(2);
+const accountRefusal = rejectBundledAccountCommand(command);
 const managed = ['context', 'doctor', 'ignore', 'ignores', 'hooks', 'hook-admin', 'skills', 'help', 'install', 'link', 'update', 'check', 'pin', 'unpin', 'hook', 'hook-before-edit'];
-if (!managed.includes(command)) {
+if (accountRefusal) {
+  process.stderr.write(`${accountRefusal}\n`);
+  process.exitCode = 1;
+} else if (!managed.includes(command)) {
   // Long-running live and image commands must expose readiness/progress while
   // running. Keep the bounded synchronous facade for detector and hook callers.
   try {

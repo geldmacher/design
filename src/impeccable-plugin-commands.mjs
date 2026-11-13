@@ -8,6 +8,11 @@ import { configNames, configPath, readConfig, writeConfig, applyHookActivation }
 const subagentDirective = "SUBAGENT_AUTHORIZATION: If your harness gates subagent or agent-tool use on an explicit user request, the user's invocation of this skill is that request for the skill's shipped subagents; spawn them where a reference file directs, without re-asking. Substitute an in-thread pass only when the tool surface has no subagent capability at all, and disclose the substitution in one line.";
 const inlineDirective = 'DEGRADED_ROLE_DIRECTIVE: Agent Plugins v1 provides no native hooks or subagents. Load the matching reference/degraded role contract and perform it inline; disclose this limitation.';
 const blocked = new Set(['skills', 'help', 'install', 'link', 'update', 'check', 'pin', 'unpin']);
+const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh']);
+export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account or upload DESIGN.md, critique reports, scan counts, or setup status. This command is unavailable.';
+export function rejectBundledAccountCommand(command) {
+  return accountCommands.has(command) ? ACCOUNT_COMMAND_REFUSAL : null;
+}
 export function interceptPluginCommand({ command, args, host, cwd, run }) {
   if (blocked.has(command)) throw new Error('Standalone installation, shortcuts and self-update are disabled. Use the Design maintainer workflow.');
   if (command === 'doctor' && (args.includes('--help') || args.includes('-h'))) return { status: 0, stdout: 'Usage: bundled impeccable doctor [--json] [--target <path>]\nReport project drift and plugin configuration. Read-only; review and authorize project migrations separately.\n', stderr: '' };
@@ -67,6 +72,16 @@ function resolvedProject(report) {
 const selectionInstructions = 'Show each app with its productStatus/productPath and designStatus/designPath so the user can see child overrides, inherited root files, fallback files, or missing files before choosing. Ask the user which app Impeccable should use, then rerun Impeccable helper commands from that child app cwd using this same scripts directory. Use `--target <path>` only as a fallback when changing cwd is not possible, or when the user explicitly named a file/path.';
 const migrationInstruction = 'By severity: `auto` is a migration the next write to that file performs anyway, so apply it then and do not raise it with the user.';
 const migrationPolicy = 'By severity: `auto` describes a proposed mechanical migration. Report its scope and obtain explicit user authorization before changing project context; never migrate it automatically.';
+
+function projectFindings(findings, host) {
+  return findings.flatMap((finding) => {
+    // Engine 0.1.23 reports every project without a host manifest. Design
+    // registers its own adapters and does not install that manifest.
+    if (finding?.id === 'hook-not-installed') return [];
+    const projected = projectMaintenanceFinding(finding);
+    return [host === 'agent-plugin' ? { ...projected, fix: portableInstruction(projected.fix) } : projected];
+  });
+}
 
 function projectMaintenanceFinding(finding) {
   if (!finding || typeof finding.id !== 'string' || typeof finding.fix !== 'string') throw new Error('Unknown engine maintenance finding format.');
@@ -174,9 +189,11 @@ function protectProjectContext(stdout, cwd) {
   return { stdout, tokens: new Set(spans.map(span => span.token)), restore: text => spans.reduce((value, span) => value.replace(span.token, () => span.block), text) };
 }
 
+const accountHelpLine = /^  (?:login|logout|whoami|health)\b.*$/;
 export function projectEngineOutput({ command, stdout, host, cwd }) {
   // Windows engine/console captures may use CRLF; projection anchors are LF-authored.
   stdout = stdout.replace(/\r\n/g, '\n');
+  if (command === '--help' || command === '-h') return stdout.split('\n').filter((line) => !accountHelpLine.test(line)).join('\n');
   if (command === 'context') {
     if (stdout.startsWith('TARGET_SELECTION_REQUIRED:\n')) {
       const parts = stdout.trim().split('\n\n');
@@ -202,7 +219,9 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
         if (end < 0) throw new Error('Unknown engine staleness payload format.');
         const findings = JSON.parse(section.slice('CONTEXT_STALE:\n'.length, end + 2));
         if (!Array.isArray(findings)) throw new Error('Unknown engine staleness findings format.');
-        section = `CONTEXT_STALE:\n${JSON.stringify(findings.map(finding => { const projected = projectMaintenanceFinding(finding); return host === 'agent-plugin' ? { ...projected, fix: portableInstruction(projected.fix) } : projected; }), null, 2)}${section.slice(end + 2)}`;
+        const projected = projectFindings(findings, host);
+        if (!projected.length) return '';
+        section = `CONTEXT_STALE:\n${JSON.stringify(projected, null, 2)}${section.slice(end + 2)}`;
         section = section.replace(migrationInstruction, migrationPolicy).replace('They are already throttled, so say them plainly rather than hedging about whether they matter.', 'Report them once per task; the plugin isolates the notice cache for each invocation.');
       }
       if (activation.enabled && (host === 'cursor' || host === 'codex') && !detectProjectConflicts(root, { host }).length
@@ -211,7 +230,7 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
       }
       if (host === 'agent-plugin' && !protectedContext.tokens.has(section) && !section.startsWith('RESOLVED_CONTEXT:') && !section.startsWith('CONTEXT_STALE:')) return portableInstruction(section);
       return section;
-    }).join('\n\n---\n\n');
+    }).filter((section) => section !== '').join('\n\n---\n\n');
     stdout = protectedContext.restore(stdout);
     stdout += `\nPLUGIN_HOOK_STATE: ${host}: ${host === 'agent-plugin' || host === 'opencode' ? 'unavailable' : activation.state}. This describes plugin configuration, not fresh host activation evidence.\n`;
     return stdout;
@@ -222,7 +241,7 @@ export function projectEngineOutput({ command, stdout, host, cwd }) {
     const root = resolvedProject(report);
     report.pluginHook = { host, ...readHookActivation(root), evidence: 'configuration-only' };
     if (host === 'agent-plugin' || host === 'opencode') report.pluginHook = { host, state: 'unavailable', enabled: false };
-    report.findings = report.findings.map(finding => { const projected = projectMaintenanceFinding(finding); return host === 'agent-plugin' ? { ...projected, fix: portableInstruction(projected.fix) } : projected; });
+    report.findings = projectFindings(report.findings, host);
     report.findings.push(...detectProjectConflicts(root, { host }));
     report.migrationPolicy = 'Report proposed migrations; obtain explicit user authorization before editing project context. Plugin doctor never applies migrations.';
     stdout = `${JSON.stringify(report, null, 2)}\n`;

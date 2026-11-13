@@ -6,7 +6,7 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { enginePlatforms, resolveEngine, validateEngine } from '../src/impeccable-engine.mjs';
 import { runBundledImpeccable, impeccableRuntimeEnvironment } from '../src/impeccable-runtime.mjs';
-import { projectEngineOutput } from '../src/impeccable-plugin-commands.mjs';
+import { ACCOUNT_COMMAND_REFUSAL, projectEngineOutput } from '../src/impeccable-plugin-commands.mjs';
 import { evaluatePluginHook } from '../hooks/impeccable-plugin-hook.mjs';
 import { evaluateCodexPluginHook } from '../hooks/impeccable-codex-hook.mjs';
 
@@ -64,7 +64,7 @@ test('runtime overrides cannot replace binary, provider, skill root, update poli
   const cwd = scratch(t);
   let observed;
   const result = runBundledImpeccable({ pluginRoot, cwd, host: 'codex', command: 'engine-probe',
-    env: { IMPECCABLE_BIN: '/outside/engine', IMPECCABLE_PROVIDER_ID: 'cursor', IMPECCABLE_SKILL_DIR: '/outside', IMPECCABLE_NO_UPDATE_CHECK: '0', IMPECCABLE_CACHE_ROOT: '/outside' },
+    env: { IMPECCABLE_BIN: '/outside/engine', IMPECCABLE_PROVIDER_ID: 'cursor', IMPECCABLE_SKILL_DIR: '/outside', IMPECCABLE_NO_UPDATE_CHECK: '0', IMPECCABLE_NO_TELEMETRY: '0', IMPECCABLE_CACHE_ROOT: '/outside' },
     spawn(file, args, options) { observed = { file, args, options }; return { status: 0, stdout: 'probe', stderr: '' }; } });
   assert.equal(result.status, 0);
   assert.equal(observed.file, resolveEngine(pluginRoot).file);
@@ -73,7 +73,36 @@ test('runtime overrides cannot replace binary, provider, skill root, update poli
   assert.equal(observed.options.env.IMPECCABLE_CACHE_ROOT, undefined);
   assert.equal(observed.options.env.IMPECCABLE_PROVIDER_ID, 'codex');
   assert.equal(observed.options.env.IMPECCABLE_NO_UPDATE_CHECK, '1');
+  assert.equal(observed.options.env.IMPECCABLE_NO_TELEMETRY, '1');
   assert.equal(observed.options.env.IMPECCABLE_SKILL_DIR, path.join(pluginRoot, 'skills/impeccable'));
+});
+
+test('bundled engine refuses account sign-in and hides its upload commands', (t) => {
+  const cwd = scratch(t);
+  const launcher = path.join(pluginRoot, 'src/impeccable-launcher.mjs');
+  const home = path.join(cwd, 'home');
+  fs.mkdirSync(home);
+  const env = { ...process.env, HOME: home, USERPROFILE: home };
+  for (const command of ['login', 'health', 'critiques', 'setup']) {
+    const refused = spawnSync(process.execPath, [launcher, command], { cwd, encoding: 'utf8', timeout: 5000, env });
+    assert.equal(refused.status, 1, refused.stderr);
+    assert.equal(refused.stdout, '');
+    assert.equal(refused.stderr, `${ACCOUNT_COMMAND_REFUSAL}\n`);
+  }
+  const help = [
+    'Usage: impeccable <command> [options]',
+    '  detect [file-or-dir-or-url...]   Scan for UI anti-patterns',
+    '  login                            Sign in to your Impeccable account',
+    '  logout                           Sign out on this machine',
+    '  whoami                           Show the signed-in account and whether it includes Pro rules',
+    '  health on|off|forget|status      Save each full scan\'s counts to your account, or stop and delete them',
+    '  telemetry off|on|status          Turn the roll API\'s anonymous usage data off or on, or show it',
+    '',
+  ].join('\n');
+  const projected = projectEngineOutput({ command: '--help', stdout: help, host: 'codex', cwd });
+  assert.match(projected, /detect \[file-or-dir-or-url\.\.\.\]/);
+  assert.match(projected, /telemetry off\|on\|status/);
+  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|health on\|off/);
 });
 
 test('native launcher reads canonical context from foreign cwd with spaces and keeps project and home unchanged', (t) => {
@@ -280,6 +309,15 @@ test('candidate readiness exercises packaged launchers and rejects missing integ
   const launcher = path.join(source, 'src/impeccable-launcher.mjs');
   fs.writeFileSync(launcher, `console.log(process.argv[2] === 'engine-probe' ? 'impeccable-engine ${pin.engine.version}' : '{}');\n`);
   assert.throws(() => verifyCandidateRuntime(source, source, []), /plugin context contract missing/);
+});
+
+test('a missing project hook is not reported as a setup failure', (t) => {
+  const cwd = scratch(t);
+  for (const command of ['doctor', 'context']) {
+    const result = invoke(cwd, command);
+    assert.equal(result.status, 0, result.stderr || result.error);
+    assert.doesNotMatch(result.stdout, /hook-not-installed|impeccable update|Impeccable found setup issues/);
+  }
 });
 
 test('native doctor findings propose authorized repairs without standalone manifest or migration actions', (t) => {
