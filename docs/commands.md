@@ -4,7 +4,7 @@
 
 Use this page to look up a command. For worked examples and expected results, start with the [usage guide](usage.md).
 
-Bundled Impeccable **4.9.0**. This is the version documented in this checkout; an installed copy may differ.
+Bundled Impeccable **4.9.1**. This is the version documented in this checkout; an installed copy may differ.
 
 ## Invocation
 
@@ -75,13 +75,14 @@ The table below follows the bundled toolkit. The reference links open detailed i
 - `teach` aliases `init`. `craft` is deprecated; describe the new interface or redesign directly instead.
 - `doctor` reports drift in canonical Impeccable project context. `/design doctor` and `/impeccable doctor` reach the same Impeccable operation; use `$` in Codex. The bundled doctor reports proposed repairs; it does not accept `--fix`. Authorize project-context changes separately.
 - `hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages optional project checks. Invoke it through Design or directly through Impeccable. Checks stay off until explicitly enabled; hook configuration does not prove fresh host activation.
+- `foundations [path]` checks product launch items from the project's own files and the local detector. Items that need a network lookup stay unchecked. It does not sign in or upload. `/design foundations` and `/impeccable foundations` reach it; use `$` in Codex.
 - Standalone `pin`/`unpin` shortcut installation is disabled. Runtime code downloads and self-updates are disabled; upstream updates belong to the maintainer workflow.
 
-See the bundled [doctor](../skills/impeccable/reference/doctor.md) and [hooks](../skills/impeccable/reference/hooks.md) instructions for details.
+See the bundled [doctor](../skills/impeccable/reference/doctor.md), [foundations](../skills/impeccable/reference/foundations.md), and [hooks](../skills/impeccable/reference/hooks.md) instructions for details.
 
 ### Live prerequisites and host boundaries
 
-`live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. `generate` enters the same live workflow from a named element and direction, such as `$design generate 3 bolder variants of the pricing cards`, without manual element picking. It defaults to three variants and supports one to eight; an unspecified direction needs clarification. Reuse the current development server and browser tab. Use the active host's available browser tool, or the system browser when no browser tool is available. First-time configuration previews changes for approval. Live injection into deployed production sites is unsupported.
+`live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. `generate` enters the same live workflow from a named element and direction, such as `$design generate 3 bolder variants of the pricing cards`, without manual element picking. It defaults to three variants and supports one to eight; an unspecified direction needs clarification. Reuse the current development server and browser tab. Use the active host's available browser tool, or the system browser when no browser tool is available. The boot writes the one-line config for a plain HTML page and reports it. Other first-time configuration still previews changes for approval. An empty folder reports that there is no page yet and does not create one unless asked. Accepting a variant that wraps an element sharing a line keeps the rest of that line. Live injection into deployed production sites is unsupported.
 
 `generate` uses existing product and design context or the current page when context is missing; it does not start init or document. The user cycles through the variants and accepts or discards them. After acceptance, finish source cleanup and stop the live helper while keeping the development server running.
 

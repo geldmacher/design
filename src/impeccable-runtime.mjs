@@ -19,9 +19,13 @@ export function impeccableRuntimeEnvironment(host, pluginRoot, env = process.env
     IMPECCABLE_HOST: resolvedHost,
     GELDMACHER_DESIGN_PLUGIN_ROOT: pluginRoot,
     IMPECCABLE_NO_UPDATE_CHECK: '1',
-    // Health counts, DESIGN.md, critique bodies, and setup status upload
-    // after sign-in unless this opt-out is set. Design keeps it set.
+    // Health counts, DESIGN.md, critique bodies, setup status, and the
+    // foundations states attached to a scan upload after sign-in unless this
+    // opt-out is set. Design keeps it set.
     IMPECCABLE_NO_TELEMETRY: '1',
+    // Taste refresh ignores the telemetry opt-out. It would fetch account
+    // preferences and context would read the cached copy. Design keeps it off.
+    IMPECCABLE_NO_TASTE: '1',
     IMPECCABLE_PROVIDER_ID: resolvedHost,
     IMPECCABLE_SKILL_DIR: path.join(pluginRoot, 'skills/impeccable'),
     IMPECCABLE_SELF: selfCommand,

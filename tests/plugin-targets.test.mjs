@@ -132,7 +132,7 @@ test("deterministic target allowlists isolate the portable package and native ad
       .map((path) => readFileSync(path, "utf8"))
       .join("\n");
     assert.doesNotMatch(portableResources, /impeccable[-_](?:finish[-_]reviewer|documenter|asset[-_]producer|manual[-_]edit[-_]applier)|SUBAGENT_AUTHORIZATION|agent continuation/i);
-    assert.doesNotMatch(portableMarkdown, /`impeccable\s+(?:adapt|animate|audit|bolder|clarify|colorize|critique|delight|distill|doctor|document|extract|harden|hooks|init|layout|live|onboard|optimize|overdrive|polish|quieter|shape|typeset)(?:\s+[^`]*)?`|\b(?:run|offer|invoke|recommend|use)\s+impeccable\s+(?:adapt|animate|audit|bolder|clarify|colorize|critique|delight|distill|doctor|document|extract|harden|hooks|init|layout|live|onboard|optimize|overdrive|polish|quieter|shape|typeset)(?=\s|[),.:]|$)/i);
+    assert.doesNotMatch(portableMarkdown, /`impeccable\s+(?:adapt|animate|audit|bolder|clarify|colorize|craft|critique|delight|distill|doctor|document|extract|foundations|generate|harden|hooks|init|layout|live|onboard|optimize|overdrive|polish|quieter|shape|typeset)(?:\s+[^`]*)?`|\b(?:run|offer|invoke|recommend|use)\s+impeccable\s+(?:adapt|animate|audit|bolder|clarify|colorize|craft|critique|delight|distill|doctor|document|extract|foundations|generate|harden|hooks|init|layout|live|onboard|optimize|overdrive|polish|quieter|shape|typeset)(?=\s|[),.:]|$)/i);
     assert.match(portableResources, /operation: polish/);
     assert.doesNotMatch(portableResources, /Impeccable-operation:|operation:impeccable|https:\/the loaded Impeccable skill|the loaded Impeccable skill\.style/);
     for (const degradedRole of ["asset-producer.md", "documenter.md", "finish-reviewer.md", "manual-edit-applier.md"]) {
@@ -150,6 +150,14 @@ test("deterministic target allowlists isolate the portable package and native ad
     assert.match(documentationFinish, /report pre-existing drift without repairing it unasked/);
     assert.match(documentationFinish, /Recheck after later edits/);
     assert.match(documentationFinish, /\[visualize\.md\]\(visualize\.md\).*COMPS section of the MODE RULES block/);
+    assert.match(documentationFinish, /--replace-world/);
+    const foundations = readFileSync(join(portableImpeccableRoot, 'reference/foundations.md'), 'utf8');
+    assert.match(foundations, /# operation: foundations/);
+    assert.match(foundations, /operation: foundations <id>/);
+    assert.doesNotMatch(foundations, /(?<![\w./:>-])\/impeccable foundations/);
+    const live = readFileSync(join(portableImpeccableRoot, 'reference/live.md'), 'utf8');
+    assert.match(live, /operation: craft <what they want>/);
+    assert.doesNotMatch(live, /(?<![\w./:>-])\/impeccable craft/);
     const planReview = readFileSync(join(portableImpeccableRoot, 'reference/component-review.md'), 'utf8');
     assert.match(planReview, /produce the new plates inline with its role contract/);
     assert.doesNotMatch(planReview, /subagents are available/);

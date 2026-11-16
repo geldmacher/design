@@ -14,7 +14,7 @@ function fixture(t) {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, value);
   };
-  for (const name of ['polish', 'doctor', 'hooks']) write(`skills/impeccable/reference/${name}.md`, `# ${name}\n`);
+  for (const name of ['polish', 'doctor', 'hooks', 'foundations']) write(`skills/impeccable/reference/${name}.md`, `# ${name}\n`);
   const skill = '---\nname: impeccable\nmetadata:\n  version: "4.3.1"\n---\n\n## Commands\n\n| Command | Category | Description | Reference |\n|---|---|---|---|\n| `polish [target]` | Refine | Finish the interface | [reference/polish.md](reference/polish.md) |\n\nRouting:\nOther instructions.\n';
   const metadata = { polish: { description: 'Polish the interface', argumentHint: '[target]' } };
   write('skills/impeccable/SKILL.md', skill);
@@ -29,7 +29,7 @@ test('reference generation is deterministic, includes invocation and helpers, an
   assert.match(expected, /Bundled Impeccable \*\*4\.3\.1\*\*/);
   assert.match(expected, /`polish \[target\]` \| Refine \| Finish the interface/);
   assert.match(expected, /\.\.\/skills\/impeccable\/reference\/polish.md/);
-  for (const text of ['/design doctor', '/impeccable doctor', '`diagnose`', '`teach`', '`craft`', 'local checkout']) assert.ok(expected.includes(text), text);
+  for (const text of ['/design doctor', '/impeccable doctor', '/design foundations', 'does not sign in or upload', 'plain HTML page', '`diagnose`', '`teach`', '`craft`', 'local checkout']) assert.ok(expected.includes(text), text);
   assert.equal(f.render(), expected);
   assert.throws(() => buildCommandReference({ root: f.root, check: true }), /stale/);
   buildCommandReference({ root: f.root });
