@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.25.0
+
 - Update bundled Impeccable to skill 4.9.1 and native engine 0.1.24. Live can start from an empty folder or a plain HTML page, pick a bare element, and accept a same-line wrap without deleting the rest of the line. `foundations` checks launch items from local files. Design keeps its Cursor pre-write denial hook. Every bundled engine run sets `IMPECCABLE_NO_TELEMETRY=1` and `IMPECCABLE_NO_TASTE=1`. `world`, `walkthrough`, `loop`, and account taste refresh are refused before the engine starts, so a catalog DESIGN.md is not downloaded, a screen recording is not prepared for upload, coding agents are not connected to Loop, and account taste is not read.
 
 ## 0.24.0
