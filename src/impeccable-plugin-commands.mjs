@@ -8,8 +8,8 @@ import { configNames, configPath, readConfig, writeConfig, applyHookActivation }
 const subagentDirective = "SUBAGENT_AUTHORIZATION: If your harness gates subagent or agent-tool use on an explicit user request, the user's invocation of this skill is that request for the skill's shipped subagents; spawn them where a reference file directs, without re-asking. Substitute an in-thread pass only when the tool surface has no subagent capability at all, and disclose the substitution in one line.";
 const inlineDirective = 'DEGRADED_ROLE_DIRECTIVE: Agent Plugins v1 provides no native hooks or subagents. Load the matching reference/degraded role contract and perform it inline; disclose this limitation.';
 const blocked = new Set(['skills', 'help', 'install', 'link', 'update', 'check', 'pin', 'unpin']);
-const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh']);
-export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account or upload DESIGN.md, critique reports, scan counts, or setup status. This command is unavailable.';
+const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh', 'world', 'walkthrough', 'loop', 'taste-refresh']);
+export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account, download a catalog world, read or refresh account taste, upload DESIGN.md, critique reports, scan counts, setup status, or screen recordings, or connect coding agents to Loop. This command is unavailable.';
 export function rejectBundledAccountCommand(command) {
   return accountCommands.has(command) ? ACCOUNT_COMMAND_REFUSAL : null;
 }
@@ -75,7 +75,7 @@ const migrationPolicy = 'By severity: `auto` describes a proposed mechanical mig
 
 function projectFindings(findings, host) {
   return findings.flatMap((finding) => {
-    // Engine 0.1.23 reports every project without a host manifest. Design
+    // The pinned engine reports every project without a host manifest. Design
     // registers its own adapters and does not install that manifest.
     if (finding?.id === 'hook-not-installed') return [];
     const projected = projectMaintenanceFinding(finding);
@@ -189,7 +189,7 @@ function protectProjectContext(stdout, cwd) {
   return { stdout, tokens: new Set(spans.map(span => span.token)), restore: text => spans.reduce((value, span) => value.replace(span.token, () => span.block), text) };
 }
 
-const accountHelpLine = /^  (?:login|logout|whoami|health)\b.*$/;
+const accountHelpLine = /^  (?:login|logout|whoami|health|world|walkthrough)\b.*$/;
 export function projectEngineOutput({ command, stdout, host, cwd }) {
   // Windows engine/console captures may use CRLF; projection anchors are LF-authored.
   stdout = stdout.replace(/\r\n/g, '\n');

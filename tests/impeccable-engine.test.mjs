@@ -64,7 +64,7 @@ test('runtime overrides cannot replace binary, provider, skill root, update poli
   const cwd = scratch(t);
   let observed;
   const result = runBundledImpeccable({ pluginRoot, cwd, host: 'codex', command: 'engine-probe',
-    env: { IMPECCABLE_BIN: '/outside/engine', IMPECCABLE_PROVIDER_ID: 'cursor', IMPECCABLE_SKILL_DIR: '/outside', IMPECCABLE_NO_UPDATE_CHECK: '0', IMPECCABLE_NO_TELEMETRY: '0', IMPECCABLE_CACHE_ROOT: '/outside' },
+    env: { IMPECCABLE_BIN: '/outside/engine', IMPECCABLE_PROVIDER_ID: 'cursor', IMPECCABLE_SKILL_DIR: '/outside', IMPECCABLE_NO_UPDATE_CHECK: '0', IMPECCABLE_NO_TELEMETRY: '0', IMPECCABLE_NO_TASTE: '0', IMPECCABLE_CACHE_ROOT: '/outside' },
     spawn(file, args, options) { observed = { file, args, options }; return { status: 0, stdout: 'probe', stderr: '' }; } });
   assert.equal(result.status, 0);
   assert.equal(observed.file, resolveEngine(pluginRoot).file);
@@ -74,6 +74,7 @@ test('runtime overrides cannot replace binary, provider, skill root, update poli
   assert.equal(observed.options.env.IMPECCABLE_PROVIDER_ID, 'codex');
   assert.equal(observed.options.env.IMPECCABLE_NO_UPDATE_CHECK, '1');
   assert.equal(observed.options.env.IMPECCABLE_NO_TELEMETRY, '1');
+  assert.equal(observed.options.env.IMPECCABLE_NO_TASTE, '1');
   assert.equal(observed.options.env.IMPECCABLE_SKILL_DIR, path.join(pluginRoot, 'skills/impeccable'));
 });
 
@@ -83,7 +84,7 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
   const home = path.join(cwd, 'home');
   fs.mkdirSync(home);
   const env = { ...process.env, HOME: home, USERPROFILE: home };
-  for (const command of ['login', 'health', 'critiques', 'setup']) {
+  for (const command of ['login', 'health', 'critiques', 'setup', 'world', 'walkthrough', 'loop', 'taste-refresh']) {
     const refused = spawnSync(process.execPath, [launcher, command], { cwd, encoding: 'utf8', timeout: 5000, env });
     assert.equal(refused.status, 1, refused.stderr);
     assert.equal(refused.stdout, '');
@@ -96,13 +97,40 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
     '  logout                           Sign out on this machine',
     '  whoami                           Show the signed-in account and whether it includes Pro rules',
     '  health on|off|forget|status      Save each full scan\'s counts to your account, or stop and delete them',
+    '  walkthrough <recording>          Turn a screen recording into a Needs you walkthrough (MP4, poster, chapters)',
+    '  world <id> [--print]             Seed this project\'s DESIGN.md from a world in the Impeccable catalog',
+    '  foundations [path]               Check which product foundations this project has in place',
     '  telemetry off|on|status          Turn the roll API\'s anonymous usage data off or on, or show it',
     '',
   ].join('\n');
   const projected = projectEngineOutput({ command: '--help', stdout: help, host: 'codex', cwd });
   assert.match(projected, /detect \[file-or-dir-or-url\.\.\.\]/);
   assert.match(projected, /telemetry off\|on\|status/);
-  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|health on\|off/);
+  assert.match(projected, /foundations \[path\]/);
+  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|health on\|off|walkthrough <recording>|world <id>/);
+});
+
+test('account taste cache is not injected and taste refresh is refused', (t) => {
+  const cwd = scratch(t);
+  const home = path.join(cwd, 'home');
+  const tasteDir = path.join(home, '.impeccable');
+  fs.mkdirSync(tasteDir, { recursive: true });
+  fs.writeFileSync(path.join(tasteDir, 'taste.json'), JSON.stringify({
+    version: 1,
+    issuer: 'https://api.impeccable.style',
+    fetchedAt: Math.floor(Date.now() / 1000),
+    state: 'ready',
+    rules: [{ id: 'corners', text: 'Keep corners square.', direction: 'prefer' }],
+  }));
+  const launcher = path.join(pluginRoot, 'src/impeccable-launcher.mjs');
+  const env = { ...impeccableRuntimeEnvironment('codex', pluginRoot), HOME: home, USERPROFILE: home, IMPECCABLE_NO_TASTE: '0' };
+  const context = spawnSync(process.execPath, [launcher, 'context'], { cwd, encoding: 'utf8', timeout: 10000, env });
+  assert.equal(context.status, 0, context.stderr);
+  assert.doesNotMatch(context.stdout, /YOUR_TASTE|Keep corners square/);
+  const refused = spawnSync(process.execPath, [launcher, 'taste-refresh'], { cwd, encoding: 'utf8', timeout: 5000, env });
+  assert.equal(refused.status, 1, refused.stderr);
+  assert.equal(refused.stdout, '');
+  assert.equal(refused.stderr, `${ACCOUNT_COMMAND_REFUSAL}\n`);
 });
 
 test('native launcher reads canonical context from foreign cwd with spaces and keeps project and home unchanged', (t) => {
