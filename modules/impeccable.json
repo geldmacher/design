@@ -2,13 +2,13 @@
   "$schema": "./module.schema.json",
   "schemaVersion": 1,
   "id": "impeccable",
-  "version": "4.9.1",
+  "version": "4.10.0",
   "source": {
     "type": "vendored",
     "url": "https://github.com/pbakaus/impeccable",
-    "tag": "skill-v4.9.1",
-    "commit": "acb4cfe14470b1fdf51e855431af618d936b7db8",
-    "archiveSha256": "f0e94487ffcf8e28d0d1cfb47f41918e3748c657f33f0f128ecf0a478ac85942"
+    "tag": "skill-v4.10.0",
+    "commit": "b49177d32788f2dc585c42831d845dacf1ebed2c",
+    "archiveSha256": "76c056a775bef9f5ce1a80889b6f961e7d0f9a3e8ef6343789392130d0383148"
   },
   "license": "Apache-2.0",
   "capabilities": [
@@ -28,7 +28,8 @@
       "agents/impeccable-asset-producer.md",
       "agents/impeccable-documenter.md",
       "agents/impeccable-finish-reviewer.md",
-      "agents/impeccable-manual-edit-applier.md"
+      "agents/impeccable-manual-edit-applier.md",
+      "agents/impeccable-motion-reviewer.md"
     ],
     "rules": [],
     "hooks": [],

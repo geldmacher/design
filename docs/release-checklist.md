@@ -42,7 +42,7 @@ Follow the [Cursor entry and shared journeys](runtime-smoke.md) in a fresh Curso
 - [ ] Plugin discovery is visible.
 - [ ] `/design` and `/impeccable` are visible in a fresh conversation.
 - [ ] Plugin-relative scripts work from a foreign project cwd.
-- [ ] All four Impeccable agents resolve.
+- [ ] All five Impeccable agents resolve, including the motion reviewer.
 - [ ] The shared configuration matrix passes: full preview, both opposite local overrides, explicit on/off, reread state, repetition and preserved foreign settings.
 - [ ] A clean UI write is allowed and the known detector fixture is denied.
 - [ ] No duplicate `.cursor/hooks.json` entry is created.

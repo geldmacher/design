@@ -10,6 +10,7 @@ import addFormats from 'ajv-formats';
 import YAML from 'yaml';
 import { flattenCapabilities, loadModules } from '../src/registry.mjs';
 import { readPin } from './lib/impeccable-maintenance.mjs';
+import { agentNames as vendoredAgentNames } from './lib/impeccable-vendor.mjs';
 import { validateInstalled as validateMotion } from './lib/motion-vendor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -233,7 +234,8 @@ for (const skillPath of skillPaths) {
 }
 
 const agentFiles = manifestValues(manifest.agents).flatMap(expandManifestPath);
-check(agentFiles.length === 4, `Expected four Impeccable agents, found ${agentFiles.length}.`);
+const expectedAgents = vendoredAgentNames.map((name) => `agents/${name}`).sort();
+check(JSON.stringify([...agentFiles].sort()) === JSON.stringify(expectedAgents), `Impeccable agents differ from the vendored inventory: ${agentFiles.join(', ')}.`);
 const agentNames = agentFiles.map((relative) => frontmatter(relative).name);
 assertUnique(agentNames, 'Agent names');
 for (const relative of agentFiles) {

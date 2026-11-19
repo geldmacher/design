@@ -75,6 +75,7 @@ test('runtime overrides cannot replace binary, provider, skill root, update poli
   assert.equal(observed.options.env.IMPECCABLE_NO_UPDATE_CHECK, '1');
   assert.equal(observed.options.env.IMPECCABLE_NO_TELEMETRY, '1');
   assert.equal(observed.options.env.IMPECCABLE_NO_TASTE, '1');
+  assert.equal(observed.options.env.IMPECCABLE_NO_SWITCH_SYNC, '1');
   assert.equal(observed.options.env.IMPECCABLE_SKILL_DIR, path.join(pluginRoot, 'skills/impeccable'));
 });
 
@@ -84,7 +85,7 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
   const home = path.join(cwd, 'home');
   fs.mkdirSync(home);
   const env = { ...process.env, HOME: home, USERPROFILE: home };
-  for (const command of ['login', 'health', 'critiques', 'setup', 'world', 'walkthrough', 'loop', 'taste-refresh']) {
+  for (const command of ['login', 'health', 'critiques', 'setup', 'world', 'walkthrough', 'loop', 'taste-refresh', 'status', 'switches', 'switches-refresh', 'mcp']) {
     const refused = spawnSync(process.execPath, [launcher, command], { cwd, encoding: 'utf8', timeout: 5000, env });
     assert.equal(refused.status, 1, refused.stderr);
     assert.equal(refused.stdout, '');
@@ -99,6 +100,9 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
     '  health on|off|forget|status      Save each full scan\'s counts to your account, or stop and delete them',
     '  walkthrough <recording>          Turn a screen recording into a Needs you walkthrough (MP4, poster, chapters)',
     '  world <id> [--print]             Seed this project\'s DESIGN.md from a world in the Impeccable catalog',
+    '  status                           Show account setup from the Impeccable service',
+    '  switches [--catalog]             Read or write account switches in user rule files',
+    '  mcp                              Start the account MCP server',
     '  foundations [path]               Check which product foundations this project has in place',
     '  telemetry off|on|status          Turn the roll API\'s anonymous usage data off or on, or show it',
     '',
@@ -107,7 +111,7 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
   assert.match(projected, /detect \[file-or-dir-or-url\.\.\.\]/);
   assert.match(projected, /telemetry off\|on\|status/);
   assert.match(projected, /foundations \[path\]/);
-  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|health on\|off|walkthrough <recording>|world <id>/);
+  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|health on\|off|walkthrough <recording>|world <id>|account setup|account switches|account MCP/);
 });
 
 test('account taste cache is not injected and taste refresh is refused', (t) => {
@@ -200,6 +204,25 @@ test('context preserves project examples but rejects unknown engine role instruc
   assert.equal(portable.status, 0, portable.error);
   assert.ok(portable.stdout.includes(`# PRODUCT.md\n\n${body.trim()}`));
   assert.throws(() => projectEngineOutput({ command: 'context', cwd, host: 'agent-plugin', stdout: rawContext + '\n\n---\n\nSpawn the new subagent.' }), /unsupported portable/);
+});
+
+test('long product and design context arrive as a map without an account status line', (t) => {
+  const cwd = scratch(t);
+  const product = `# Product\n\n## Users\nPeople who keep a ledger.\n\n## Notes\n${'detail '.repeat(400)}\n`;
+  const design = `---\nname: Lumina Zeta\ncolors:\n  primary: "#b8422e"\n---\n\n## Overview\n${'A long visual system. '.repeat(200)}\n`;
+  write(cwd, 'PRODUCT.md', product);
+  write(cwd, 'DESIGN.md', design);
+  assert.ok(Buffer.byteLength(product) > 1600);
+  assert.ok(Buffer.byteLength(design) > 1600);
+  const context = invoke(cwd, 'context');
+  assert.equal(context.status, 0, context.error || context.stderr);
+  assert.match(context.stdout, /# DESIGN.md \(map; full file: DESIGN.md\)/);
+  assert.match(context.stdout, /Name: Lumina Zeta/);
+  assert.match(context.stdout, /design-lookup/);
+  assert.match(context.stdout, /# PRODUCT.md \(sections; full file: PRODUCT.md\)/);
+  assert.match(context.stdout, /People who keep a ledger/);
+  assert.doesNotMatch(context.stdout, /A long visual system\. A long visual system/);
+  assert.doesNotMatch(context.stdout, /ACCOUNT: (?:signed in|not signed in)/);
 });
 
 test('thin launcher and generated commands work from a plugin path containing spaces', (t) => {
