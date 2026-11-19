@@ -8,8 +8,8 @@ import { configNames, configPath, readConfig, writeConfig, applyHookActivation }
 const subagentDirective = "SUBAGENT_AUTHORIZATION: If your harness gates subagent or agent-tool use on an explicit user request, the user's invocation of this skill is that request for the skill's shipped subagents; spawn them where a reference file directs, without re-asking. Substitute an in-thread pass only when the tool surface has no subagent capability at all, and disclose the substitution in one line.";
 const inlineDirective = 'DEGRADED_ROLE_DIRECTIVE: Agent Plugins v1 provides no native hooks or subagents. Load the matching reference/degraded role contract and perform it inline; disclose this limitation.';
 const blocked = new Set(['skills', 'help', 'install', 'link', 'update', 'check', 'pin', 'unpin']);
-const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh', 'world', 'walkthrough', 'loop', 'taste-refresh']);
-export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account, download a catalog world, read or refresh account taste, upload DESIGN.md, critique reports, scan counts, setup status, or screen recordings, or connect coding agents to Loop. This command is unavailable.';
+const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh', 'world', 'walkthrough', 'loop', 'taste-refresh', 'status', 'switches', 'switches-refresh', 'mcp']);
+export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account, download a catalog world, read or refresh account taste, upload DESIGN.md, critique reports, scan counts, setup status, or screen recordings, connect coding agents to Loop, sync account switches into rule files, or start the account MCP server. This command is unavailable.';
 export function rejectBundledAccountCommand(command) {
   return accountCommands.has(command) ? ACCOUNT_COMMAND_REFUSAL : null;
 }
@@ -165,6 +165,24 @@ export function createEngineOutputStream({ command, host, cwd, write, passthroug
 
 // The engine embeds these files verbatim (trimmed) before its resolution record.
 // Protect complete byte spans, including Markdown separators or directive examples.
+const contextSeparator = '\n\n---\n\n';
+
+function contextHeadingAt(stdout, cursor, limit, heading) {
+  let from = cursor;
+  while (from <= limit) {
+    const start = stdout.indexOf(heading, from);
+    if (start < 0 || start > limit) return -1;
+    if (start === 0 || stdout.startsWith(contextSeparator, start - contextSeparator.length)) return start;
+    from = start + heading.length;
+  }
+  return -1;
+}
+
+function contextSectionEnd(stdout, start, limit) {
+  const next = stdout.indexOf(contextSeparator, start);
+  return next < 0 || next > limit ? limit : next;
+}
+
 function protectProjectContext(stdout, cwd) {
   const records = [...stdout.matchAll(/(?:^|\n\n---\n\n)RESOLVED_CONTEXT:\n(\{[\s\S]*?\n\})(?=\n\n---\n\n|$)/g)];
   if (!records.length) throw new Error('Unknown engine context resolution format.');
@@ -173,35 +191,57 @@ function protectProjectContext(stdout, cwd) {
   resolvedProject(report);
   const spans = [];
   let cursor = 0;
-  for (const [file, heading] of [[report.productPath, '# PRODUCT.md'], [report.designPath, '# DESIGN.md'], [report.surfaceBriefPath, `# SURFACE BRIEF (${report.surfaceBriefPath})`]]) {
+  const files = [
+    [report.productPath, '# PRODUCT.md', [
+      `# PRODUCT.md (sections; full file: ${report.productPath})`,
+      `# PRODUCT.md\n\nDOCUMENT_NOT_INLINED: ${report.productPath}`,
+    ]],
+    [report.designPath, '# DESIGN.md', [
+      `# DESIGN.md (map; full file: ${report.designPath})`,
+      `# DESIGN.md (map; ${report.designPath})`,
+      `# DESIGN.md\n\nDOCUMENT_NOT_INLINED: ${report.designPath}`,
+    ]],
+    [report.surfaceBriefPath, `# SURFACE BRIEF (${report.surfaceBriefPath})`, [
+      `# SURFACE BRIEF (${report.surfaceBriefPath})\n\nDOCUMENT_NOT_INLINED: ${report.surfaceBriefPath}`,
+    ]],
+  ];
+  for (const [file, heading, summaries] of files) {
     if (file == null) continue;
     if (typeof file !== 'string') throw new Error('Unknown engine context file path.');
     // Engine context paths are relative to its invocation cwd, including inherited files.
     const body = fs.readFileSync(path.resolve(cwd, file), 'utf8').trim();
     if (!body) continue;
-    const block = `${heading}\n\n${body}`;
-    const start = stdout.indexOf(block, cursor);
-    if (start < 0 || start + block.length > record.index) throw new Error('Engine project context differs from its resolved file.');
-    cursor = start + block.length;
-    spans.push({ start, block, token: `PROJECT_CONTEXT_${randomUUID()}` });
+    const full = `${heading}\n\n${body}`;
+    const fullStart = contextHeadingAt(stdout, cursor, record.index, full);
+    const summaryHeading = summaries.find((item) => contextHeadingAt(stdout, cursor, record.index, item) >= 0);
+    const start = fullStart >= 0 ? fullStart : (summaryHeading ? contextHeadingAt(stdout, cursor, record.index, summaryHeading) : -1);
+    if (start < 0) throw new Error('Engine project context differs from its resolved file.');
+    const end = fullStart >= 0 ? start + full.length : contextSectionEnd(stdout, start, record.index);
+    if (end > record.index) throw new Error('Engine project context differs from its resolved file.');
+    cursor = end;
+    spans.push({ start, block: stdout.slice(start, end), token: `PROJECT_CONTEXT_${randomUUID()}` });
   }
   for (const span of spans.sort((a, b) => b.start - a.start)) stdout = stdout.slice(0, span.start) + span.token + stdout.slice(span.start + span.block.length);
   return { stdout, tokens: new Set(spans.map(span => span.token)), restore: text => spans.reduce((value, span) => value.replace(span.token, () => span.block), text) };
 }
 
-const accountHelpLine = /^  (?:login|logout|whoami|health|world|walkthrough)\b.*$/;
+const accountHelpLine = /^  (?:login|logout|whoami|health|world|walkthrough|status|switches|mcp)\b.*$/;
 export function projectEngineOutput({ command, stdout, host, cwd }) {
   // Windows engine/console captures may use CRLF; projection anchors are LF-authored.
   stdout = stdout.replace(/\r\n/g, '\n');
   if (command === '--help' || command === '-h') return stdout.split('\n').filter((line) => !accountHelpLine.test(line)).join('\n');
   if (command === 'context') {
+    stdout = stdout.replace(/\nACCOUNT: (?:signed in|not signed in)\s*$/, '\n');
     if (stdout.startsWith('TARGET_SELECTION_REQUIRED:\n')) {
       const parts = stdout.trim().split('\n\n');
       const report = JSON.parse(parts[0].slice('TARGET_SELECTION_REQUIRED:\n'.length));
       resolvedProject(report);
+      const skippedWorkspaces = parts.length === 2 && parts[1].startsWith(selectionInstructions)
+        ? parts[1].slice(selectionInstructions.length) : null;
+      const skippedPattern = /^ \d+ workspaces? without a UI signal \(no UI framework dependency, HTML entry, native app marker, or UI source file\) (?:is|are) not listed; reach one with `--target <path>` only when the user names it\.$/;
       if (report.targetPath !== null || !Array.isArray(report.targetCandidates) || !report.targetCandidates.length
           || !report.targetCandidates.every(item => typeof item.name === 'string' && typeof item.path === 'string')
-          || parts.length !== 2 || parts[1] !== selectionInstructions) throw new Error('Unknown engine target selection format.');
+          || skippedWorkspaces === null || (skippedWorkspaces !== '' && !skippedPattern.test(skippedWorkspaces))) throw new Error('Unknown engine target selection format.');
       return stdout;
     }
     const protectedContext = protectProjectContext(stdout, cwd);

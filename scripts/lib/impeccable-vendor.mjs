@@ -45,6 +45,7 @@ export const agentNames = Object.freeze([
   "impeccable-documenter.md",
   "impeccable-finish-reviewer.md",
   "impeccable-manual-edit-applier.md",
+  "impeccable-motion-reviewer.md",
 ]);
 
 export const releaseArchiveExclusions = Object.freeze({
@@ -172,37 +173,39 @@ export function transformSkillFile(relativePath, original, version) {
     for (const [before, after] of replacements) text = mustReplace(text, before, after, `document guidance: ${before}`);
     operations.push("inline-design-document-format");
   }
-  if (relativePath === "reference/critique.md") {
-    const replacements = [
+  if (relativePath === "reference/critique.md" || relativePath === "reference/critique-rubric.md") {
+    const replacements = relativePath === "reference/critique.md" ? [
       ["**Nielsen heuristics**", "**Usability criteria**"],
       ["report checklist failures and decision points with >4 visible options.", "report evidence of avoidable remembering, unclear grouping, or difficult comparison in the user's task."],
-      ["Presenting 10+ choices at once with no hierarchy.", "Presenting poorly distinguished choices with no hierarchy or meaningful grouping, making the relevant action hard to find."],
       ["Present the Nielsen's 10 heuristics scores as a table:", "Present the ten usability criteria scores as a table:"],
+    ] : [
+      ["Presenting 10+ choices at once with no hierarchy.", "Presenting poorly distinguished choices with no hierarchy or meaningful grouping, making the relevant action hard to find."],
       ["Score each of Nielsen's 10 Usability Heuristics on a 0–4 scale.", "Score each of the ten usability criteria below on a 0–4 scale."],
       ["#### Nielsen's 10 Heuristics", "#### Ten Usability Criteria"],
-      ["The sections below were previously separate reference files (`cognitive-load.md`, `heuristics-scoring.md`, `personas.md`). They live inline now so the critique flow has all its deep context in one place.", "Use the criteria below to assess cognitive effort, usability, and representative user situations. Each finding needs evidence from the reviewed task or interface."],
       ["Is information presented in digestible groups (≤4 items per group)?", "Are related items grouped meaningfully for this task and audience?"],
       ["Are decisions simplified (≤4 visible options at any decision point)?", "Are options distinguishable and easy to compare without hiding useful choices?"],
       ["**Scoring**: Count the failed items. 0–1 failures = low cognitive load (good). 2–3 = moderate (address soon). 4+ = high cognitive load (critical fix needed).", "**Assessment**: For each relevant item, record the task, observed burden, and available evidence. Determine severity from the consequence and recoverability of that burden, not the number of checklist failures. These checks guide judgment; they do not measure mental capacity."],
     ];
     for (const [before, after] of replacements) text = mustReplace(text, before, after, `critique guidance: ${before}`);
-    text = replaceSection(text, "#### The Working Memory Rule", "#### Common Cognitive Load Violations", [
-      "#### Remembering and comparing",
-      "",
-      "Distinguish information a person must remember from choices that remain visible and recognizable. Judge the task's complexity, familiarity, interruptions, comparison needs, and the user's experience. There is no universal maximum number of visible menu items, sibling links, or actions.",
-      "",
-      "Keep needed context visible or easy to retrieve. Group by meaning, label choices distinctly, preserve useful comparison views, and disclose advanced detail when it helps the current task. Do not bury frequent actions or force extra navigation just to reduce a count.",
-      "",
-      "Two calibration cases:",
-      "- An index with twelve clearly labeled, grouped links is not a finding merely because twelve links are visible. Inspect whether users can find the needed destination.",
-      "- A flow with only two choices can still impose substantial burden if users must remember amounts, restrictions, or earlier answers from another screen. Identify that missing context and its consequence.",
-      "",
-      "Treat likely confusion as a hypothesis until the interface, task evidence, or observed behavior supports it. Do not predict abandonment or mistakes from option count alone.",
-      "",
-      "---",
-      "",
-      "",
-    ].join("\n"), "task-based memory assessment");
+    if (relativePath === "reference/critique-rubric.md") {
+      text = replaceSection(text, "#### The Working Memory Rule", "#### Common Cognitive Load Violations", [
+        "#### Remembering and comparing",
+        "",
+        "Distinguish information a person must remember from choices that remain visible and recognizable. Judge the task's complexity, familiarity, interruptions, comparison needs, and the user's experience. There is no universal maximum number of visible menu items, sibling links, or actions.",
+        "",
+        "Keep needed context visible or easy to retrieve. Group by meaning, label choices distinctly, preserve useful comparison views, and disclose advanced detail when it helps the current task. Do not bury frequent actions or force extra navigation just to reduce a count.",
+        "",
+        "Two calibration cases:",
+        "- An index with twelve clearly labeled, grouped links is not a finding merely because twelve links are visible. Inspect whether users can find the needed destination.",
+        "- A flow with only two choices can still impose substantial burden if users must remember amounts, restrictions, or earlier answers from another screen. Identify that missing context and its consequence.",
+        "",
+        "Treat likely confusion as a hypothesis until the interface, task evidence, or observed behavior supports it. Do not predict abandonment or mistakes from option count alone.",
+        "",
+        "---",
+        "",
+        "",
+      ].join("\n"), "task-based memory assessment");
+    }
     operations.push("evidence-based-usability-guidance");
   }
   if (compareVersions(version, "4.2.2") >= 0 && ["reference/hooks.md", "reference/doctor.md"].includes(relativePath)) {
@@ -212,7 +215,7 @@ export function transformSkillFile(relativePath, original, version) {
     "This command toggles plugin hooks per project through `.impeccable/config.json`. `.impeccable/config.local.json` overrides shared values. Hook administration never writes host manifests or records standalone installation consent. `hook.enabled` must be explicitly true; malformed configuration produces a visible diagnostic and skips enforcement."
   ],
   [
-    "Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `$CLAUDE_CONFIG_DIR/settings.json` for a user-scope install, defaulting to `~/.claude/settings.json`; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project), Cursor (`.cursor/hooks.json` in the project), Grok Build (`.grok/hooks/impeccable.json` in the project; requires `/hooks-trust` or `--trust`), GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read), and Hermes Agent (the `impeccable-design-hook` plugin in `~/.hermes/plugins/`; the user enables it once with `hermes plugins enable impeccable-design-hook`; a project install's launcher runs only in a project Hermes trusts, via `hermes skills trust`). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
+    "Supported harnesses: Claude Code (`.claude/settings.local.json` for a project-scope install; `$CLAUDE_CONFIG_DIR/settings.json` for a user-scope install, defaulting to `~/.claude/settings.json`; a project hook moved into shared `.claude/settings.json` is honored in place too), Codex (`.codex/hooks.json` in the project; `$CODEX_HOME/hooks.json`, default `~/.codex/hooks.json`, for a user-scope install), Cursor (`.cursor/hooks.json` in the project; `~/.cursor/hooks.json` for a user-scope install), Grok Build (`.grok/hooks/impeccable.json` in the project, which requires `/hooks-trust` or `--trust`; the personal `~/.grok/hooks/impeccable.json` for a user-scope install), GitHub Copilot (`.github/hooks/impeccable.json` in the project, a team-shared committed file that both the Copilot CLI and the cloud agent read), and Hermes Agent (the `impeccable-design-hook` plugin in `~/.hermes/plugins/`; the user enables it once with `hermes plugins enable impeccable-design-hook`; a project install's launcher runs only in a project Hermes trusts, via `hermes skills trust`). For the Copilot CLI, repo-level hooks fire once `.github/hooks/impeccable.json` is committed to the repository's default branch.",
     "Geldmacher Design provides Cursor pre-write and Codex post-write/Stop adapters registered by the plugin. Project-local Impeccable installations and hook manifests are conflicts to diagnose. Agent Plugins v1 has no native hook integration."
   ],
   [
@@ -310,7 +313,7 @@ export function transformSkillFile(relativePath, original, version) {
           "",
           "This bundled skill targets Cursor, Codex, and Agent Plugins v1 clients. Cursor invokes it as `/impeccable`; Codex invokes it as `$impeccable`; a generic standard client loads the bare `impeccable` skill name. Before running any command, replace `<IMPECCABLE_SKILL_ROOT>` with the absolute directory containing this `SKILL.md`; never execute an unresolved placeholder. Runtime scripts derive the host from `IMPECCABLE_HOST`, then the native plugin-root variables, or the canonical Agent Plugins root manifest.",
           "",
-          "Cursor resolves the four bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), or [manual edit applier](../../agents/impeccable-manual-edit-applier.md). Pass only the role input contract and task evidence. Agent Plugins v1 does not standardize native agents; use the corresponding `reference/degraded/` fallback there. If any other host exposes no subagent capability, use the same fallback and disclose the degradation.",
+          "Cursor resolves the five bundled files under `../../agents/` as native agents. On Codex, read the matching canonical role prompt and spawn a fresh generic subagent with no forked conversation history and no model override: [asset producer](../../agents/impeccable-asset-producer.md), [documenter](../../agents/impeccable-documenter.md), [finish reviewer](../../agents/impeccable-finish-reviewer.md), [manual edit applier](../../agents/impeccable-manual-edit-applier.md), or [motion reviewer](../../agents/impeccable-motion-reviewer.md). Pass only the role input contract and task evidence. Agent Plugins v1 does not standardize native agents; use the corresponding `reference/degraded/` fallback there. If any other host exposes no subagent capability, use the same fallback and disclose the degradation.",
           "",
           "This skill gives you the tools and permission to make design",
         ].join("\n"),
@@ -339,7 +342,7 @@ export function transformSkillFile(relativePath, original, version) {
       );
       text = mustReplace(
         text,
-        "- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses the active account's `$CLAUDE_CONFIG_DIR/settings.json` (default `~/.claude/settings.json`). On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.\n",
+        "- The hook is bundled with the Impeccable skill. Project installs use `.claude/settings.local.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/impeccable.json`, and `.gemini/settings.json`; a user-scope Claude install uses the active account's `$CLAUDE_CONFIG_DIR/settings.json` (default `~/.claude/settings.json`), and a user-scope Codex, Cursor or Grok install uses `~/.codex/hooks.json`, `~/.cursor/hooks.json` or `~/.grok/hooks/impeccable.json`. On Codex, the user must approve the hook via `/hooks` the first time. On Cursor, confirm hooks are enabled under Settings -> Hooks. On GitHub Copilot, the CLI loads `.github/hooks/impeccable.json` once it is committed to the repository's default branch, and the cloud agent reads it from the repo directly.\n",
         "- In Geldmacher Design, the detector is bundled with the Impeccable skill and invoked through the active host adapter. Project-local hook manifests are diagnostics-only conflicts and are never installed, repaired, or removed.\n",
         "standalone hook install paths",
       );

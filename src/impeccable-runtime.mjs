@@ -26,6 +26,10 @@ export function impeccableRuntimeEnvironment(host, pluginRoot, env = process.env
     // Taste refresh ignores the telemetry opt-out. It would fetch account
     // preferences and context would read the cached copy. Design keeps it off.
     IMPECCABLE_NO_TASTE: '1',
+    // Switch sync also ignores the telemetry opt-out. After context, a
+    // signed-in CLI would read account switches and write them into user-level
+    // rule files. Any non-empty value stops that schedule. Design keeps it set.
+    IMPECCABLE_NO_SWITCH_SYNC: '1',
     IMPECCABLE_PROVIDER_ID: resolvedHost,
     IMPECCABLE_SKILL_DIR: path.join(pluginRoot, 'skills/impeccable'),
     IMPECCABLE_SELF: selfCommand,

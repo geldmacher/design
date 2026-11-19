@@ -59,6 +59,8 @@ test('runtime facade resolves only physical bundled scripts and sets one explici
   assert.equal(impeccableRuntimeEnvironment('codex', pluginRoot, { IMPECCABLE_NO_TELEMETRY: 'false' }).IMPECCABLE_NO_TELEMETRY, '1');
   assert.equal(codexEnv.IMPECCABLE_NO_TASTE, '1');
   assert.equal(impeccableRuntimeEnvironment('codex', pluginRoot, { IMPECCABLE_NO_TASTE: 'false' }).IMPECCABLE_NO_TASTE, '1');
+  assert.equal(codexEnv.IMPECCABLE_NO_SWITCH_SYNC, '1');
+  assert.equal(impeccableRuntimeEnvironment('codex', pluginRoot, { IMPECCABLE_NO_SWITCH_SYNC: '0' }).IMPECCABLE_NO_SWITCH_SYNC, '1');
 
   let observed;
   const child = runBundledImpeccable({

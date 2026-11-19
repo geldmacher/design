@@ -8,6 +8,7 @@ import YAML from 'yaml';
 
 const document = readFileSync(new URL('../skills/impeccable/reference/document.md', import.meta.url), 'utf8');
 const critique = readFileSync(new URL('../skills/impeccable/reference/critique.md', import.meta.url), 'utf8');
+const critiqueRubric = readFileSync(new URL('../skills/impeccable/reference/critique-rubric.md', import.meta.url), 'utf8');
 const example = document.match(/```yaml\n([\s\S]*?)```/)[1];
 const sidecar = JSON.parse(document.match(/```json\n([\s\S]*?)```/)[1]);
 
@@ -48,13 +49,15 @@ test('seed and sidecar preserve separate responsibilities', () => {
 });
 
 test('usability criteria keep evidence and both memory calibration cases', () => {
-  const criteria = critique.split('#### Ten Usability Criteria\n')[1].split('#### Score Summary')[0];
+  const criteria = critiqueRubric.split('#### Ten Usability Criteria\n')[1].split('#### Score Summary')[0];
   assert.deepEqual([...criteria.matchAll(/^##### (\d+)\. /gm)].map((match) => Number(match[1])), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  assert.match(critique, /twelve clearly labeled, grouped links is not a finding/);
-  assert.match(critique, /only two choices can still impose substantial burden/);
-  assert.match(critique, /severity from the consequence and recoverability/);
-  assert.match(critique, /Do not predict abandonment or mistakes from option count alone/);
-  assert.doesNotMatch(critique, /Nielsen|Miller|Cowan|[>≤][45]|5–7 items|8\+ items|10\+ choices|Count the failed items/);
+  assert.match(critiqueRubric, /twelve clearly labeled, grouped links is not a finding/);
+  assert.match(critiqueRubric, /only two choices can still impose substantial burden/);
+  assert.match(critiqueRubric, /severity from the consequence and recoverability/);
+  assert.match(critiqueRubric, /Do not predict abandonment or mistakes from option count alone/);
+  const banned = /Nielsen|Miller|Cowan|[>≤][45]|5–7 items|8\+ items|10\+ choices|Count the failed items/;
+  assert.doesNotMatch(critique, banned);
+  assert.doesNotMatch(critiqueRubric, banned);
   assert.doesNotMatch(document, /Stitch|Material-derived|official.*spec/);
 });
 
