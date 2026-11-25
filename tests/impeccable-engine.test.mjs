@@ -171,6 +171,9 @@ test('a telemetry opt-out explains a local save without telling anyone to turn u
       p3_count: 0,
     }),
   };
+  // A non-empty CI makes the engine stay silent. Drop it so this trial hits the
+  // daily explanation that Design rewrites.
+  delete env.CI;
   const saved = spawnSync(process.execPath, [launcher, 'critique-storage', 'write', 'pricing', body], { cwd, encoding: 'utf8', timeout: 10000, env });
   assert.equal(saved.status, 0, saved.stderr);
   assert.match(saved.stdout, /\/\.impeccable\/critique\/.+\.md/);
