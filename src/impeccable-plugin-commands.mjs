@@ -8,8 +8,39 @@ import { configNames, configPath, readConfig, writeConfig, applyHookActivation }
 const subagentDirective = "SUBAGENT_AUTHORIZATION: If your harness gates subagent or agent-tool use on an explicit user request, the user's invocation of this skill is that request for the skill's shipped subagents; spawn them where a reference file directs, without re-asking. Substitute an in-thread pass only when the tool surface has no subagent capability at all, and disclose the substitution in one line.";
 const inlineDirective = 'DEGRADED_ROLE_DIRECTIVE: Agent Plugins v1 provides no native hooks or subagents. Load the matching reference/degraded role contract and perform it inline; disclose this limitation.';
 const blocked = new Set(['skills', 'help', 'install', 'link', 'update', 'check', 'pin', 'unpin']);
-const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh', 'world', 'walkthrough', 'loop', 'taste-refresh', 'status', 'switches', 'switches-refresh', 'mcp']);
-export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account, download a catalog world, read or refresh account taste, upload DESIGN.md, critique reports, scan counts, setup status, or screen recordings, connect coding agents to Loop, sync account switches into rule files, or start the account MCP server. This command is unavailable.';
+const accountCommands = new Set(['login', 'logout', 'whoami', 'health', 'health-design-refresh', 'critiques', 'critiques-refresh', 'setup', 'setup-report', 'pro-refresh', 'world', 'walkthrough', 'loop', 'taste', 'taste-refresh', 'status', 'switches', 'switches-refresh', 'mcp', 'critique-frames']);
+export const ACCOUNT_COMMAND_REFUSAL = 'Design does not sign in to an Impeccable account, download a catalog world, read or refresh account taste, record a taste note, upload DESIGN.md, critique reports, critique screenshots, scan counts, setup status, or screen recordings, connect coding agents to Loop, sync account switches into rule files, or start the account MCP server. This command is unavailable.';
+export const LOCAL_ONLY_SAVE_NOTE = 'Not saved to Impeccable: Design keeps this report on this machine.';
+const uploadEnablement = /^(?:Not saved to Impeccable: (?:IMPECCABLE_NO_TELEMETRY|DO_NOT_TRACK) is set\. Unset (?:IMPECCABLE_NO_TELEMETRY|DO_NOT_TRACK) to enable saving\.|Not saved to Impeccable: "telemetry": false in .+\. Set telemetry to true in that file to enable saving\.)$/;
+
+export function suppressUploadEnablement(text) {
+  const normalized = String(text).replace(/\r\n/g, '\n');
+  const ending = normalized.endsWith('\n') ? '\n' : '';
+  const body = ending ? normalized.slice(0, -1) : normalized;
+  if (!body) return normalized;
+  return `${body.split('\n').map((line) => uploadEnablement.test(line) ? LOCAL_ONLY_SAVE_NOTE : line).join('\n')}${ending}`;
+}
+
+export function createTextLineFilter(write, transform = suppressUploadEnablement) {
+  let pending = '';
+  const emit = (line) => write(transform(line));
+  return {
+    push(chunk) {
+      pending += chunk;
+      let end;
+      while ((end = pending.indexOf('\n')) >= 0) {
+        emit(pending.slice(0, end + 1));
+        pending = pending.slice(end + 1);
+      }
+    },
+    finish() {
+      if (pending) {
+        emit(pending);
+        pending = '';
+      }
+    },
+  };
+}
 export function rejectBundledAccountCommand(command) {
   return accountCommands.has(command) ? ACCOUNT_COMMAND_REFUSAL : null;
 }
@@ -225,10 +256,12 @@ function protectProjectContext(stdout, cwd) {
   return { stdout, tokens: new Set(spans.map(span => span.token)), restore: text => spans.reduce((value, span) => value.replace(span.token, () => span.block), text) };
 }
 
-const accountHelpLine = /^  (?:login|logout|whoami|health|world|walkthrough|status|switches|mcp)\b.*$/;
+const accountHelpLine = /^  (?:login|logout|whoami|health|world|walkthrough|status|switches|mcp|taste)\b.*$/;
 export function projectEngineOutput({ command, stdout, host, cwd }) {
   // Windows engine/console captures may use CRLF; projection anchors are LF-authored.
-  stdout = stdout.replace(/\r\n/g, '\n');
+  // A telemetry opt-out used to be silent. Engine 0.1.30 prints a daily line that
+  // tells the person to unset it. Design keeps the report local and drops that instruction.
+  stdout = suppressUploadEnablement(stdout);
   if (command === '--help' || command === '-h') return stdout.split('\n').filter((line) => !accountHelpLine.test(line)).join('\n');
   if (command === 'context') {
     stdout = stdout.replace(/\nACCOUNT: (?:signed in|not signed in)\s*$/, '\n');

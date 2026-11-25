@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update bundled Impeccable to skill 4.11.0 and native engine 0.1.30. A critique, audit, or scan says whether the copy was saved to Impeccable, and a saved critique names the page it viewed. Live stops polling after three quiet timeouts and keeps a queued steer. Design keeps its Cursor pre-write denial hook. Every bundled engine run sets `IMPECCABLE_NO_TELEMETRY=1`, `IMPECCABLE_NO_TASTE=1`, and `IMPECCABLE_NO_SWITCH_SYNC=1`, so reports, screenshots, folder names, and per-kind account taste stay on this machine. `taste`, taste notes, critique screenshots, MCP sign-in, catalog worlds, walkthrough uploads, and Loop stay refused.
+
 ## 0.26.0
 
 - Update bundled Impeccable to skill 4.10.0 and native engine 0.1.27. A long DESIGN.md reaches the agent as a short map. `design-compact` proposes that map and writes it only after agreement. Drift findings name what the code contradicts in DESIGN.md. `animate` captures the motion it built and reviews that evidence. A world build finishes on the site, walks the direction over the captures, and records DESIGN.md from what shipped. The Live bar stays still under the pointer, and the missing PRODUCT.md notice is shown once. Design keeps its Cursor pre-write denial hook. Every bundled engine run sets `IMPECCABLE_NO_TELEMETRY=1`, `IMPECCABLE_NO_TASTE=1`, and `IMPECCABLE_NO_SWITCH_SYNC=1`. Account status, switch sync, the account MCP server, catalog worlds, walkthrough uploads, and Loop stay refused.

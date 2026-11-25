@@ -3,7 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { resolvePluginHost } from './host.mjs';
-import { interceptPluginCommand, projectEngineOutput, rejectBundledAccountCommand } from './impeccable-plugin-commands.mjs';
+import { interceptPluginCommand, projectEngineOutput, rejectBundledAccountCommand, suppressUploadEnablement } from './impeccable-plugin-commands.mjs';
 import { resolveEngine } from './impeccable-engine.mjs';
 import { runWithoutStandaloneHookConsent } from './hook-config.mjs';
 
@@ -19,12 +19,14 @@ export function impeccableRuntimeEnvironment(host, pluginRoot, env = process.env
     IMPECCABLE_HOST: resolvedHost,
     GELDMACHER_DESIGN_PLUGIN_ROOT: pluginRoot,
     IMPECCABLE_NO_UPDATE_CHECK: '1',
-    // Health counts, DESIGN.md, critique bodies, setup status, and the
-    // foundations states attached to a scan upload after sign-in unless this
-    // opt-out is set. Design keeps it set.
+    // Health counts, DESIGN.md, critique and audit bodies, setup status, the
+    // folder name sent for a repository with no remote, critique screenshots,
+    // and the foundations states attached to a scan upload after sign-in unless
+    // this opt-out is set. Design keeps it set.
     IMPECCABLE_NO_TELEMETRY: '1',
     // Taste refresh ignores the telemetry opt-out. It would fetch account
-    // preferences and context would read the cached copy. Design keeps it off.
+    // preferences for web, slides, or motion, and context would read that cache.
+    // Design keeps it off.
     IMPECCABLE_NO_TASTE: '1',
     // Switch sync also ignores the telemetry opt-out. After context, a
     // signed-in CLI would read account switches and write them into user-level
@@ -104,7 +106,7 @@ export function runBundledImpeccable({
       status: Number.isInteger(child.status) ? child.status : null,
       signal: child.signal || null,
       stdout: child.stdout || '',
-      stderr: child.stderr || '',
+      stderr: suppressUploadEnablement(child.stderr || ''),
       error: child.error?.message || null,
       timedOut: child.error?.code === 'ETIMEDOUT',
       runtime: {
