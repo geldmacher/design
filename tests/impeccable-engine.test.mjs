@@ -176,7 +176,7 @@ test('a telemetry opt-out explains a local save without telling anyone to turn u
   delete env.CI;
   const saved = spawnSync(process.execPath, [launcher, 'critique-storage', 'write', 'pricing', body], { cwd, encoding: 'utf8', timeout: 10000, env });
   assert.equal(saved.status, 0, saved.stderr);
-  assert.match(saved.stdout, /\/\.impeccable\/critique\/.+\.md/);
+  assert.match(saved.stdout, /[\\/]\.impeccable[\\/]critique[\\/].+\.md/);
   assert.match(saved.stdout, new RegExp(LOCAL_ONLY_SAVE_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.doesNotMatch(`${saved.stdout}\n${saved.stderr}`, /Unset IMPECCABLE_NO_TELEMETRY|impeccable login|Saved to Impeccable: https?:/);
 });
