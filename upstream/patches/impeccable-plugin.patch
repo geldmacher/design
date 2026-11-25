@@ -1,18 +1,18 @@
 diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
-index a2bc89a..d008280 100644
+index d66e661..41c51de 100644
 --- a/skills/impeccable/SKILL.md
 +++ b/skills/impeccable/SKILL.md
 @@ -1,20 +1,28 @@
  ---
  name: impeccable
 -description: "Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, settings, onboarding, empty states, and native iOS or Android screens. Handles UX review, hierarchy, layout, typography, color, motion, UX copy, accessibility, responsive behavior, edge cases, and capturing or documenting design systems (DESIGN.md, tokens). Also for making bland UI bolder, loud UI quieter, or ambitious visual effects. Not for backend-only or non-UI tasks."
--version: 4.10.0
+-version: 4.11.0
 -license: Apache 2.0
 +description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.
 +license: Apache-2.0
 +compatibility: Requires Node.js 22 or newer.
 +metadata:
-+  version: "4.10.0"
++  version: "4.11.0"
  ---
  
 +## Geldmacher Design host contract
@@ -68,7 +68,7 @@ index 371b480..f25f576 100644
  
  For keyboard or multi-step interactions pass `--steps <json-file>` instead of `--click`, such as `[{"click":"#toggle"},{"press":"Enter"}]`; steps are click, hover, press (navigation keys), and wait (milliseconds). Capture each entrance and exit separately: for an exit, `--setup <json-file>` runs the same kind of steps and lets them settle before the first frame, such as opening the panel whose close is under review. The fixed capture points are before, first animated, evenly spaced middle, last animated, and settled frames. Inspect each directory's frame PNGs, `filmstrip.png`, and `report.json` before sending it: blank, wrong-region, stale, or missing evidence requires recapture. The report's limitations are unmeasured checks, not a clean result. Never judge motion by a single element or a single screenshot.
 diff --git a/skills/impeccable/reference/audit.md b/skills/impeccable/reference/audit.md
-index 8d7655e..d72649e 100644
+index 6214d63..7d401f6 100644
 --- a/skills/impeccable/reference/audit.md
 +++ b/skills/impeccable/reference/audit.md
 @@ -66,7 +66,7 @@ On RTL-declared pages, each of the following is a signal to verify the rendered
@@ -83,12 +83,12 @@ index 8d7655e..d72649e 100644
 @@ -151,7 +151,7 @@ After the report is delivered, save a copy so the findings outlive this conversa
  
  ```bash
- IMPECCABLE_REPORT_META='{"target":"<user phrasing, or .>","total_score":<n>,"max_score":20,"p0_count":<n>,"p1_count":<n>,"p2_count":<n>,"p3_count":<n>}' \
+ IMPECCABLE_REPORT_META='{"target":"<user phrasing, or .>","title":"<page title, or empty>","total_score":<n>,"max_score":20,"p0_count":<n>,"p1_count":<n>,"p2_count":<n>,"p3_count":<n>}' \
 -  .cursor/skills/impeccable/scripts/impeccable audit-storage write "<resolved target, or . for the whole project>" <temp-file>
 +  <IMPECCABLE_SKILL_ROOT>/scripts/impeccable audit-storage write "<resolved target, or . for the whole project>" <temp-file>
  ```
  
- The helper prints the path it wrote, which you mention in one line; `REPORTS OFF:` means the project opted out, and you mention nothing. Saving never replaces delivering: the user reads the report in chat first.
+ Use the observed `<title>` or first h1 for `title`; leave it empty when unknown. The helper prints the path it wrote, which you mention in one line. Pass any `Saved to Impeccable: <url>` or `Not saved to Impeccable: <reason>` line on to the person word for word; `REPORTS OFF:` means the project opted out, and you mention nothing. Saving never replaces delivering: the user reads the report in chat first.
 diff --git a/skills/impeccable/reference/audit.native.md b/skills/impeccable/reference/audit.native.md
 index 5d86173..c6c6d38 100644
 --- a/skills/impeccable/reference/audit.native.md
@@ -227,7 +227,7 @@ index 525c60a..b6df556 100644
  ##### 1. Visibility of System Status
  
 diff --git a/skills/impeccable/reference/critique.md b/skills/impeccable/reference/critique.md
-index f900233..e3031be 100644
+index f700f1b..947f878 100644
 --- a/skills/impeccable/reference/critique.md
 +++ b/skills/impeccable/reference/critique.md
 @@ -23,7 +23,7 @@ Resolve one stable target, run two independent assessments, synthesize a design
@@ -289,11 +289,11 @@ index f900233..e3031be 100644
 @@ -214,7 +214,7 @@ Skip this step if the Setup slug was null (vague or root-level target), and say
  2. **Pass the structured metadata** through `IMPECCABLE_CRITIQUE_META` (JSON), then run the write command:
     ```bash
-    IMPECCABLE_CRITIQUE_META='{"target":"<user phrasing>","total_score":<n>,"max_score":<n>,"na_heuristics":"<comma-separated numbers, or empty>","p0_count":<n>,"p1_count":<n>}' \
+    IMPECCABLE_CRITIQUE_META='{"target":"<user phrasing>","title":"<page title, or empty>","url":"<http(s) URL you viewed, or empty>","pr":"<PR number checked out, or empty>","heuristics":[{"n":<1-10>,"score":<0-4>}],"total_score":<n>,"max_score":<n>,"na_heuristics":"<comma-separated numbers, or empty>","p0_count":<n>,"p1_count":<n>,"p2_count":<n>,"p3_count":<n>}' \
 -     .cursor/skills/impeccable/scripts/impeccable critique-storage write "<resolved target>" <body-file>
 +     <IMPECCABLE_SKILL_ROOT>/scripts/impeccable critique-storage write "<resolved target>" <body-file>
     ```
-    `max_score` is the applicable maximum from the heuristic table (40 when every heuristic applied), so a later run can tell a renormalized total from a full one. For a local file target, the helper also records an exact content fingerprint so polish can distinguish the assessed bytes from later edits without relying on Git state or timestamps. The helper prints the absolute path it wrote, and sometimes one more line (`Saved to Impeccable: <link>`, `Not saved to Impeccable: <reason>` or `Keep this critique's history: impeccable login`); put that line in the close word for word. Leave that file on disk. Polish closes it; this run does not. `REPORTS OFF:` instead means the project opted out of saved reports: skip the trend read and carry on.
+    Use the observed `<title>` or first h1 for `title`; omit N/A heuristics. `max_score` is the table’s applicable maximum (40 if all apply), distinguishing renormalized totals. For local files the helper records an exact content fingerprint, so polish detects later edits without Git or timestamps. The helper prints the absolute saved path, sometimes followed by a line (`Saved to Impeccable: <link>`, `Not saved to Impeccable: <reason>` or `Keep this critique's history: impeccable login`); put that line in the close word for word, also from detect (JSON `savedTo`: `Saved to Impeccable: <url>`). Leave that file on disk. Polish closes it; this run does not. `REPORTS OFF:` instead means the project opted out of saved reports: skip the trend read and carry on.
  
 @@ -222,7 +222,7 @@ Skip this step if the Setup slug was null (vague or root-level target), and say
  
@@ -564,7 +564,7 @@ index 1f07c4d..9afc9c4 100644
  - **app-icons**: a favicon and a large app icon, as image files in the public folders (including `public/icons/`, `static/icons/`, `public/images/`), or local images linked by `rel="icon"`, `rel="apple-touch-icon"` or a web manifest. Source components do not count. Ask for the logo if there is none; never invent a brand mark.
  - **social-previews**: a share image in `og:image`, `twitter:image`, framework metadata (including Nuxt `ogImage` and Next `generateMetadata` with `openGraph.images`), or an `opengraph-image` file. `twitter:card` alone and comments do not count. Aim for 1200×630.
 diff --git a/skills/impeccable/reference/generate.md b/skills/impeccable/reference/generate.md
-index bedfa84..30847f6 100644
+index 540d51b..f55b266 100644
 --- a/skills/impeccable/reference/generate.md
 +++ b/skills/impeccable/reference/generate.md
 @@ -42,11 +42,11 @@ Done when you hold an action from the vocabulary (asked for, when the request na
@@ -599,7 +599,7 @@ index bedfa84..30847f6 100644
 +<IMPECCABLE_SKILL_ROOT>/scripts/impeccable live-poll --reply EVENT_ID done --file src/App.jsx --then-poll
  ```
  
- This replies done (the browser mounts the variants) and then blocks until the user's choice arrives, so run it the way your harness runs a long wait: **Claude Code** in the foreground with your tool's longest timeout (600000 ms), so you are paused until the choice arrives; **Codex** in a yielded foreground exec; **Cursor** in a background terminal with notify on `"type":"(accept|discard|variant_mount_failed|exit)"`. Never pass a short `--timeout=`. While it runs there is nothing else to do: never sleep and never poll its output on a timer; a harness that backgrounds it wakes you when it returns. `{"type":"timeout"}` means the user has not chosen yet: run `live-poll` again and keep waiting. If the edit fails after the browser flipped to GENERATING, `--reply EVENT_ID error "Short reason"` (without `--then-poll`) so the bar resets.
+ This replies done (the browser mounts the variants) and then blocks until the user's choice arrives, so run it the way your harness runs a long wait: **Claude Code** in the foreground with your tool's longest timeout (600000 ms), so you are paused until the choice arrives; **Codex** in a yielded foreground exec; **Cursor** in a background terminal with notify on `"type":"(accept|discard|variant_mount_failed|exit)"`. Never pass a short `--timeout=`. While it runs there is nothing else to do: never sleep and never poll its output on a timer; a harness that backgrounds it wakes you when it returns. `{"type":"timeout"}` means the user has not chosen yet: run `live-poll` again, at most twice (about 30 minutes of waiting in all). After the third timeout, stop polling: tell the user the variants are still live on the page, to Accept or Discard there and then tell you, and end your turn; one `live-poll` collects the queued choice, and Step 4 runs from there. If the edit fails after the browser flipped to GENERATING, `--reply EVENT_ID error "Short reason"` (without `--then-poll`) so the bar resets.
 @@ -85,17 +85,17 @@ Outside the replace path, read the matching live.md section before acting: `scaf
  
  ## Step 4: Accept and close
@@ -803,7 +803,7 @@ index 72bb9fa..825b5da 100644
  
  Output `{ shape, signals }`; the shape names the *patch mechanism*, so one template covers many frameworks:
 diff --git a/skills/impeccable/reference/live.md b/skills/impeccable/reference/live.md
-index 9b5f4ee..c499acd 100644
+index b600a9e..6d9708c 100644
 --- a/skills/impeccable/reference/live.md
 +++ b/skills/impeccable/reference/live.md
 @@ -4,7 +4,7 @@ Interactive live variant mode: select elements in the browser, pick a design act
@@ -824,7 +824,7 @@ index 9b5f4ee..c499acd 100644
    Read JSON; dispatch on "type"
  
    "generate"  → Handle Generate; reply done; LOOP
-@@ -54,7 +54,7 @@ LOOP:
+@@ -56,7 +56,7 @@ LOOP:
  ## Start
  
  ```bash
@@ -833,7 +833,7 @@ index 9b5f4ee..c499acd 100644
  ```
  
  Output JSON: `{ ok, serverPort, serverToken, configCreated, pageFiles, roots, targetPath, devUrl, pageUrls, devCommand, contextMissing, hasProduct, product, productPath, hasDesign, design, designPath, hasSurfaceBrief, surfaceBrief }`. `devUrl` is the running dev server that serves the page, or null when none answered; `pageUrls` or `devCommand` then name the next step (step 2). `contextMissing` lists PRODUCT.md or DESIGN.md when absent: Live never waits on init or document. Work from the page as below, and offer `init` or `document` after the session, not before it. `roots` is the resolved root manifest; `projectRoot` mirrors `roots.appRoot`. The surface brief rides along; do not shell out to `impeccable surface-brief` separately. Precedence for generation: **DESIGN.md wins on visual decisions; PRODUCT.md wins on durable product and voice decisions; the surface brief wins on this surface's strategy.** When DESIGN.md is missing, identity is **not** absent; extract it from CSS variables, computed styles, and sibling components (Step 4 Phase A). Identity preservation is the default; departure requires the user's explicit redesign intent.
-@@ -65,7 +65,7 @@ A plain page needs no setup: when the app root holds an `index.html` page shell
+@@ -67,7 +67,7 @@ A plain page needs no setup: when the app root holds an `index.html` page shell
  
  If output is `{ ok: false, error: "config_invalid", message, path }`, the config at `path` exists but `message` names what is wrong with it: repair that field in the existing file ([live-setup.md](live-setup.md) describes each field), keep every other field as it is, and boot again. Never replace the file with the common-case config below.
  
@@ -842,7 +842,7 @@ index 9b5f4ee..c499acd 100644
  
  On `no_page`, tell the person in one sentence that there is nothing for Live to open yet. Offer to build the first page with `/impeccable craft <what they want>` and start Live on it once it exists. Do not create a page unless the person asks for one.
  
-@@ -74,9 +74,9 @@ On `no_page`, tell the person in one sentence that there is nothing for Live to
+@@ -76,9 +76,9 @@ On `no_page`, tell the person in one sentence that there is nothing for Live to
  The append-only journal under `.impeccable/live/sessions/` is canonical durable state (not project source). When the chat was interrupted, polling was missed, the helper restarted, or the browser reloaded:
  
  ```bash
@@ -855,7 +855,7 @@ index 9b5f4ee..c499acd 100644
  ```
  
  Server restart rule: start `impeccable live-server` again, then poll; startup requeues unacknowledged events, so never ask the user to click Go again unless `impeccable live-resume` says no active session exists.
-@@ -95,7 +95,7 @@ Speed matters; the user is watching the selected element. Reuse preflight metada
+@@ -97,7 +97,7 @@ Speed matters; the user is watching the selected element. Reuse preflight metada
  2. If `event.scaffold` is present, use it and do **not** run the helper again. Otherwise:
  
  ```bash
@@ -864,7 +864,7 @@ index 9b5f4ee..c499acd 100644
    --element-id "ANCHOR_ID" --classes "class1,class2" --tag "section" --text "ANCHOR_TEXT"
  ```
  
-@@ -116,7 +116,7 @@ When `event.scaffold` is present, the helper already found the source and comput
+@@ -118,7 +118,7 @@ When `event.scaffold` is present, the helper already found the source and comput
  **On source-preview targets `event.scaffold` carries `sourceWritten: false`.** The helper did NOT write the wrapper; it hands you `scaffold.wrapperBlock` plus the picked element's source range (`replaceStartLine`, `replaceEndLine`, 1-indexed). Write the wrapper **and** all variants in ONE edit: splice your variants into `wrapperBlock` at the "Variants: insert below this line" marker, then replace lines `[replaceStartLine, replaceEndLine]` with the result. A separate scaffold write reloads the framework before your variant write lands and strands the browser at 0/N. (`replaceEndLine < replaceStartLine` means insert mode: insert, remove nothing.) The `svelte-component` path never sets `sourceWritten`.
  
  ```bash
@@ -873,7 +873,7 @@ index 9b5f4ee..c499acd 100644
  ```
  
  Flag mapping (keep separate, never collapse into `--query`): `--element-id` ← `event.element.id`; `--classes` ← classes joined with commas; `--tag` ← tagName; `--text` ← first ~80 chars of textContent, **every call**: it disambiguates repeated sibling components, and without it a class locator lands on the first match. If `event.pageUrl` implies the file, pass `--file PATH`. If `--text` still matches several candidates, wrap exits `{ error: "element_ambiguous", candidates, fallback: "agent-driven" }`: pick the right range from page context and write the wrapper manually per the fallback flow.
-@@ -124,7 +124,7 @@ Flag mapping (keep separate, never collapse into `--query`): `--element-id` ←
+@@ -126,7 +126,7 @@ Flag mapping (keep separate, never collapse into `--query`): `--element-id` ←
  An element with neither an id nor classes (a bare `<h1>`, the usual first pick on a fresh page) leaves both flags out; the tag alone locates it:
  
  ```bash
@@ -882,7 +882,7 @@ index 9b5f4ee..c499acd 100644
  ```
  
  A tag alone never lands on the first match: when the tag repeats and `--text` does not single out one element, or the element shares a source line with other markup (`reason: "shared_line"`), wrap exits `element_ambiguous`; follow the fallback flow as above. Short text settles it only when it is one element's whole text.
-@@ -256,14 +256,14 @@ Three kinds: `range` (slider; drives `--p-<id>`; author `var(--p-color-amount, 0
+@@ -258,14 +258,14 @@ Three kinds: `range` (slider; drives `--p-<id>`; author `var(--p-color-amount, 0
  ### 8. Signal done
  
  ```bash
@@ -899,7 +899,7 @@ index 9b5f4ee..c499acd 100644
  
  ## Handle fallback
  
-@@ -304,7 +304,7 @@ Event: `{id, _acceptResult, _completionAck}`. The poll script already restored t
+@@ -306,7 +306,7 @@ Event: `{id, _acceptResult, _completionAck}`. The poll script already restored t
  
  ## Handle `steer`
  
@@ -908,7 +908,7 @@ index 9b5f4ee..c499acd 100644
  
  ## Handle `prefetch`
  
-@@ -322,7 +322,7 @@ An op with `deleted: true` and `removeElement: true` is the browser's Remove bad
+@@ -324,7 +324,7 @@ An op with `deleted: true` and `removeElement: true` is the browser's Remove bad
  
  If `repair` is present, the previous Apply changed source but final validation failed. Fix the current source and return the same canonical JSON result; do not roll files back yourself. The browser will ask the user before any rollback.
  
@@ -917,7 +917,7 @@ index 9b5f4ee..c499acd 100644
  
  ## Exit
  
-@@ -331,7 +331,7 @@ The user stops live mode by saying so in chat, closing the tab (SSE drops; poll
+@@ -333,7 +333,7 @@ The user stops live mode by saying so in chat, closing the tab (SSE drops; poll
  ## Cleanup
  
  ```bash
@@ -927,7 +927,7 @@ index 9b5f4ee..c499acd 100644
  
  Stops the helper and runs `impeccable live-inject --remove` to strip the injected script (use `stop --keep-inject` to keep it for a quick restart; `.impeccable/live/config.json` persists as project config). Then search for and remove any leftover `impeccable-variants-start` wrappers and `impeccable-carbonize-start` blocks, stop a dev server this session started (by its own process id), and when the boot's context asked for the detector (`MANUAL_DETECTOR_REQUIRED`), run it once over the files an accept changed.
 diff --git a/skills/impeccable/reference/new-work-comp.md b/skills/impeccable/reference/new-work-comp.md
-index c05e201..e714780 100644
+index f800876..1b69d3c 100644
 --- a/skills/impeccable/reference/new-work-comp.md
 +++ b/skills/impeccable/reference/new-work-comp.md
 @@ -6,9 +6,9 @@ The comp-led branch of [new-work.md](new-work.md) step 6. Both paths and step 7
@@ -943,7 +943,7 @@ index c05e201..e714780 100644
  0. **comps.** The comp round from [visualize.md](visualize.md): three compositional comps of the requested surface at its own viewport under `.impeccable/mocks/`, each with a prompt sidecar, put in front of the user; the chosen one's sidecar gets `"approved": true`. The gate counts them and reads the approval; a `start --comp` skips this phase because it already happened.
  The comp-led path is a frontier-tier job: it asks the builder to hold a measured layout, place plates at their boxes, and act on numeric readings across a dozen attempts. Smaller or faster models produce a recognisable page and stall under the hero gate; if the model in hand is one of those, say so before the direction round and take the code-led path, or expect the run to end at the hero with its readings unmet.
 diff --git a/skills/impeccable/reference/new-work-world.md b/skills/impeccable/reference/new-work-world.md
-index 2e8ea1b..b455849 100644
+index 839d750..ec4e92e 100644
 --- a/skills/impeccable/reference/new-work-world.md
 +++ b/skills/impeccable/reference/new-work-world.md
 @@ -7,10 +7,10 @@ The branch of [new-work.md](new-work.md) step 3 for a new or replacement world.
@@ -954,8 +954,8 @@ index 2e8ea1b..b455849 100644
 +4. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable concept-seed --scope direction --mode <mode>` and follow what it prints. No substitute, no skip: on a new or replacement world, writing artifact code before this script has run and its assignment is acknowledged is a contract violation, whatever the harness, the model, or the time pressure; the roll is what keeps every run from converging on the category default. When DESIGN.md's frontmatter names a catalog `world:` and the user asked to replace that world, add `--replace-world` (keep it on every re-roll of the round): without it the roll stays settled on the old world and deals no others. A `--replace-world` run is a replacement world, never a seeded world's first build, so tell the documenter at finish that this world replaced the seeded one. The one exception is a direction the user or brief pins whole, naming its world and its first-surface experience both in words you can quote: steps 1 to 3 have nothing to derive and the assignment has nothing left to bind, so no roll and no decision page; confirm a pin only a brief file carries with the user, so the finish review can corroborate it, and record the pin under section 5. Anything less rolls: a pin that leaves a dimension open, a direction you completed from a partial brief, or a brief's picture or metaphor alone, which is step 1's rut material. The script assigns the direction to build and deals catalog challengers. Fuse each challenger before judging it: the challenger supplies the form and its system grammar, the product supplies every fact, clarity wins conflicts. Weigh fused challengers against the assigned direction on exactly two axes, audience identification and product clarity. Losing to strong grounded material is a valid outcome; beating a thin or tool-monoculture list is the point. Close with a verdict per challenger, decided before any borrowing: wins (beats the assigned direction on both axes; becomes the build candidate), competitive (holds one axis; stays a full alternate), or declined (loses both). A declined challenger is not spent: name the one discipline of its system the assigned direction lacks, and raise the assigned direction to match before presenting it. A donation transfers ambition and system discipline (a palette's total commitment, a grid's density courage, a form's structural honesty), never the challenger's clothes. A component treatment, such as a button's shadow or a display face, is clothes, not discipline; a lifted motif is a costume note, not a raise, and one world owns the page. Write each raise into the presented direction as its own line, named for its donor; a raise nobody can read did not happen.
  5. Present one direction, fully committed and already raised by the hand it beat, raises visible as named lines: world, first viewport, visitor path, signature interaction, cross-surface reach, honest risk. Route each challenger by verdict: winning and competitive challengers are full alternates with their QUALITY BAR cards and one-line case; declined challengers render demoted, compact and quiet, each carrying its verdict and what the direction kept from it, never full-size, never silently dropped, still adoptable on request. The verdict informs the user's choice, never pre-empts it; the demoted row is the hand's proof of judgment. A hand holds at most three full-card challengers: when the roll deals more, the three strongest join and the rest wait in the re-roll pool, noted in one line; dropping a challenger from the hand itself takes a named product-truth failure, disclosed. The hand's size follows the verdicts, never a number the user named: when the weighing yields fewer full cards than asked, deliver the honest hand, say in one line why it is smaller, and offer a re-roll to deal candidates that could earn full cards. A declined challenger is never promoted to fill a slot; a promoted card looks exactly like a competitive one, so the promotion leaves no trace. The standing exit does not count toward a requested number once the user has seen and rejected it; it stays present as the quiet door. Add one card for your own top-ranked grounded candidate when it is not the assigned direction, kicker IMPECCABLE’S PICK, same anatomy as every card, with an honest risk line naming its familiarity when true: the strongest grounded direction is often where most runs in this category land, and the user deciding that trade is the point of showing it. Familiar and effective is a legitimate destination, not a failure of nerve; the pick card and the standing exit serve it at two depths. One pick card, never two, never a ranked list: a lineup of your candidates hands selection back to a taste function and invites the safest card. The pick never takes the lead position; when the dice assign your top candidate there is no pick card, and the assigned card notes it topped your list. Add re-roll with an optional one-line steer, in three registers: plain (a fresh hand, same spread), safer (your remaining conventional grounded candidates plus the canon against named competitors), bolder (foreign forms only, at full commitment). The register is the user's steering on the familiar-to-bold axis, never yours to pre-select; when the answer carries one, re-run the seed with `--register <value>` and the next `--reroll` round, and follow what it prints. A user saying "bolder" or "safer" while a direction round is open means these registers, never the bolder or harden commands. The two channels share this structure and differ only in richness: cards and boards on the decision page, names and one-liners through the structured tool, whose option list carries the assigned direction, the pick, the winning and competitive challengers, and the standing exit last; declined challengers fold into the assigned option's description as their kept lines, so the raise survives the text channel.
  
--The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. A pin names the look itself, in the user's words or as a brand commitment the user made binding; a product the brief cites as a reference sets the craft bar, not the world, and an answer to an open steer that restates the brief pins nothing. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in new-work.md, **The build path of a decision round**). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), or `dealt` (a surface round's dealt structures other than the lead), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `.cursor/skills/impeccable/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
-+The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. A pin names the look itself, in the user's words or as a brand commitment the user made binding; a product the brief cites as a reference sets the craft bar, not the world, and an answer to an open steer that restates the brief pins nothing. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in new-work.md, **The build path of a decision round**). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), or `dealt` (a surface round's dealt structures other than the lead), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
+-The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. A pin names the look itself, in the user's words or as a brand commitment the user made binding; a product the brief cites as a reference sets the craft bar, not the world, and an answer to an open steer that restates the brief pins nothing. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in new-work.md, **The build path of a decision round**). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), or `dealt` (a surface round's dealt structures other than the lead), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `.cursor/skills/impeccable/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. Exit 5 means the hand went unanswered past its budget with the page still open: follow its PENDING line, which leaves the round pending and ends the turn. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
++The standing exit: every direction round offers one quiet, permanent alternative, the category standard, played straight. It is the user's door, never yours: never recommend it, never weigh it against the roll, never let it soften the dealt directions; the counterweights bind the unchosen default, not the chosen one. When the user takes it (the canon action, a safer-steer, or plain words asking for the familiar or competitor-like path), convention becomes the commitment: ask once for two or three products this should sit alongside, make their craft level the bar, and execute the canon at full fidelity, without irony or smuggled quirk. Record a standing preference as a brand commitment in PRODUCT.md. Re-roll eliminates every direction already shown, grounded and challenger alike; after two consecutive re-rolls, ask what quality is missing. Re-roll on your own only on named factual grounds, when the assigned direction cannot carry the product's truth or task; taste is never grounds. The user may re-roll freely, and a user- or brief-pinned direction beats the roll, always. A pin names the look itself, in the user's words or as a brand commitment the user made binding; a product the brief cites as a reference sets the craft bar, not the world, and an answer to an open steer that restates the brief pins nothing. Resolve collisions field by field: preserve every user- or brief-pinned constraint. In dimensions the brief leaves open, the assignment still binds through its topology, controls, state vocabulary, and ritual; when only its materials conflict with a pinned visual direction or PRODUCT.md brand commitment, translate that material expression and name the translation in the presented direction. A look mismatch is not grounds to re-roll. Present the decision visually: write an options payload with the assigned direction leading, its raised lines included; the pick card when one exists; the dealt challengers as alternates with their QUALITY BAR cards, verdicts, and kept lines; re-roll with its safer and bolder registers; steer; canon enabled; and `buildPath` carrying the recorded default with `toggle: true` whenever image generation exists (details in new-work.md, **The build path of a decision round**). A degraded roll with no challengers still uses the page, as a single text-only card with re-roll. Every option declares its identity: `kind` is `assigned`, `pick`, `challenger`, `grounded` (another of your own grounded directions, such as each card of a safer hand's lineup, any number of them), or `dealt` (a surface round's dealt structures other than the lead), and each challenger carries `catalogId`, the SOURCE ID concept-seed printed for its world, never the card's own id; `--start` and `--update` refuse a direction or surface payload without them, and the page reports the choice from them. Give every card the same anatomy: thesis, palette, materials, first viewport, honest risk, and the challengers' case lines (`--schema` prints the exact shape); the page renders identity from these fields, demotes declined challengers to their row on its own, and a challenger's catalog image rides as labeled inspiration, never the promise of the build. Author `canonCard` too: the category standard as one honest card, same anatomy; the page keeps it subordinate, and the counterweights still bind you. Run `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable serve-question --start --payload <file>` (`--schema` first for the payload shape). It daemonizes, prints the page URL and a key, and exits; open that URL for the user, in-app browser first, then the system opener, then showing the URL. Collect the choice with `--wait --key <key>`, repeating while it exits 3; the ANSWER prints as JSON. Exit 5 means the hand went unanswered past its budget with the page still open: follow its PENDING line, which leaves the round pending and ends the turn. An ANSWER of `{"optionId":"reroll"}` keeps the server alive and the page open on a loading hand: rerun concept-seed with the same `--scope` and `--mode` plus `--from <seed-key> --reroll <n>` (1 on the first re-roll, counting up), build the next payload, deliver it with `--update --key <same key> --payload <file>`, then return to `--wait` on that key. Never `--start` a second server or fall back to chat here: either strands the open tab on a hand that never arrives. Exit 4 means the page closed unanswered: re-present once through the structured question tool, and with no answer there either, proceed unattended with the assigned direction and state the assumptions. A harness that can leave a shell blocked in the background may run the script without `--start` and let it auto-open and block. A harness that cannot hold a blocking `--wait` (it detaches long-running commands without ever returning their output, or reaps a backgrounded child) takes the structured tool without starting the page and discloses the substitution in the first reply, so the tab is never left unanswered. A shell that hands back a still-running command as a session you can poll holds the wait: poll that session until it exits, and rerun `--wait` only after it exits without an answer. Never predict any other fallback: run the script, and only exit code 2 from starting it, or that wait check before starting, routes the decision to the structured tool; those are the fallback, never an error to retry. concept-seed closes every roll with this procedure, condensed, as a PRESENTATION block that names the recorded build path.
  
  When image generation exists, every card also declares a `comp` path under `.impeccable/mocks/decision/`, the canon card included. Where the harness sandboxes its shell, start the page through the least-sandboxed command path it offers: a sandboxed shell cannot bind the board's port, and the first-attempt failure costs a retry every session. Serve the page first, then produce the comps; the page shimmer-waits per slot and the user may answer before they land. Load [visualize.md](visualize.md) before writing the first decision comp prompt, not at the comp round: each card's image is that direction's north-star comp at full fidelity under its comp discipline and the MODE RULES block concept-seed printed, and a prompt written before reading them misses every rule there: the requested surface as the real page, its first viewport and the start of the section below it, held like every comp to visualize.md's rule that a template skeleton stays the template whatever world paints it (your own pick included: a safe layout under a world skin is the template), a short prompt in visualize.md's shape, real product name and real content, no invented commercial claims, in that card's own palette, type character, and material world, committed all the way. Once a round declares comps it has not generated yet, `impeccable serve-question --start` (and `--update`, and a flip to comp) prints a `NEXT read <path>/visualize.md` line; read that file then, before the first prompt. `--wait` prints `COMP SIDECAR MISSING` for any landed decision comp with no prompt sidecar (the image's full file name plus `.json`: `a.png` gets `a.png.json`); write the missing sidecar before you continue. `COMP STALE` names a file an earlier round left at one of this hand's slots; regenerate it there. Generation takes the same time at any fidelity, so an unfinished draft pays comp cost for draft quality; fairness between cards is equal fidelity in each card's own grammar, one surface, one aspect, never shared unfinishedness. The frame's aspect is the surface's own: portrait at device viewport for a native app or mobile-first surface, landscape for desktop web; the decision page adapts to either, and a phone screen comped landscape is a broken frame, not a neutral default. Produce in reading order, the assigned card, then the pick, then the full-card hand, then canon, each file written with its prompt sidecar the moment it is done, so a re-roll's spend front-loads onto the cards read first; declined challengers get no comp, their catalog thumb is their face. With parallel subagents, fan out one agent per card: each spawn is the shipped asset producer with a single-comp packet, that card's fields, its world's card images when the NEXT line names them, PRODUCT.md, the shared frame, the path to visualize.md for its comp discipline, the COMPS section of the MODE RULES block copied verbatim (the subagent never sees the roll's output), and the card's declared path, up to four in flight. Regenerate inline any slot still empty when its agent returns; drop without ceremony any slot still empty when the user answers. No other supervision is owed. Without parallel subagents, generate in the main thread after serving, same order, and let the harness's own generation display carry the progress; the wait for the answer follows the last file. The chosen card's comp is not spent by the choice: comp-led, it enters the comp round as compositional option one; code-led, it returns at the finish review as the critique reference, what the image dared that the build did not. Unchosen comps stay in `.impeccable/mocks/decision/` as the round's spent hand; they carry no approval and imply none. With no image generation, cards carry their identity in palette chips and facts, and that page is complete, not a lesser version; the page then also demotes every challenger's catalog art to a labeled thumbnail on its own, because salience must encode the verdict, never the accident of which cards have images.
  Catalog worlds are working systems, not mood references. When one survives, carry its palette and material, type and composition, topology, controls and state, and responsive rules into the product, as far as the surface's mode allows. How far a source that is itself an interface language may carry its grammar is the mode's call, in the MODE RULES block. Open the QUALITY BAR board and hero for the world you build the moment the choice lands, even if you viewed another card earlier; the ANSWER line names the chosen card's images (when the harness only reads files or runs sandboxed, download them into the workspace and open the relative path; sandboxed viewers reject absolute paths outside it). They set the craft level the build must reach, a rendered reference's finish, commitment, and art direction, never the composition; your surface serves this product.
@@ -1108,10 +1108,10 @@ index 5c1555f..aa2fbdc 100644
  Convert images with a converter `impeccable context` reported at boot (the IMAGE_TOOLS line); probe only when it reported none, at most once per session, never per image.
  
 diff --git a/skills/impeccable/scripts/impeccable b/skills/impeccable/scripts/impeccable
-index 5026527..26b0f9c 100755
+index 16086b9..26b0f9c 100755
 --- a/skills/impeccable/scripts/impeccable
 +++ b/skills/impeccable/scripts/impeccable
-@@ -1,319 +1,4 @@
+@@ -1,342 +1,4 @@
  #!/bin/sh
 -# Impeccable launcher. Runs the platform binary shipped next to this script:
 -#   <this dir>/bin/<os>-<arch>/impeccable
@@ -1195,9 +1195,10 @@ index 5026527..26b0f9c 100755
 -}
 -
 -# This script's directory without dirname or a subshell: what dirname "$0"
--# gives, made absolute by a cd there and back.
+-# gives, made absolute by a cd there and back. A backslash separates too:
+-# Windows hook commands spell the launcher C:\...\scripts\impeccable (#1462).
 -case $0 in
--  */*) dir=${0%/*} ;;
+-  */*|*\\*) dir=${0%[/\\]*} ;;
 -  *) dir=. ;;
 -esac
 -[ -n "$dir" ] || dir=/
@@ -1304,11 +1305,15 @@ index 5026527..26b0f9c 100755
 -fetch_url() {
 -  http_status=""
 -  download_host=""
+-  fetch_error=""
 -  if command -v curl >/dev/null 2>&1; then
 -    fetch_result=0
--    metadata=$(curl -fsSL --retry 2 -w '%{http_code} %{url_effective}' -o "$tmp" "$1" 2>/dev/null) || fetch_result=$?
+-    metadata=$(curl -fsSL --retry 2 -w '%{http_code} %{url_effective} %{errormsg}' -o "$tmp" "$1" 2>/dev/null) || fetch_result=$?
 -    http_status=${metadata%% *}
 -    effective_url=${metadata#* }
+-    curl_msg=${effective_url#* }
+-    effective_url=${effective_url%% *}
+-    fetch_error="curl exit $fetch_result${curl_msg:+: $curl_msg}"
 -    # Only the authority is needed, never the signed storage URL's query.
 -    download_host=${effective_url#*://}
 -    download_host=${download_host%%/*}
@@ -1320,10 +1325,27 @@ index 5026527..26b0f9c 100755
 -    download_host=$(printf '%s' "$download_host" | tr '[:upper:]' '[:lower:]')
 -    return "$fetch_result"
 -  elif command -v wget >/dev/null 2>&1; then
--    wget -q -O "$tmp" "$1" 2>/dev/null
+-    fetch_result=0
+-    wget_out=$(wget -O "$tmp" "$1" 2>&1) || fetch_result=$?
+-    newline='
+-'
+-    fetch_error="wget exit $fetch_result: ${wget_out##*$newline}"
+-    return "$fetch_result"
 -  else
 -    return 1
 -  fi
+-}
+-# SIGKILL or a crash skips the traps below and strands the staging file, so
+-# each download first removes parts in any version's cache that are an hour
+-# idle and whose owner PID is gone (the age covers a curl outliving its
+-# launcher). A cache it cannot write is reported later, never here.
+-sweep_stale_parts() {
+-  find "$cache_root/bin" -mindepth 2 -maxdepth 2 -type f -name '.impeccable.part.*' -mmin +60 2>/dev/null |
+-    while IFS= read -r part; do
+-      owner=${part##*.part.}
+-      case "$owner" in ''|*[!0-9]*) continue ;; esac
+-      kill -0 "$owner" 2>/dev/null || rm -f "$part" 2>/dev/null || :
+-    done
 -}
 -check_download() {
 -  download_file=${1:-$tmp}
@@ -1350,6 +1372,7 @@ index 5026527..26b0f9c 100755
 -    echo "impeccable: no checksum for engine $version ($asset) in $manifest; refusing the unverified download" >&2
 -    exit 127
 -  fi
+-  sweep_stale_parts
 -  tmp="$cache_root/bin/$version/.impeccable.part.$$"
 -  # An interrupted download (Ctrl-C, a hook timeout) would otherwise leave the
 -  # PID-named staging file behind for good. The handlers must exit explicitly.
@@ -1423,7 +1446,7 @@ index 5026527..26b0f9c 100755
 -      esac
 -      exit 127 ;;
 -  esac
--  echo "impeccable: could not download engine $version from $url; check network access, the release URL, and curl or wget availability." >&2
+-  echo "impeccable: could not download engine $version from $url${fetch_error:+ ($fetch_error)}; check network access, the release URL, and curl or wget availability." >&2
 -  setup_help
 -  exit 127
 -fi
@@ -1434,10 +1457,10 @@ index 5026527..26b0f9c 100755
 +dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 +exec node "$dir/../../../src/impeccable-launcher.mjs" "$@"
 diff --git a/skills/impeccable/scripts/impeccable.cmd b/skills/impeccable/scripts/impeccable.cmd
-index 706372e..ec5768f 100644
+index 3874909..ec5768f 100644
 --- a/skills/impeccable/scripts/impeccable.cmd
 +++ b/skills/impeccable/scripts/impeccable.cmd
-@@ -1,354 +1,6 @@
+@@ -1,363 +1,6 @@
 -@echo off
 -setlocal
 -rem Impeccable launcher (Windows). Runs bin\windows-<arch>\impeccable.exe next
@@ -1570,6 +1593,9 @@ index 706372e..ec5768f 100644
 -mkdir "%IMPECCABLE_HOME%\bin\%version%" >nul 2>nul
 -if errorlevel 1 goto cache_directory_failed
 -:cache_ready
+-rem Remove staging directories killed runs left in any version's cache, once
+-rem two days idle (forfiles /d counts days; a live curl's open file stays).
+-forfiles /p "%IMPECCABLE_HOME%\bin" /s /m .impeccable.part.* /d -2 /c "cmd /c if @isdir==TRUE rd /s /q @path" >nul 2>nul
 -rem Stage the download in a directory only this run owns, as the sh launcher
 -rem does with .impeccable.part.$$: concurrent first runs (parallel hooks, two
 -rem agents) must never write, hash or move each other's files. mkdir fails
@@ -1631,10 +1657,12 @@ index 706372e..ec5768f 100644
 -set "http_status="
 -set "effective_url="
 -set "download_host="
--curl.exe -fsSL --retry 2 -w "%%{http_code} %%{url_effective}" -o "%part%" "%url%" >"%staging%\http.txt" 2>nul
+-set "curl_error="
+-curl.exe -fsSL --retry 2 -w "%%{http_code} %%{url_effective} %%{errormsg}" -o "%part%" "%url%" >"%staging%\http.txt" 2>nul
 -set "fetch_result=%errorlevel%"
 -for /f "usebackq tokens=1" %%a in ("%staging%\http.txt") do set "http_status=%%a"
 -for /f "usebackq tokens=2" %%a in ("%staging%\http.txt") do set "effective_url=%%a"
+-for /f "usebackq tokens=2,*" %%a in ("%staging%\http.txt") do set "curl_error=%%b"
 -rem Token 2 is the authority after scheme://. Drop userinfo and the port.
 -for /f "tokens=2 delims=/" %%h in ("%effective_url%") do set "download_host=%%h"
 -for /f "tokens=1,* delims=@" %%h in ("%download_host%") do if not "%%i"=="" set "download_host=%%i"
@@ -1780,7 +1808,11 @@ index 706372e..ec5768f 100644
 -echo impeccable: could not download engine %version%: GitHub's downloads are failing right now (HTTP %http_status% from %download_host%). This is an outage on GitHub's side, not a problem with your setup or the CLI, so updating won't help. Check https://www.githubstatus.com and run the same command again once GitHub has recovered. 1>&2
 -exit /b 127
 -:download_generic
--echo impeccable: could not download engine %version% from %url%; check network access and the release URL. 1>&2
+-rem Delayed expansion keeps cmd metacharacters in curl's message literal.
+-setlocal EnableDelayedExpansion
+-if defined curl_error set "curl_error=: !curl_error!"
+-echo impeccable: could not download engine %version% from !url! (curl exit %fetch_result%!curl_error!); check network access and the release URL. 1>&2
+-endlocal
 -
 -:setup_failed
 -echo Engine %version% setup needs network access and write permission to "%IMPECCABLE_HOME%\bin\%version%". 1>&2

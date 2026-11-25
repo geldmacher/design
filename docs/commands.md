@@ -4,7 +4,7 @@
 
 Use this page to look up a command. For worked examples and expected results, start with the [usage guide](usage.md).
 
-Bundled Impeccable **4.10.0**. This is the version documented in this checkout; an installed copy may differ.
+Bundled Impeccable **4.11.0**. This is the version documented in this checkout; an installed copy may differ.
 
 ## Invocation
 
@@ -77,13 +77,14 @@ The table below follows the bundled toolkit. The reference links open detailed i
 - `hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages optional project checks. Invoke it through Design or directly through Impeccable. Checks stay off until explicitly enabled; hook configuration does not prove fresh host activation.
 - `foundations [path]` checks product launch items from the project's own files and the local detector. Items that need a network lookup stay unchecked. It does not sign in or upload. `/design foundations` and `/impeccable foundations` reach it; use `$` in Codex.
 - `design-compact` proposes a short map of a long DESIGN.md and shows the saving. It writes the map only after agreement; the original moves to `.impeccable/design-full.md`. Doctor proposes it for `design-md-sprawl` and does not compact as a side effect. `design-lookup` reads one token, component, or section from that map.
+- A saved critique or audit names the page it viewed. The helper says whether that copy was uploaded. Design keeps the copy in the project.
 - Standalone `pin`/`unpin` shortcut installation is disabled. Runtime code downloads and self-updates are disabled; upstream updates belong to the maintainer workflow.
 
 See the bundled [doctor](../skills/impeccable/reference/doctor.md), [foundations](../skills/impeccable/reference/foundations.md), and [hooks](../skills/impeccable/reference/hooks.md) instructions for details.
 
 ### Live prerequisites and host boundaries
 
-`live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. `generate` enters the same live workflow from a named element and direction, such as `$design generate 3 bolder variants of the pricing cards`, without manual element picking. It defaults to three variants and supports one to eight; an unspecified direction needs clarification. Reuse the current development server and browser tab. Use the active host's available browser tool, or the system browser when no browser tool is available. The boot writes the one-line config for a plain HTML page and reports it. Other first-time configuration still previews changes for approval. An empty folder reports that there is no page yet and does not create one unless asked. Accepting a variant that wraps an element sharing a line keeps the rest of that line. The Live bar stays still under the pointer. A missing PRODUCT.md notice is shown once. Live injection into deployed production sites is unsupported.
+`live` requires a local checkout, available browser tools, and either a running development server with hot reload or a static HTML file open in the browser. It lets you select elements, generate alternatives, and accept or discard them. `generate` enters the same live workflow from a named element and direction, such as `$design generate 3 bolder variants of the pricing cards`, without manual element picking. It defaults to three variants and supports one to eight; an unspecified direction needs clarification. Reuse the current development server and browser tab. Use the active host's available browser tool, or the system browser when no browser tool is available. The boot writes the one-line config for a plain HTML page and reports it. Other first-time configuration still previews changes for approval. An empty folder reports that there is no page yet and does not create one unless asked. Accepting a variant that wraps an element sharing a line keeps the rest of that line. The Live bar stays still under the pointer. A missing PRODUCT.md notice is shown once. After three quiet timeouts, about 30 minutes, Live stops polling and waits for the next message; the page stays live and a queued steer is kept. Live injection into deployed production sites is unsupported.
 
 `generate` uses existing product and design context or the current page when context is missing; it does not start init or document. The user cycles through the variants and accepts or discards them. After acceptance, finish source cleanup and stop the live helper while keeping the development server running.
 

@@ -6,7 +6,7 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { enginePlatforms, resolveEngine, validateEngine } from '../src/impeccable-engine.mjs';
 import { runBundledImpeccable, impeccableRuntimeEnvironment } from '../src/impeccable-runtime.mjs';
-import { ACCOUNT_COMMAND_REFUSAL, projectEngineOutput } from '../src/impeccable-plugin-commands.mjs';
+import { ACCOUNT_COMMAND_REFUSAL, LOCAL_ONLY_SAVE_NOTE, projectEngineOutput, suppressUploadEnablement } from '../src/impeccable-plugin-commands.mjs';
 import { evaluatePluginHook } from '../hooks/impeccable-plugin-hook.mjs';
 import { evaluateCodexPluginHook } from '../hooks/impeccable-codex-hook.mjs';
 
@@ -85,7 +85,7 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
   const home = path.join(cwd, 'home');
   fs.mkdirSync(home);
   const env = { ...process.env, HOME: home, USERPROFILE: home };
-  for (const command of ['login', 'health', 'critiques', 'setup', 'world', 'walkthrough', 'loop', 'taste-refresh', 'status', 'switches', 'switches-refresh', 'mcp']) {
+  for (const command of ['login', 'health', 'critiques', 'setup', 'world', 'walkthrough', 'loop', 'taste', 'taste-refresh', 'status', 'switches', 'switches-refresh', 'mcp', 'critique-frames']) {
     const refused = spawnSync(process.execPath, [launcher, command], { cwd, encoding: 'utf8', timeout: 5000, env });
     assert.equal(refused.status, 1, refused.stderr);
     assert.equal(refused.stdout, '');
@@ -96,13 +96,15 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
     '  detect [file-or-dir-or-url...]   Scan for UI anti-patterns',
     '  login                            Sign in to your Impeccable account',
     '  logout                           Sign out on this machine',
+    '  taste                            Read your taste for the kind of work (--focus web|slides|motion)',
     '  whoami                           Show the signed-in account and whether it includes Pro rules',
     '  health on|off|forget|status      Save each full scan\'s counts to your account, or stop and delete them',
     '  walkthrough <recording>          Turn a screen recording into a Needs you walkthrough (MP4, poster, chapters)',
     '  world <id> [--print]             Seed this project\'s DESIGN.md from a world in the Impeccable catalog',
-    '  status                           Show account setup from the Impeccable service',
+    '  status                           Show what Impeccable is connected to for you, and the one next step',
     '  switches [--catalog]             Read or write account switches in user rule files',
     '  mcp                              Start the account MCP server',
+    '  context                          Read project context and task-focused taste',
     '  foundations [path]               Check which product foundations this project has in place',
     '  telemetry off|on|status          Turn the roll API\'s anonymous usage data off or on, or show it',
     '',
@@ -111,7 +113,8 @@ test('bundled engine refuses account sign-in and hides its upload commands', (t)
   assert.match(projected, /detect \[file-or-dir-or-url\.\.\.\]/);
   assert.match(projected, /telemetry off\|on\|status/);
   assert.match(projected, /foundations \[path\]/);
-  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|health on\|off|walkthrough <recording>|world <id>|account setup|account switches|account MCP/);
+  assert.match(projected, /task-focused taste/);
+  assert.doesNotMatch(projected, /Sign in to your Impeccable account|logout|whoami|^\s*taste\b|health on\|off|walkthrough <recording>|world <id>|connected to for you|account switches|account MCP/m);
 });
 
 test('account taste cache is not injected and taste refresh is refused', (t) => {
@@ -135,6 +138,44 @@ test('account taste cache is not injected and taste refresh is refused', (t) => 
   assert.equal(refused.status, 1, refused.stderr);
   assert.equal(refused.stdout, '');
   assert.equal(refused.stderr, `${ACCOUNT_COMMAND_REFUSAL}\n`);
+});
+
+test('a telemetry opt-out explains a local save without telling anyone to turn uploads on', (t) => {
+  const enablement = 'Not saved to Impeccable: IMPECCABLE_NO_TELEMETRY is set. Unset IMPECCABLE_NO_TELEMETRY to enable saving.';
+  const track = 'Not saved to Impeccable: DO_NOT_TRACK is set. Unset DO_NOT_TRACK to enable saving.';
+  const config = 'Not saved to Impeccable: "telemetry": false in .impeccable/config.json. Set telemetry to true in that file to enable saving.';
+  const kept = 'Saved locally: /tmp/report.md';
+  assert.equal(suppressUploadEnablement(`${kept}\n${enablement}\n${track}\n${config}\n`), `${kept}\n${LOCAL_ONLY_SAVE_NOTE}\n${LOCAL_ONLY_SAVE_NOTE}\n${LOCAL_ONLY_SAVE_NOTE}\n`);
+  assert.equal(projectEngineOutput({ command: 'critique-storage', stdout: `${enablement}\n`, host: 'codex', cwd: t.name }), `${LOCAL_ONLY_SAVE_NOTE}\n`);
+
+  const cwd = scratch(t);
+  const home = path.join(cwd, 'home');
+  fs.mkdirSync(home);
+  const body = write(cwd, 'body.md', 'A critique body that is long enough to save for the local report.\n');
+  const launcher = path.join(pluginRoot, 'src/impeccable-launcher.mjs');
+  const env = {
+    ...impeccableRuntimeEnvironment('codex', pluginRoot),
+    HOME: home,
+    USERPROFILE: home,
+    IMPECCABLE_CRITIQUE_META: JSON.stringify({
+      target: 'pricing',
+      title: 'Pricing',
+      url: '',
+      heuristics: [{ n: 1, score: 3 }],
+      total_score: 3,
+      max_score: 4,
+      na_heuristics: '2,3,4,5,6,7,8,9,10',
+      p0_count: 0,
+      p1_count: 1,
+      p2_count: 0,
+      p3_count: 0,
+    }),
+  };
+  const saved = spawnSync(process.execPath, [launcher, 'critique-storage', 'write', 'pricing', body], { cwd, encoding: 'utf8', timeout: 10000, env });
+  assert.equal(saved.status, 0, saved.stderr);
+  assert.match(saved.stdout, /\/\.impeccable\/critique\/.+\.md/);
+  assert.match(saved.stdout, new RegExp(LOCAL_ONLY_SAVE_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.doesNotMatch(`${saved.stdout}\n${saved.stderr}`, /Unset IMPECCABLE_NO_TELEMETRY|impeccable login|Saved to Impeccable: https?:/);
 });
 
 test('native launcher reads canonical context from foreign cwd with spaces and keeps project and home unchanged', (t) => {

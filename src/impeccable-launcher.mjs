@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { runBundledImpeccable } from './impeccable-runtime.mjs';
 import { impeccableRuntimeEnvironment } from './impeccable-runtime.mjs';
 import { resolveEngine } from './impeccable-engine.mjs';
-import { createEngineOutputStream, rejectBundledAccountCommand } from './impeccable-plugin-commands.mjs';
+import { createEngineOutputStream, createTextLineFilter, rejectBundledAccountCommand } from './impeccable-plugin-commands.mjs';
 import { resolvePluginHost } from './host.mjs';
 import { spawn } from 'node:child_process';
 
@@ -20,8 +20,14 @@ if (accountRefusal) {
   try {
     const runtime = resolveEngine(pluginRoot);
     const host = resolvePluginHost(undefined, pluginRoot);
-    const child = spawn(runtime.file, [command, ...args], { cwd: process.cwd(), shell: false, env: impeccableRuntimeEnvironment(host, pluginRoot), stdio: ['inherit', 'pipe', 'inherit'] });
+    const child = spawn(runtime.file, [command, ...args], { cwd: process.cwd(), shell: false, env: impeccableRuntimeEnvironment(host, pluginRoot), stdio: ['inherit', 'pipe', 'pipe'] });
     let failed = false;
+    const stderr = createTextLineFilter((line) => process.stderr.write(line));
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk) => {
+      if (failed) return;
+      stderr.push(chunk);
+    });
     const output = createEngineOutputStream({ command, host, cwd: process.cwd(), write: chunk => process.stdout.write(chunk), passthrough: args.includes('--help') || args.includes('-h') });
     const fail = (error) => {
       if (failed) return;
@@ -37,7 +43,9 @@ if (accountRefusal) {
     for (const [signal, handler] of Object.entries(handlers)) process.on(signal, handler);
     child.on('error', (error) => { failed = true; process.stderr.write(`${error.message}\n`); });
     child.on('close', (code, signal) => {
-      if (!failed) try { output.finish(); } catch (error) { fail(error); }
+      if (!failed) {
+        try { output.finish(); stderr.finish(); } catch (error) { fail(error); }
+      }
       for (const [name, handler] of Object.entries(handlers)) process.removeListener(name, handler);
       if (signal && !failed) process.kill(process.pid, signal);
       else process.exitCode = failed ? 1 : code ?? 1;
