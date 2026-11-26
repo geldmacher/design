@@ -1,18 +1,18 @@
 diff --git a/skills/impeccable/SKILL.md b/skills/impeccable/SKILL.md
-index d66e661..41c51de 100644
+index 1b8cb3d..a3c580a 100644
 --- a/skills/impeccable/SKILL.md
 +++ b/skills/impeccable/SKILL.md
 @@ -1,20 +1,28 @@
  ---
  name: impeccable
 -description: "Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, settings, onboarding, empty states, and native iOS or Android screens. Handles UX review, hierarchy, layout, typography, color, motion, UX copy, accessibility, responsive behavior, edge cases, and capturing or documenting design systems (DESIGN.md, tokens). Also for making bland UI bolder, loud UI quieter, or ambitious visual effects. Not for backend-only or non-UI tasks."
--version: 4.11.0
+-version: 4.11.1
 -license: Apache 2.0
 +description: Execute the bundled web-interface design workflow when Design routes a task here or the user explicitly requests Impeccable. Supports new interfaces, redesigns, UX critiques, and focused refinements.
 +license: Apache-2.0
 +compatibility: Requires Node.js 22 or newer.
 +metadata:
-+  version: "4.11.0"
++  version: "4.11.1"
  ---
  
 +## Geldmacher Design host contract
@@ -227,7 +227,7 @@ index 525c60a..b6df556 100644
  ##### 1. Visibility of System Status
  
 diff --git a/skills/impeccable/reference/critique.md b/skills/impeccable/reference/critique.md
-index f700f1b..947f878 100644
+index 63d8f01..b86aded 100644
 --- a/skills/impeccable/reference/critique.md
 +++ b/skills/impeccable/reference/critique.md
 @@ -23,7 +23,7 @@ Resolve one stable target, run two independent assessments, synthesize a design
@@ -293,7 +293,7 @@ index f700f1b..947f878 100644
 -     .cursor/skills/impeccable/scripts/impeccable critique-storage write "<resolved target>" <body-file>
 +     <IMPECCABLE_SKILL_ROOT>/scripts/impeccable critique-storage write "<resolved target>" <body-file>
     ```
-    Use the observed `<title>` or first h1 for `title`; omit N/A heuristics. `max_score` is the table’s applicable maximum (40 if all apply), distinguishing renormalized totals. For local files the helper records an exact content fingerprint, so polish detects later edits without Git or timestamps. The helper prints the absolute saved path, sometimes followed by a line (`Saved to Impeccable: <link>`, `Not saved to Impeccable: <reason>` or `Keep this critique's history: impeccable login`); put that line in the close word for word, also from detect (JSON `savedTo`: `Saved to Impeccable: <url>`). Leave that file on disk. Polish closes it; this run does not. `REPORTS OFF:` instead means the project opted out of saved reports: skip the trend read and carry on.
+    Use the observed `<title>` or first h1 for `title`; omit N/A heuristics. `max_score` is the table’s applicable maximum (40 if all apply), distinguishing renormalized totals. For local files the helper records an exact content fingerprint, so polish detects later edits without Git or timestamps. The helper prints the absolute saved path, sometimes followed by a line (`Saved to Impeccable: <link>` or `Not saved to Impeccable: <reason>`); put that line in the close word for word, also from detect (JSON `savedTo`: `Saved to Impeccable: <url>`). Leave that file on disk. Polish closes it; this run does not. `REPORTS OFF:` instead means the project opted out of saved reports: skip the trend read and carry on.
  
 @@ -222,7 +222,7 @@ Skip this step if the Setup slug was null (vague or root-level target), and say
  
@@ -763,19 +763,6 @@ index e4ca380..ef70373 100644
 -- If the user asks to "disable the hook" globally, lead with `/impeccable hooks off` (persistent for this project; writes `hook.enabled: false` to config). The legacy `IMPECCABLE_HOOK_DISABLED=1` env var also works as a one-shot override that follows the shell.
 +- Malformed shared or local configuration produces a visible diagnostic and skips enforcement. Repair requires a deliberate edit; valid defaults never hide the failure.
 +- Use `/impeccable hooks off` to disable plugin hooks for this project. The plugin uses canonical configuration and does not honor the standalone IMPECCABLE_HOOK_DISABLED override.
-diff --git a/skills/impeccable/reference/init.md b/skills/impeccable/reference/init.md
-index dfc6b57..f88fc10 100644
---- a/skills/impeccable/reference/init.md
-+++ b/skills/impeccable/reference/init.md
-@@ -24,7 +24,7 @@ Form a platform hypothesis: `web`, `ios`, `android`, or `adaptive` (one product
- 
- ## Step 3: Interview for product truth
- 
--**Your first message opens with the sign-in when it's missing.** If `impeccable context` printed `ACCOUNT: not signed in` (or printed no `ACCOUNT:` line and `.cursor/skills/impeccable/scripts/impeccable whoami` prints `Not signed in`), the first line of your first message to the person, before any question, structured or plain-chat, is: "Run `npx impeccable login` to keep your critiques and audits in your Impeccable account. It's free, and creates the account if you're new." Say it once per init. Signed in, say nothing about it.
-+**Your first message opens with the sign-in when it's missing.** If `impeccable context` printed `ACCOUNT: not signed in` (or printed no `ACCOUNT:` line and `<IMPECCABLE_SKILL_ROOT>/scripts/impeccable whoami` prints `Not signed in`), the first line of your first message to the person, before any question, structured or plain-chat, is: "Run `npx impeccable login` to keep your critiques and audits in your Impeccable account. It's free, and creates the account if you're new." Say it once per init. Signed in, say nothing about it.
- 
- Ask the user directly to clarify what you cannot infer. Ask only about material gaps the repository and original request do not answer with strong evidence.
- 
 diff --git a/skills/impeccable/reference/layout.md b/skills/impeccable/reference/layout.md
 index 6662c40..8c5514d 100644
 --- a/skills/impeccable/reference/layout.md

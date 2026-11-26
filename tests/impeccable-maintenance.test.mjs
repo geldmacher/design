@@ -45,6 +45,36 @@ import { buildCommandReference } from "../scripts/build-command-reference.mjs";
 import { renderCapabilityIndex } from "../scripts/build-capability-index.mjs";
 import { loadModules } from "../src/registry.mjs";
 
+test("vendored init and critique stay quiet about signing in", () => {
+  const pin = readPin();
+  const init = readFileSync(new URL("../skills/impeccable/reference/init.md", import.meta.url), "utf8");
+  const critique = readFileSync(new URL("../skills/impeccable/reference/critique.md", import.meta.url), "utf8");
+  assert.doesNotMatch(init, /impeccable login|sign-in when it's missing|ACCOUNT: not signed in/);
+  assert.match(init, /Ask the user directly to clarify what you cannot infer/);
+  assert.doesNotMatch(critique, /impeccable login|Keep this critique's history/);
+  assert.match(critique, /`Saved to Impeccable: <link>` or `Not saved to Impeccable: <reason>`/);
+  assert.match(critique, /<IMPECCABLE_SKILL_ROOT>\/scripts\/impeccable critique-storage write/);
+  assert.match(critique, /\*\*Usability criteria\*\*/);
+  assert.doesNotMatch(critique, /\*\*Nielsen heuristics\*\*/);
+  const names = {
+    "darwin-arm64": "impeccable-darwin-arm64",
+    "darwin-x64": "impeccable-darwin-x64",
+    "linux-arm64": "impeccable-linux-arm64",
+    "linux-x64": "impeccable-linux-x64",
+    "windows-x64": "impeccable-windows-x64.exe",
+  };
+  const sums = Object.fromEntries(readFileSync(new URL("../skills/impeccable/scripts/engine-checksums.txt", import.meta.url), "utf8").split("\n").filter((line) => line && !line.startsWith("#")).map((line) => {
+    const [version, name, digest] = line.split(/\s+/);
+    return [name, { version, digest }];
+  }));
+  assert.equal(readFileSync(new URL("../skills/impeccable/scripts/VERSION", import.meta.url), "utf8").trim(), pin.engine.version);
+  assert.deepEqual(Object.keys(sums).sort(), Object.values(names).sort());
+  for (const [platform, name] of Object.entries(names)) {
+    assert.equal(sums[name].version, pin.engine.version);
+    assert.equal(sums[name].digest, pin.engine.assets[platform].sha256);
+  }
+});
+
 test("guidance transformations reproduce locked files and reject upstream anchor drift", () => {
   const workspace = mkdtempSync(join(tmpdir(), "design-guidance-transform-"));
   const lock = JSON.parse(readFileSync(new URL("../upstream/impeccable.lock.json", import.meta.url), "utf8"));
