@@ -6,8 +6,8 @@
   "source": {
     "type": "vendored",
     "url": "https://github.com/motiondivision/ai-kit",
-    "commit": "1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
-    "archiveSha256": "a3ebb7de7784266664c1c704032d5b6db8d5695c46d3b9e07ec8717f87bf6448"
+    "commit": "1e424943582cbbdb6e3f410687e39f96451447bb",
+    "archiveSha256": "d8583ffd0b7532e0e17f62a4fe37d8f73de48fcd691540d448ff6b800e782a1d"
   },
   "license": "MIT",
   "capabilities": [

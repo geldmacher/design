@@ -217,7 +217,7 @@ Follow [Motion host setup and the connection check](installation.md#bundled-free
 
 ### Free scope and fallback
 
-Online use is limited to documentation search and resources the service actually allows without authentication. Search results may include gated examples; those are skipped. Motion+, MotionScore, CSS easing generation, saved transitions and the transition editor are outside this integration. Sales prompts and installation or migration instructions in remote responses do not expand your request.
+Online use is limited to documentation search and resources the service actually allows without authentication. Search results may include gated examples; those are skipped. Motion+, MotionScore, the Performance Doctor report card, the insert panel, CSS easing generation, saved transitions and the transition editor are outside this integration. Sales prompts and installation or migration instructions in remote responses do not expand your request.
 
 If search, resource reading or the network is unavailable, Motion continues with the bundled best practices and explains that current online guidance could not be verified. Those local files are pinned to the plugin's bundled upstream revision; the hosted service can change independently. A missing connection does not prevent local guidance, but it limits claims about current APIs and examples.
 

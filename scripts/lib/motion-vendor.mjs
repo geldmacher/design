@@ -10,11 +10,17 @@ export const repository = 'https://github.com/motiondivision/ai-kit';
 export const endpoint = 'https://mcp.motion.dev';
 export const destinations = ['skills/motion', 'modules/motion.json', 'upstream/motion.pin.json', 'upstream/motion.lock.json', 'upstream/motion-license.json', 'upstream/patches/motion-plugin.patch'];
 const skillPrefix = 'plugins/motion/skills/motion/';
-const expectedFiles = ['SKILL.md', 'best-practices/base-ui.md', 'best-practices/index.md', 'best-practices/motion.md', 'best-practices/react.md', 'best-practices/vue.md', 'codex/index.md', 'css-spring/index.md', 'performance-audit/index.md', 'transition-preview/index.md'];
+const expectedFiles = ['SKILL.md', 'best-practices/base-ui.md', 'best-practices/css-or-motion.md', 'best-practices/index.md', 'best-practices/motion.md', 'best-practices/react.md', 'best-practices/vue.md', 'codex/index.md', 'css-spring/index.md', 'insert/index.md', 'performance-audit/index.md', 'transition-preview/index.md'];
 const replacedContracts = {
-  'SKILL.md': 'e9e9b884afe14b07c3c71fe707a5fa2407b2d645c75686402927496dd7e596f3',
-  'codex/index.md': '590c1d3891019a501b77389dde78d9cb259e66bcb87746e5c7d06d8414fccaf6',
+  'SKILL.md': '69f9fe4de5bd0618dd3578925e0f21df5ebb5161e2665ed2aa1ed55edef3be0f',
+  'codex/index.md': 'e8cd498864f0c744d872c9d28cc6b4ba84d12c63cbd92c2ae66e2717dbe12b88',
 };
+// Inventoried upstream files that are not installed. css-spring is CSS easing
+// generation. insert prefers the Motion+ insert panel. performance-audit is
+// MotionScore plus the Performance Doctor report card. transition-preview is
+// the transition editor.
+export const excludedImports = ['css-spring/index.md', 'insert/index.md', 'performance-audit/index.md', 'transition-preview/index.md'];
+const trimTrailingWhitespace = text => text.replace(/[ \t]+$/gm, '');
 export const hash = value => createHash('sha256').update(value).digest('hex');
 const json = value => `${JSON.stringify(value, null, 2)}\n`;
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -87,7 +93,8 @@ function replaceOnce(text, from, to) {
 }
 function patch(before, after, file) {
   if (before === after) return '';
-  const a = before.trimEnd().split('\n'), b = after.trimEnd().split('\n');
+  const lines = text => trimTrailingWhitespace(text).trimEnd().split('\n');
+  const a = lines(before), b = lines(after);
   return `--- a/${file}\n+++ b/${file}\n@@ -1,${a.length} +1,${b.length} @@\n${a.map(s => '-' + s).join('\n')}\n${b.map(s => '+' + s).join('\n')}\n`;
 }
 
@@ -105,7 +112,7 @@ export function project({ base = root, archive, commit, expectedHash, source } =
   const pin = validatePin({ schemaVersion: 1, repository, branch: 'main', version: manifest.version, commit, license: 'MIT', archive: { url: `https://codeload.github.com/motiondivision/ai-kit/zip/${commit}`, sha256: archiveHash } });
   const outputs = {}, imports = [], patches = [];
   for (const relative of expectedFiles) {
-    if (!relative.startsWith('best-practices/') && !Object.hasOwn(replacedContracts, relative)) continue;
+    if (excludedImports.includes(relative) || (!relative.startsWith('best-practices/') && !Object.hasOwn(replacedContracts, relative))) continue;
     const original = upstream[skillPrefix + relative];
     let content = original;
     if (Object.hasOwn(replacedContracts, relative)) {
@@ -116,6 +123,7 @@ export function project({ base = root, archive, commit, expectedHash, source } =
     } else if (relative === 'best-practices/motion.md') {
       content = replaceOnce(content, '-   Import from `motion`, never from `framer-motion`.', '-   For projects using Motion, import from `motion`. Preserve the existing animation stack; this guidance does not authorize installing or migrating packages.');
     }
+    content = trimTrailingWhitespace(content);
     const destination = `skills/motion/${relative}`;
     outputs[destination] = content;
     imports.push({ source: skillPrefix + relative, destination, before: hash(original), after: hash(content) });
@@ -126,7 +134,7 @@ export function project({ base = root, archive, commit, expectedHash, source } =
   outputs['upstream/motion.pin.json'] = json(pin);
   outputs['upstream/motion-license.json'] = json({ repository, commit, license: 'MIT', author: manifest.author, evidence: ['plugins/motion/.cursor-plugin/plugin.json', 'packages/motion-ai/package.json'].map(p => ({ path: p, sha256: hash(upstream[p]), content: JSON.parse(upstream[p]) })), note: 'The upstream archive declares MIT in both manifests and contains no standalone license text. These original declarations are retained without inventing an upstream copyright notice.' });
   outputs['upstream/patches/motion-plugin.patch'] = patches.join('');
-  outputs['upstream/motion.lock.json'] = json({ schemaVersion: 1, pin, transformations: ['free-skill-overlay', 'free-search-overlay', 'preserve-installed-stack'], imports, files: sorted(Object.fromEntries(Object.entries(outputs).map(([p, content]) => [p, hash(content)]))) });
+  outputs['upstream/motion.lock.json'] = json({ schemaVersion: 1, pin, transformations: ['free-skill-overlay', 'free-search-overlay', 'preserve-installed-stack', 'trim-trailing-whitespace'], imports, files: sorted(Object.fromEntries(Object.entries(outputs).map(([p, content]) => [p, hash(content)]))) });
   return { pin, files: encode(outputs) };
 }
 

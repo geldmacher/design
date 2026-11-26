@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/motiondivision/ai-kit",
-  "commit": "1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+  "commit": "1e424943582cbbdb6e3f410687e39f96451447bb",
   "license": "MIT",
   "author": {
     "name": "Motion",
@@ -40,16 +40,29 @@
     },
     {
       "path": "packages/motion-ai/package.json",
-      "sha256": "0533e2fb2ea62b278d68102d55fd11ebcbf6e7f99e4cc12bc94572d3c6dab9ba",
+      "sha256": "a9441186eb244a32029abe0d35f1cd6a740309fd73faec21dd3c8114d1579bfb",
       "content": {
         "name": "motion-ai",
-        "version": "14.0.0",
+        "version": "14.2.0",
         "description": "Install the Motion AI Kit — installs Motion skills into your AI coding agents and configures Motion's hosted MCP servers.",
         "author": {
           "name": "Matt Perry",
           "url": "https://motion.dev"
         },
         "license": "MIT",
+        "homepage": "https://motion.dev/ai-kit",
+        "keywords": [
+          "motion",
+          "animation",
+          "ai",
+          "agent",
+          "mcp",
+          "skills",
+          "claude-code",
+          "cursor",
+          "codex",
+          "performance"
+        ],
         "repository": "https://github.com/motiondivision/ai-kit",
         "type": "module",
         "bin": "./dist/cli.js",

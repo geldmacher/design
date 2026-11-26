@@ -4,6 +4,8 @@
 
 - Update bundled Impeccable to skill 4.11.1 and native engine 0.1.31. Init no longer opens with a sign-in nudge, and a saved critique no longer tells the person to run `impeccable login`. Engine 0.1.31 keeps those install and signed-out save offers behind `OFFER_SIGN_IN`, which this build leaves off. Design keeps its Cursor pre-write denial hook. Every bundled engine run still sets `IMPECCABLE_NO_TELEMETRY=1`, `IMPECCABLE_NO_TASTE=1`, and `IMPECCABLE_NO_SWITCH_SYNC=1`. Account commands, including `login`, stay refused before the engine starts.
 
+- Update the bundled free Motion guidance to ai-kit commit `1e424943582cbbdb6e3f410687e39f96451447bb` (skill version 1.0.0). Local guidance adds the CSS-or-Motion choice guide, revised hardware-acceleration and reduced-motion rules, and React guidance for `AnimatePresence`, layout, and height animation. The insert panel, Performance Doctor report card, and MotionScore reviewer stay outside the free integration.
+
 ## 0.27.0
 
 - Update bundled Impeccable to skill 4.11.0 and native engine 0.1.30. A critique, audit, or scan says whether the copy was saved to Impeccable, and a saved critique names the page it viewed. Live stops polling after three quiet timeouts and keeps a queued steer. Design keeps its Cursor pre-write denial hook. Every bundled engine run sets `IMPECCABLE_NO_TELEMETRY=1`, `IMPECCABLE_NO_TASTE=1`, and `IMPECCABLE_NO_SWITCH_SYNC=1`, so reports, screenshots, folder names, and per-kind account taste stay on this machine. `taste`, taste notes, critique screenshots, MCP sign-in, catalog worlds, walkthrough uploads, and Loop stay refused.
