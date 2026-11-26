@@ -115,7 +115,7 @@ export function renderCommandReference({ skillRoot, version }) {
     '- `hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages optional project checks. Invoke it through Design or directly through Impeccable. Checks stay off until explicitly enabled; hook configuration does not prove fresh host activation.',
     '- `foundations [path]` checks product launch items from the project\'s own files and the local detector. Items that need a network lookup stay unchecked. It does not sign in or upload. `/design foundations` and `/impeccable foundations` reach it; use `$` in Codex.',
     '- `design-compact` proposes a short map of a long DESIGN.md and shows the saving. It writes the map only after agreement; the original moves to `.impeccable/design-full.md`. Doctor proposes it for `design-md-sprawl` and does not compact as a side effect. `design-lookup` reads one token, component, or section from that map.',
-    '- A saved critique or audit names the page it viewed. The helper says whether that copy was uploaded. Design keeps the copy in the project.',
+    '- A saved critique or audit names the page it viewed. The helper says whether that copy was uploaded and does not suggest signing in. Design keeps the copy in the project.',
     '- Standalone `pin`/`unpin` shortcut installation is disabled. Runtime code downloads and self-updates are disabled; upstream updates belong to the maintainer workflow.',
     '',
     `See the bundled ${helperLinks} instructions for details.`,
