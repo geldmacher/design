@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { root, hash, prepare, apply, project, check, validateInstalled, destinations } from '../scripts/lib/motion-vendor.mjs';
+import { root, hash, prepare, apply, project, check, validateInstalled, destinations, excludedImports } from '../scripts/lib/motion-vendor.mjs';
 
-const commit = '1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7';
+const commit = '1e424943582cbbdb6e3f410687e39f96451447bb';
 const inputs = JSON.parse(fs.readFileSync(new URL('./fixtures/motion-upstream.json', import.meta.url)));
 function fixture(t, modify = files => files) {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-maintenance-'));
@@ -46,6 +46,12 @@ test('Motion import prepares, reviews, applies and reprojects identical pinned f
   assert.ok(fs.readFileSync(path.join(candidate.directory, 'repository.patch'), 'utf8').includes('skills/motion/SKILL.md'));
   assert.equal(apply({ base: f.base, id: candidate.id }).state, 'candidate-applied');
   assert.equal(validateInstalled(f.base).commit, commit);
+  assert.equal(fs.existsSync(path.join(f.base, 'skills/motion/best-practices/css-or-motion.md')), true);
+  for (const excluded of excludedImports) assert.equal(fs.existsSync(path.join(f.base, 'skills/motion', excluded)), false);
+  for (const relative of ['best-practices/index.md', 'best-practices/css-or-motion.md']) {
+    const guidance = fs.readFileSync(path.join(f.base, 'skills/motion', relative), 'utf8');
+    assert.equal(/[ \t]+$/m.test(guidance), false, relative);
+  }
   const first = owned(f.base);
   const again = prepare(f);
   apply({ base: f.base, id: again.id });

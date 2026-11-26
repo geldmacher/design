@@ -6,7 +6,7 @@ import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import YAML from 'yaml';
 import { buildPluginTargets, createTargetBuildWorkspace, removeTargetBuildWorkspace } from '../scripts/build-plugin-targets.mjs';
-import { root, validateInstalled } from '../scripts/lib/motion-vendor.mjs';
+import { root, validateInstalled, excludedImports } from '../scripts/lib/motion-vendor.mjs';
 
 test('Motion packages preserve the free native connection, explicit skill policy and portable offline floor', t => {
   const workspace = createTargetBuildWorkspace();
@@ -31,7 +31,7 @@ test('Motion packages preserve the free native connection, explicit skill policy
       assert.equal(YAML.parse(fs.readFileSync(path.join(base, 'skills/motion/agents/openai.yaml'), 'utf8')).policy.allow_implicit_invocation, false);
     }
     assert.equal(fs.existsSync(path.join(base, '.agents/skills/update-motion')), false);
-    for (const excluded of ['css-spring', 'performance-audit', 'transition-preview']) assert.equal(fs.existsSync(path.join(base, 'skills/motion', excluded)), false);
+    for (const excluded of excludedImports) assert.equal(fs.existsSync(path.join(base, 'skills/motion', excluded)), false);
     const output = JSON.parse(execFileSync(process.execPath, [path.join(base, 'skills/design/scripts/design-cli.mjs'), '--host', host, 'status', '--json'], { cwd: project, env: { ...process.env, IMPECCABLE_HOST: host, HOME: project, CODEX_HOME: path.join(project, 'codex-home') }, encoding: 'utf8' }));
     assert.equal(output.motion.commit, pin.commit);
     assert.equal(output.motion.mcp.availability, 'not-checked');
@@ -71,4 +71,17 @@ test('Motion guidance covers controlled free, gated, unavailable and scope-expan
   assert.match(skill, /Newly advertised tools do not expand this scope/);
   assert.match(skill, /questions about commands|Questions about commands/);
   assert.match(skill, /separate explicit request/);
+  assert.match(skill, /insert panel/);
+  assert.match(skill, /Performance Doctor report card/);
+  assert.doesNotMatch(skill, /insert-motion|open-performance-report|generate-css-easing/);
+  assert.doesNotMatch(search, /insert-motion|open-performance-report|generate-css-easing/);
+  const paidTool = /insert-motion|open-performance-report|update-performance-report|generate-css-easing|motion\.dev\/plus/;
+  function walk(relative) {
+    for (const name of fs.readdirSync(path.join(root, relative))) {
+      const child = path.join(relative, name);
+      if (fs.statSync(path.join(root, child)).isDirectory()) walk(child);
+      else if (name.endsWith('.md')) assert.doesNotMatch(fs.readFileSync(path.join(root, child), 'utf8'), paidTool, child);
+    }
+  }
+  walk('skills/motion');
 });

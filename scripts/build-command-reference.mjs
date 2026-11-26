@@ -145,7 +145,7 @@ export function renderCommandReference({ skillRoot, version }) {
     '',
     'Local guidance needs only the loaded plugin. Official documentation search and anonymously readable examples additionally need the bundled Motion MCP connection, network access and the corresponding host search and resource-reading tools. No Motion account or token is required. Missing or blocked online tools fall back to pinned local guidance with an explicit freshness limitation.',
     '',
-    'The plugin does not install project dependencies or migrate `framer-motion`. Motion+, MotionScore, CSS easing generation, saved transitions and the transition editor are outside its scope. `checks` and optional hooks are independent of the MCP connection; status reports its configuration without testing connectivity.',
+    'The plugin does not install project dependencies or migrate `framer-motion`. Motion+, MotionScore, the Performance Doctor report card, the insert panel, CSS easing generation, saved transitions and the transition editor are outside its scope. `checks` and optional hooks are independent of the MCP connection; status reports its configuration without testing connectivity.',
     '',
     'See [worked Motion examples](usage.md#animate-with-motion), [host setup and connection checks](installation.md#bundled-free-motion-documentation), and [maintenance boundaries](motion-maintenance.md). The portable package includes local Motion guidance without an MCP configuration; its client determines invocation syntax.',
     '',
